@@ -134,6 +134,16 @@ static PyObject *createPyResults(STextResultArray *paryResult)
 static PyObject *
 decodeFile(PyObject *self, PyObject *args)
 {
+    #if defined(_WIN32)
+    printf("Windows\n");
+    #elif defined(__linux__)
+    printf("Linux\n");
+    #elif defined(__APPLE__)
+    printf("MacOS\n");
+    #else
+    printf("Unknown Operating System.\n");
+    #endif
+
     if (!createDBR()) 
     {
         return NULL;
@@ -222,9 +232,9 @@ decodeBuffer(PyObject *self, PyObject *args)
 
     // Get image information
     char *buffer = (char*)pai->data; // The address of image data
-    int width = pai->shape[1];       // image width
-    int height = pai->shape[0];      // image height
-    int size = pai->strides[0] * pai->shape[0]; // image size = stride * height
+    int width = (int)pai->shape[1];       // image width
+    int height = (int)pai->shape[0];      // image height
+    int size = (int)pai->strides[0] * height; // image size = stride * height
     #endif
 
     // Initialize Dynamsoft Barcode Reader
