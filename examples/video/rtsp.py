@@ -3,27 +3,35 @@ import dbr
 import time
 import os
 
+import sys
+sys.path.append('../')
+from license import dbr_license
+
+
 def get_time():
     localtime = time.localtime()
     capturetime = time.strftime("%Y%m%d%H%M%S", localtime)
     return capturetime
 
+
 def read_barcode():
 
-    vc = cv2.VideoCapture("rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov");
+    vc = cv2.VideoCapture(
+        "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov")
 
-    if vc.isOpened(): # try to get the first frame
-        dbr.initLicense("t0068MgAAABt/IBmbdOLQj2EIDtPBkg8tPVp6wuFflHU0+y14UaUt5KpXdhAxlERuDYvJy7AOB514QK4H50mznL6NZtBjITQ=")
+    if vc.isOpened():  # try to get the first frame
+        dbr.initLicense(dbr_license)
         rval, frame = vc.read()
     else:
         return
-    
+
     windowName = "Barcode Reader"
-    formats = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000 # 1D, PDF417, QRCODE, DataMatrix
+    # 1D, PDF417, QRCODE, DataMatrix
+    formats = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000
 
     while True:
         cv2.imshow(windowName, frame)
-        rval, frame = vc.read();
+        rval, frame = vc.read()
         results = dbr.decodeBuffer(frame, formats)
         if (len(results) > 0):
             print(get_time())
@@ -39,6 +47,7 @@ def read_barcode():
             break
 
     cv2.destroyWindow(windowName)
+
 
 if __name__ == "__main__":
     print("OpenCV version: " + cv2.__version__)

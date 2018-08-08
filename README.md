@@ -18,12 +18,14 @@ Get the [trial license](https://www.dynamsoft.com/CustomerPortal/Portal/Triallic
 
     ```
     pip install opencv-python
+    python3 -m pip install opencv-python
     ```
     
 * NumPy
 	
     ```
     pip install numpy
+    python3 -m pip install numpy
     ```
     
 ## HowTo

@@ -2,10 +2,20 @@ import cv2
 import dbr
 import time
 import threading
-import Queue
+import sys
 import os
 
-q = Queue.Queue(1)
+import sys
+sys.path.append('../')
+from license import dbr_license
+
+if sys.version_info < (3, 0):
+    import Queue
+    q = Queue.Queue(1)
+else:
+    import queue
+    q = queue.Queue(1)
+
 
 class BarcodeReaderThread (threading.Thread):
     def __init__(self, name, isRunning):
@@ -15,7 +25,8 @@ class BarcodeReaderThread (threading.Thread):
 
     def run(self):
         global q
-        formats = 0x3FF | 0x2000000 | 0x8000000 | 0x4000000; # 1D, QRCODE, PDF417, DataMatrix
+        # 1D, PDF417, QRCODE, DataMatrix
+        formats = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000
 
         while self.isRunning:
             # Get a frame
@@ -32,20 +43,22 @@ class BarcodeReaderThread (threading.Thread):
 
         print("Quit thread")
 
+
 def get_time():
     localtime = time.localtime()
     capturetime = time.strftime("%Y%m%d%H%M%S", localtime)
     return capturetime
 
+
 def read_barcode():
     vc = cv2.VideoCapture(0)
 
-    if vc.isOpened(): # try to get the first frame
-        dbr.initLicense("t0068MgAAABt/IBmbdOLQj2EIDtPBkg8tPVp6wuFflHU0+y14UaUt5KpXdhAxlERuDYvJy7AOB514QK4H50mznL6NZtBjITQ=")
+    if vc.isOpened():  # try to get the first frame
+        dbr.initLicense(dbr_license)
         rval, frame = vc.read()
     else:
         return
-    
+
     windowName = "Barcode Reader"
 
     # Create a thread for barcode detection
@@ -54,8 +67,8 @@ def read_barcode():
 
     global q
     while True:
-        cv2.imshow(windowName, frame) # Render a frame on Window
-        rval, frame = vc.read(); # Get a frame
+        cv2.imshow(windowName, frame)  # Render a frame on Window
+        rval, frame = vc.read()  # Get a frame
 
         try:
             q.put_nowait(frame)
@@ -75,6 +88,7 @@ def read_barcode():
 
     cv2.destroyWindow(windowName)
 
+
 if __name__ == "__main__":
-    print "OpenCV version: " + cv2.__version__
+    print("OpenCV version: " + cv2.__version__)
     read_barcode()
