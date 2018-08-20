@@ -4,18 +4,14 @@ import cv2
 
 import sys
 sys.path.append('../')
-from license import dbr_license
-
-# 1D, PDF417, QRCODE, DataMatrix
-formats = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000
-
+import config
 
 def initLicense(license):
     dbr.initLicense(license)
 
 
 def decodeFile(fileName):
-    results = dbr.decodeFile(fileName, formats)
+    results = dbr.decodeFile(fileName, config.barcodeTypes)
 
     for result in results:
         print("barcode format: " + result[0])
@@ -23,7 +19,7 @@ def decodeFile(fileName):
 
 
 def decodeBuffer(image):
-    results = dbr.decodeBuffer(image, formats)
+    results = dbr.decodeBuffer(image, config.barcodeTypes)
 
     for result in results:
         print("barcode format: " + result[0])
@@ -40,7 +36,7 @@ if __name__ == "__main__":
     if not os.path.isfile(barcode_image):
         print("It is not a valid file.")
     else:
-        initLicense(dbr_license)
+        initLicense(config.license)
         decodeFile(barcode_image)
         # image = cv2.imread(barcode_image, 1)
         # decodeBuffer(image)

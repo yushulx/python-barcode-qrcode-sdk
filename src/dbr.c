@@ -166,6 +166,10 @@ decodeFile(PyObject *self, PyObject *args)
 
     // Barcode detection
     int ret = DBR_DecodeFile(hBarcode, pFileName, "");
+    if (ret) 
+	{
+		printf("Detection error: %s\n", DBR_GetErrorString(ret));
+	}
     DBR_GetAllTextResults(hBarcode, &paryResult);
 
     // Wrap results
@@ -245,7 +249,11 @@ decodeBuffer(PyObject *self, PyObject *args)
     int iStride = ((width * depth + 31) >> 5) << 2;
 
     PyObject *list = NULL;
-    int iRet = DBR_DecodeBuffer(hBarcode, buffer, width, height, iStride, IPF_RGB_888, "");
+    int ret = DBR_DecodeBuffer(hBarcode, buffer, width, height, iStride, IPF_RGB_888, "");
+    if (ret) 
+	{
+		printf("Detection error: %s\n", DBR_GetErrorString(ret));
+	}
     // Wrap results
     DBR_GetAllTextResults(hBarcode, &paryResult);
     list = createPyResults(paryResult);

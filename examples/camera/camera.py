@@ -5,7 +5,7 @@ import os
 
 import sys
 sys.path.append('../')
-from license import dbr_license
+import config
 
 
 def get_time():
@@ -19,19 +19,17 @@ def read_barcode():
     vc = cv2.VideoCapture(0)
 
     if vc.isOpened():  # try to get the first frame
-        dbr.initLicense(dbr_license)
+        dbr.initLicense(config.license)
         rval, frame = vc.read()
     else:
         return
 
     windowName = "Barcode Reader"
-    # 1D, PDF417, QRCODE, DataMatrix
-    formats = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000
 
     while True:
         cv2.imshow(windowName, frame)
         rval, frame = vc.read()
-        results = dbr.decodeBuffer(frame, formats)
+        results = dbr.decodeBuffer(frame, config.barcodeTypes)
         if (len(results) > 0):
             print(get_time())
             print("Total count: " + str(len(results)))

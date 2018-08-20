@@ -1,5 +1,5 @@
 # DBR Python Extension
-Version 6.2
+Version 6.3
 
 The repository aims to help developers build **Python barcode** apps with [Dynamsoft Barcode Reader](https://www.dynamsoft.com/Products/Dynamic-Barcode-Reader.aspx) in Windows, Linux, macOS, and Raspberry Pi.
 
@@ -39,8 +39,8 @@ SET VS90COMNTOOLS=%VS140COMNTOOLS%
 Edit `setup.py`. Replace the **dbr_lib_dir** and **dbr_dll** with yours:
 
 ```
-dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.2\Components\C_C++\Lib'
-dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.2\Components\C_C++\Redist\x64\DynamsoftBarcodeReaderx64.dll'
+dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.3\Components\C_C++\Lib'
+dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.3\Components\C_C++\Redist\x64\DynamsoftBarcodeReaderx64.dll'
 ```
 
 Build and install the Python extension:

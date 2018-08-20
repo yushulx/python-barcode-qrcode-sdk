@@ -7,7 +7,7 @@ import os
 
 import sys
 sys.path.append('../')
-from license import dbr_license
+import config
 
 if sys.version_info < (3, 0):
     import Queue
@@ -25,13 +25,11 @@ class BarcodeReaderThread (threading.Thread):
 
     def run(self):
         global q
-        # 1D, PDF417, QRCODE, DataMatrix
-        formats = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000
 
         while self.isRunning:
             # Get a frame
             frame = q.get(True)
-            results = dbr.decodeBuffer(frame, formats)
+            results = dbr.decodeBuffer(frame, config.barcodeTypes)
             q.task_done()
 
             if (len(results) > 0):
@@ -54,7 +52,7 @@ def read_barcode():
     vc = cv2.VideoCapture(0)
 
     if vc.isOpened():  # try to get the first frame
-        dbr.initLicense(dbr_license)
+        dbr.initLicense(config.license)
         rval, frame = vc.read()
     else:
         return
