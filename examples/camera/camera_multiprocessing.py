@@ -11,7 +11,7 @@ import config
 
 def clear_queue(queue):
     try:
-        while not queue.empty():
+        while queue.qsize() > 0:
             queue.get()
         queue.close()
         queue.join_thread()
@@ -89,9 +89,6 @@ def read_barcode():
             break
 
     cv2.destroyWindow(windowName)
-    clear_queue(frame_queue)
-    clear_queue(status_queue)
-    clear_queue(finish_queue)
 
 
 if __name__ == "__main__":

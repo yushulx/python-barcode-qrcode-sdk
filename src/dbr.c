@@ -115,7 +115,7 @@ static PyObject *createPyResults(STextResultArray *paryResult)
 
     // Create a Python object to store results
     PyObject* list = PyList_New(count); 
-    printf("count: %d\n", count);
+    // printf("count: %d\n", count);
     PyObject* result = NULL;
     for (int i = 0; i < count; i++)
     {
