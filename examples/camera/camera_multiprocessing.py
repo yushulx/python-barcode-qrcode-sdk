@@ -54,6 +54,10 @@ def read_barcode():
     status_queue = Queue()
     finish_queue = Queue()
 
+    dbr_proc = Process(target=dbr_run, args=(
+        frame_queue, status_queue, finish_queue))
+    dbr_proc.start()
+
     vc = cv2.VideoCapture(0)
 
     if vc.isOpened():  # try to get the first frame
@@ -62,7 +66,6 @@ def read_barcode():
         return
 
     windowName = "Barcode Reader"
-    is_started = False
 
     while True:
         cv2.imshow(windowName, frame)
@@ -70,12 +73,6 @@ def read_barcode():
 
         if frame_queue.qsize() == 0:
             frame_queue.put(frame)
-
-            if is_started == False:
-                is_started = True
-                dbr_proc = Process(target=dbr_run, args=(
-                    frame_queue, status_queue, finish_queue))
-                dbr_proc.start()
         else:
             status = status_queue.get()
             if status == "main":
