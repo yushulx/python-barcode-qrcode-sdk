@@ -117,7 +117,8 @@ static PyObject *createPyResults(STextResultArray *paryResult)
     PyObject* list = PyList_New(count); 
     // printf("count: %d\n", count);
     PyObject* result = NULL;
-    for (int i = 0; i < count; i++)
+    int i = 0;
+    for (; i < count; i++)
     {
         PyList_SetItem(list, i, Py_BuildValue("ss", paryResult->ppResults[i]->pszBarcodeFormatString, paryResult->ppResults[i]->pszBarcodeText)); // Add results to list
     }
