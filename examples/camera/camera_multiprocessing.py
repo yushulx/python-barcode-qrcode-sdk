@@ -55,6 +55,9 @@ def read_barcode():
     dbr_proc.start()
 
     vc = cv2.VideoCapture(0)
+    # vc.set(5, 30)  #set FPS
+    vc.set(3, 640) #set width
+    vc.set(4, 480) #set height
 
     if vc.isOpened():  # try to get the first frame
         rval, frame = vc.read()
