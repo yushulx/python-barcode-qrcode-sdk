@@ -24,7 +24,7 @@ Get the [trial license](https://www.dynamsoft.com/CustomerPortal/Portal/Triallic
     For **Raspberry Pi**
     
     ```
-    sudo apt-get install python-opencv
+    sudo apt-get install libopencv-dev python-opencv
     ```
     
 * NumPy
