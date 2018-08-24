@@ -23,7 +23,7 @@ def dbr_run(frame_queue, finish_queue):
     dbr.initLicense(config.license)
     while finish_queue.qsize() == 0:
         try:
-            inputframe = frame_queue.get()
+            inputframe = frame_queue.get_nowait()
             results = dbr.decodeBuffer(inputframe, config.barcodeTypes)
             if (len(results) > 0):
                 print(get_time())
