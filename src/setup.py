@@ -20,6 +20,7 @@ if sys.platform == "linux" or sys.platform == "linux2":
     dbr_lib_dir = '/usr/lib'
 elif sys.platform == "darwin":
     # OS X
+    dbr_lib_dir = '/usr/lib'
     pass
 elif sys.platform == "win32":
     # Windows
