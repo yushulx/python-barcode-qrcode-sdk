@@ -25,8 +25,8 @@ elif sys.platform == "darwin":
 elif sys.platform == "win32":
     # Windows
     dbr_lib_name = 'DBRx64'
-    dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.3\Components\C_C++\Lib'
-    dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.3\Components\C_C++\Redist\x64\DynamsoftBarcodeReaderx64.dll'
+    dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.4\Components\C_C++\Lib'
+    dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.4\Components\C_C++\Redist\x64\DynamsoftBarcodeReaderx64.dll'
 
 module_dbr = Extension('dbr', sources=['dbr.c'], include_dirs=[
                        numpy_include], library_dirs=[dbr_lib_dir], libraries=[dbr_lib_name])
@@ -44,7 +44,7 @@ class CustomInstall(install):
 
 
 setup(name='dbr',
-      version='6.3',
+      version='6.4',
       description='Python barcode extension',
       author='Dynamsoft',
       author_email='support@dynamsoft.com',
