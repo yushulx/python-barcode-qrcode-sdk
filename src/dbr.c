@@ -239,18 +239,30 @@ decodeBuffer(PyObject *self, PyObject *args)
     char *buffer = (char*)pai->data; // The address of image data
     int width = (int)pai->shape[1];       // image width
     int height = (int)pai->shape[0];      // image height
-    int size = (int)pai->strides[0] * height; // image size = stride * height
+    int stride = (int)pai->strides[0]; // image stride
     #endif
 
     // Initialize Dynamsoft Barcode Reader
     STextResultArray *paryResult = NULL;
 
     // Detect barcodes
-    int depth = 24;
-    int iStride = ((width * depth + 31) >> 5) << 2;
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (width == stride) 
+    {
+        format = IPF_GrayScaled;
+    }
+    else if (width == stride * 3) 
+    {
+        format = IPF_RGB_888;
+    }
+    else if (width == stride * 4)
+    {
+        format = IPF_ARGB_8888;
+    }
 
     PyObject *list = NULL;
-    int ret = DBR_DecodeBuffer(hBarcode, buffer, width, height, iStride, IPF_RGB_888, "");
+    int ret = DBR_DecodeBuffer(hBarcode, buffer, width, height, stride, format, "");
     if (ret) 
 	{
 		printf("Detection error: %s\n", DBR_GetErrorString(ret));
