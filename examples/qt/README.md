@@ -40,3 +40,6 @@ python barcode-reader.py
 ```
 
 <kbd><img src="https://www.codepool.biz/wp-content/uploads/2019/01/qt-python-barcode-reader.PNG" width="75%">
+  
+## Blog
+[How to Build Python Barcode Apps with Qt on Windows](https://www.codepool.biz/build-python-barcode-apps-qt-windows.html)
