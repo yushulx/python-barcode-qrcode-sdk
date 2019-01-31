@@ -68,7 +68,6 @@ class UI_Window(QWidget):
 
         if reply == QMessageBox.Yes:
             event.accept()
-            self.isClosed = True
             self.stopCamera()
         else:
             event.ignore()
