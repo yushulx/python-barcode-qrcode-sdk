@@ -131,9 +131,9 @@ typedef void* HANDLE;
 /**
 * @defgroup CandCPlus C/C++ APIs
 * @{
-* Dynamsoft Barcode Reaeder 6.5 - C/C++ APIs Description.
+* Dynamsoft Barcode Reaeder 6.5.1 - C/C++ APIs Description.
 */
-#define DBR_VERSION                  "6.5.1225"
+#define DBR_VERSION                  "6.5.1.0319"
 
 /**
  * @defgroup ErrorCode ErrorCode
@@ -350,8 +350,12 @@ typedef enum
 	/**< 16bit */
 	IPF_RGB_888,		
 	/**< 24bit */
-	IPF_ARGB_8888		
-	/**< 32bit */		
+	IPF_ARGB_8888,
+	/**< 32bit */
+	IPF_RGB_161616,
+	/**< 48bit */
+	IPF_ARGB_16161616
+	/**< 64bit */ 
 }ImagePixelFormat;
 
 
@@ -1366,7 +1370,7 @@ extern "C" {
 	 * 		   DBR_GetErrorString to get detail message.
 	 */
 	DBR_API int DBR_InitLicenseFromLicenseContent(void* hBarcodeReader, const char* pszLicenseKey, const char* pszLicenseContent);
-
+	
 	/**
 	 * Initializes barcode reader license from the license content on the mobile device for offline verification.
 	 *
@@ -1378,7 +1382,7 @@ extern "C" {
 	 * @return Returns error code. Returns 0 if the function completed successfully, otherwise call
 	 * 		   DBR_GetErrorString to get detail message.
 	 */
-	DBR_API int DBR_InitLicenseFromLicenseContentEx(void* hBarcodeReader, const char* pszLicenseKey, const char* pszMachineID, const char* pszLicenseContent);
+	DBR_API int DBR_InitLicenseFromLicenseContentEx(void* hBarcodeReader, const char* pszLicenseKey, const char* pszMachineID, const char* pszLicenseContent, int* bIfNeedUpdateLicense);
 
 	/**
 	 * Outputs the license content as an encrypted string from the license server to be used for offline license verification.
@@ -2041,8 +2045,10 @@ extern "C" {
 	 */
 	DBR_API int DBR_SetTemplateSettings(void* hBarcodeReader,const char*pszTemplateName,PublicParameterSettings *pSettings,char szErrorMsgBuffer[],int nErrorMsgBufferLen);
 
+	DBR_API int DBR_SetMaxFrameCount(void* hBarcodeReader, int nMaxFrameCount);
 
-	//DBR_API int DBR_GetDBRImageObject(void* hBarcodeReader, void* hDBRImageObject);
+	DBR_API int DBR_SetRemainingFrameCount(void* hBarcodeReader, int nRemainingFrameCount);
+
 
 	/**
 	 * @}
@@ -2169,7 +2175,7 @@ public:
 	 * @return Returns error code. Returns 0 if the function completed successfully, otherwise call
 	 * 		   GetErrorString to get detail message.
 	 */
-	int InitLicenseFromLicenseContentEx(const char* pszLicenseKey, const char* pszMachineID, const char* pszLicenseContent);
+	int InitLicenseFromLicenseContentEx(const char* pszLicenseKey, const char* pszLicenseContent, const char* pszMachineID, int* bIfNeedUpdateLicense);
 
 	/**
 	 * Outputs the license content as an encrypted string from the license server to be used for offline license verification.
@@ -2829,7 +2835,10 @@ public:
 	 */
 	int SetTemplateSettings(const char* pszTemplateName, PublicParameterSettings *pSettings, char szErrorMsgBuffer[] = NULL, int nErrorMsgBufferLen = 0);
 
-	//int GetDBRImageObject(void* hDBRImageObject);
+	int SetMaxFrameCount(int nMaxFrameCount);
+
+	int SetRemainingFrameCount(int nRemainingFrameCount);
+
 
 	/**
 	 * @}

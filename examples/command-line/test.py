@@ -27,6 +27,7 @@ def decodeBuffer(image):
 
 
 if __name__ == "__main__":
+    print("OpenCV version: " + cv2.__version__)
     import sys
     if sys.version_info < (3, 0):
         barcode_image = raw_input("Enter the barcode file: ")
