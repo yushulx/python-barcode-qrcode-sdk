@@ -44,7 +44,7 @@ class CustomInstall(install):
 
 
 setup(name='dbr',
-      version='6.4.1',
+      version='6.5.1',
       description='Python barcode extension',
       author='Dynamsoft',
       author_email='support@dynamsoft.com',
