@@ -120,7 +120,19 @@ static PyObject *createPyResults(STextResultArray *paryResult)
     int i = 0;
     for (; i < count; i++)
     {
-        PyList_SetItem(list, i, Py_BuildValue("ss", paryResult->ppResults[i]->pszBarcodeFormatString, paryResult->ppResults[i]->pszBarcodeText)); // Add results to list
+        PyObject* pyObject = Py_BuildValue("ss", paryResult->ppResults[i]->pszBarcodeFormatString, paryResult->ppResults[i]->pszBarcodeText);
+        PyList_SetItem(list, i, pyObject); // Add results to list
+
+        // Print out PyObject if needed
+        #if defined(IS_PY3K)
+            PyObject* objectsRepresentation = PyObject_Repr(list);
+            const char* s = PyUnicode_AsUTF8(objectsRepresentation);
+            printf("Results: %s\n", s);
+        #else
+            PyObject* objectsRepresentation = PyObject_Repr(list);
+            const char* s = PyString_AsString(objectsRepresentation);
+            printf("Results: %s\n", s);
+        #endif
     }
 
     // Release memory
