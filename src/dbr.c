@@ -2,6 +2,10 @@
 #include "DynamsoftBarcodeReader.h"
 #include <ndarraytypes.h>
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 #if PY_MAJOR_VERSION >= 3
 #ifndef IS_PY3K
 #define IS_PY3K 1
@@ -124,15 +128,18 @@ static PyObject *createPyResults(STextResultArray *paryResult)
         PyList_SetItem(list, i, pyObject); // Add results to list
 
         // Print out PyObject if needed
-        #if defined(IS_PY3K)
-            PyObject* objectsRepresentation = PyObject_Repr(list);
-            const char* s = PyUnicode_AsUTF8(objectsRepresentation);
-            printf("Results: %s\n", s);
-        #else
-            PyObject* objectsRepresentation = PyObject_Repr(list);
-            const char* s = PyString_AsString(objectsRepresentation);
-            printf("Results: %s\n", s);
-        #endif
+        if (DEBUG)
+        {
+            #if defined(IS_PY3K)
+                PyObject* objectsRepresentation = PyObject_Repr(list);
+                const char* s = PyUnicode_AsUTF8(objectsRepresentation);
+                printf("Results: %s\n", s);
+            #else
+                PyObject* objectsRepresentation = PyObject_Repr(list);
+                const char* s = PyString_AsString(objectsRepresentation);
+                printf("Results: %s\n", s);
+            #endif
+        }
     }
 
     // Release memory
