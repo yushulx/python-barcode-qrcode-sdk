@@ -131,9 +131,9 @@ typedef void* HANDLE;
 /**
 * @defgroup CandCPlus C/C++ APIs
 * @{
-* Dynamsoft Barcode Reaeder 6.5.1 - C/C++ APIs Description.
+* Dynamsoft Barcode Reaeder - C/C++ APIs Description.
 */
-#define DBR_VERSION                  "6.5.1.0319"
+#define DBR_VERSION                  "6.5.2.0513"
 
 /**
  * @defgroup ErrorCode ErrorCode
@@ -1398,7 +1398,7 @@ extern "C" {
 	
 
 	/**
-	 * Decodes barcodes in the specified image file.
+	 * Decodes barcode in the specified image file.
 	 * 
 	 * @param [in] hBarcodeReader Handle of the barcode reader instance.
 	 * @param [in] pszFileName A string defining the file name.
@@ -1443,7 +1443,7 @@ extern "C" {
 	DBR_API int  DBR_DecodeFileInMemory(void*  hBarcodeReader, unsigned char* pFileBytes, int nFileSize, const char* pszTemplateName);
 
 	/**
-	 * Decodes barcodes from the memory buffer containing image pixels in defined format.
+	 * Decodes barcode from the memory buffer containing image pixels in defined format.
 	 * 
 	 * @param [in] hBarcodeReader Handle of the barcode reader instance.
 	 * @param [in] pBufferBytes The array of bytes which contain the image data.
@@ -2189,7 +2189,7 @@ public:
 	int OutputLicenseToString(char pszContent[], int nContentLen);
 
 	/**
-	 * Decodes barcodes in a specified image file.
+	 * Decodes barcode in a specified image file.
 	 * 
 	 * @param [in] pszFileName A string defining the file name.
 	 * @param [in] pszTemplateName (Optional) The template name.
@@ -2211,7 +2211,7 @@ public:
 	int  DecodeFile(const char* pszFileName, const char* pszTemplateName = "");
 
 	/**
-	 * Decodes barcodes from an image file in memory.
+	 * Decodes barcode from an image file in memory.
 	 * 
 	 * @param [in] pFileBytes The image file bytes in memory.
 	 * @param [in] nFileSize The length of the file bytes in memory.
@@ -2237,7 +2237,7 @@ public:
 	int  DecodeFileInMemory(unsigned char* pFileBytes, int nFileSize, const char* pszTemplateName = "");
 
 	/**
-	 * Decodes barcodes from the memory buffer containing image pixels in defined format.
+	 * Decodes barcode from the memory buffer containing image pixels in defined format.
 	 * 
 	 * @param [in] pBufferBytes The array of bytes which contain the image data.
 	 * @param [in] iWidth The width of the image in pixels.
@@ -2839,7 +2839,7 @@ public:
 
 	int SetRemainingFrameCount(int nRemainingFrameCount);
 
-
+	int SetIfEnableFrameListCheck(bool bIfEnableFrameListCheck);
 	/**
 	 * @}
 	 */	
