@@ -21,9 +21,27 @@ def decodeFile(fileName):
 def decodeBuffer(image):
     results = dbr.decodeBuffer(image, config.barcodeTypes)
 
+    thickness = 2
+    color = (0,255,0)
     for result in results:
         print("barcode format: " + result[0])
         print("barcode value: " + result[1])
+        x1 = result[2]
+        y1 = result[3]
+        x2 = result[4]
+        y2 = result[5]
+        x3 = result[6]
+        y3 = result[7]
+        x4 = result[8]
+        y4 = result[9]
+
+        cv2.line(image, (x1, y1), (x2, y2), color, thickness)
+        cv2.line(image, (x2, y2), (x3, y3), color, thickness)
+        cv2.line(image, (x3, y3), (x4, y4), color, thickness)
+        cv2.line(image, (x4, y4), (x1, y1), color, thickness)
+
+    cv2.imshow("Localization", image)
+    cv2.waitKey(0)
 
 
 if __name__ == "__main__":
@@ -39,5 +57,5 @@ if __name__ == "__main__":
     else:
         initLicense(config.license)
         decodeFile(barcode_image)
-        # image = cv2.imread(barcode_image, 1)
-        # decodeBuffer(image)
+        image = cv2.imread(barcode_image, 1)
+        decodeBuffer(image)

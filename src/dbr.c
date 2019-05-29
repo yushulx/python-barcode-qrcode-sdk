@@ -124,7 +124,18 @@ static PyObject *createPyResults(STextResultArray *paryResult)
     int i = 0;
     for (; i < count; i++)
     {
-        PyObject* pyObject = Py_BuildValue("ss", paryResult->ppResults[i]->pszBarcodeFormatString, paryResult->ppResults[i]->pszBarcodeText);
+        SLocalizationResult* pLocalizationResult = paryResult->ppResults[i]->pLocalizationResult;
+        int x1 = pLocalizationResult->iX1;
+        int y1 = pLocalizationResult->iY1;
+        int x2 = pLocalizationResult->iX2;
+        int y2 = pLocalizationResult->iY2;
+        int x3 = pLocalizationResult->iX3;
+        int y3 = pLocalizationResult->iY3;
+        int x4 = pLocalizationResult->iX4;
+        int y4 = pLocalizationResult->iY4;
+
+        PyObject* pyObject = Py_BuildValue("ssiiiiiiii", paryResult->ppResults[i]->pszBarcodeFormatString, paryResult->ppResults[i]->pszBarcodeText
+        , x1, y1, x2, y2, x3, y3, x4, y4);
         PyList_SetItem(list, i, pyObject); // Add results to list
 
         // Print out PyObject if needed
