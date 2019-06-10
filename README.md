@@ -25,6 +25,9 @@ Get the [trial license](https://www.dynamsoft.com/CustomerPortal/Portal/Triallic
     
     ```
     sudo apt-get install libopencv-dev python-opencv
+    # Or
+    sudo apt-get install python3-opencv
+
     ```
     
 * NumPy
@@ -32,6 +35,15 @@ Get the [trial license](https://www.dynamsoft.com/CustomerPortal/Portal/Triallic
     ```
     pip install numpy
     python3 -m pip install numpy
+    ```
+
+    For **Raspberry Pi**
+    
+    ```
+    sudo apt-get install python-numpy
+    # Or
+    sudo apt-get install python3-numpy
+
     ```
     
 ## HowTo
