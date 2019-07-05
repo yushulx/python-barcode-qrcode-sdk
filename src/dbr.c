@@ -41,8 +41,11 @@ error_out(PyObject *m) {
 
 #endif
 
+#define CHECK_DBR() {if (!createDBR()) {return NULL;}}
+
 // Barcode reader handler
-void* hBarcode = NULL; 
+static void* hBarcode = NULL; 
+static PyObject *py_callback = NULL;
 
 /**
  * Create DBR instance
@@ -51,6 +54,8 @@ static int createDBR()
 {
     if (!hBarcode) {
         hBarcode = DBR_CreateInstance();
+        const char* versionInfo = DBR_GetVersion();
+        printf("Dynamsoft Barcode Reader %s\n", versionInfo);
         if (!hBarcode)
         {
             printf("Cannot allocate memory!\n");
@@ -93,10 +98,7 @@ destroy(PyObject *self, PyObject *args)
 static PyObject *
 initLicense(PyObject *self, PyObject *args)
 {
-    if (!createDBR()) 
-    {
-        return NULL;
-    }
+    CHECK_DBR();
 
     char *pszLicense;
     if (!PyArg_ParseTuple(args, "s", &pszLicense)) {
@@ -107,7 +109,7 @@ initLicense(PyObject *self, PyObject *args)
     return Py_BuildValue("i", ret);
 }
 
-static PyObject *createPyResults(STextResultArray *paryResult)
+static PyObject *createPyResults(TextResultArray *paryResult)
 {
     if (!paryResult)
     {
@@ -115,7 +117,7 @@ static PyObject *createPyResults(STextResultArray *paryResult)
         return NULL;
     }
     // Get barcode results
-    int count = paryResult->nResultsCount;
+    int count = paryResult->resultsCount;
 
     // Create a Python object to store results
     PyObject* list = PyList_New(count); 
@@ -124,17 +126,17 @@ static PyObject *createPyResults(STextResultArray *paryResult)
     int i = 0;
     for (; i < count; i++)
     {
-        SLocalizationResult* pLocalizationResult = paryResult->ppResults[i]->pLocalizationResult;
-        int x1 = pLocalizationResult->iX1;
-        int y1 = pLocalizationResult->iY1;
-        int x2 = pLocalizationResult->iX2;
-        int y2 = pLocalizationResult->iY2;
-        int x3 = pLocalizationResult->iX3;
-        int y3 = pLocalizationResult->iY3;
-        int x4 = pLocalizationResult->iX4;
-        int y4 = pLocalizationResult->iY4;
+        LocalizationResult* pLocalizationResult = paryResult->results[i]->localizationResult;
+        int x1 = pLocalizationResult->x1;
+        int y1 = pLocalizationResult->y1;
+        int x2 = pLocalizationResult->x2;
+        int y2 = pLocalizationResult->y2;
+        int x3 = pLocalizationResult->x3;
+        int y3 = pLocalizationResult->y3;
+        int x4 = pLocalizationResult->x4;
+        int y4 = pLocalizationResult->y4;
 
-        PyObject* pyObject = Py_BuildValue("ssiiiiiiii", paryResult->ppResults[i]->pszBarcodeFormatString, paryResult->ppResults[i]->pszBarcodeText
+        PyObject* pyObject = Py_BuildValue("ssiiiiiiii", paryResult->results[i]->barcodeFormatString, paryResult->results[i]->barcodeText
         , x1, y1, x2, y2, x3, y3, x4, y4);
         PyList_SetItem(list, i, pyObject); // Add results to list
 
@@ -159,6 +161,16 @@ static PyObject *createPyResults(STextResultArray *paryResult)
     return list;
 }
 
+void updateFormat(int format)
+{
+    // Update DBR params
+	PublicRuntimeSettings pSettings = {0};
+	DBR_GetRuntimeSettings(hBarcode, &pSettings);
+	pSettings.barcodeFormatIds = format;
+    char szErrorMsgBuffer[256];
+	DBR_UpdateRuntimeSettings(hBarcode, &pSettings, szErrorMsgBuffer, 256);
+}
+
 /**
  * Decode barcode from a file 
  */
@@ -175,10 +187,7 @@ decodeFile(PyObject *self, PyObject *args)
     printf("Unknown Operating System.\n");
     #endif
 
-    if (!createDBR()) 
-    {
-        return NULL;
-    }
+    CHECK_DBR();
 
     char *pFileName; // File name
     int iFormat;     // Barcode formats
@@ -186,14 +195,9 @@ decodeFile(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    // Update DBR params
-	PublicParameterSettings pSettings = {0};
-	DBR_GetTemplateSettings(hBarcode, "", &pSettings);
-	pSettings.mBarcodeFormatIds = iFormat;
-	char szErrorMsgBuffer[256];
-	DBR_SetTemplateSettings(hBarcode, "", &pSettings, szErrorMsgBuffer, 256);
+	updateFormat(iFormat);
 
-    STextResultArray *paryResult = NULL;
+    TextResultArray *paryResult = NULL;
 
     // Barcode detection
     int ret = DBR_DecodeFile(hBarcode, pFileName, "");
@@ -214,22 +218,14 @@ decodeFile(PyObject *self, PyObject *args)
 static PyObject *
 decodeBuffer(PyObject *self, PyObject *args)
 {
-    if (!createDBR()) 
-    {
-        return NULL;
-    }
+    CHECK_DBR();
 
     PyObject *o;
     int iFormat;
     if (!PyArg_ParseTuple(args, "Oi", &o, &iFormat))
         return NULL;
 
-    // Update DBR params
-	PublicParameterSettings pSettings = {0};
-	DBR_GetTemplateSettings(hBarcode, "", &pSettings);
-	pSettings.mBarcodeFormatIds = iFormat;
-	char szErrorMsgBuffer[256];
-	DBR_SetTemplateSettings(hBarcode, "", &pSettings, szErrorMsgBuffer, 256);
+    updateFormat(iFormat);
     
     #if defined(IS_PY3K)
     //Refer to numpy/core/src/multiarray/ctors.c
@@ -273,14 +269,14 @@ decodeBuffer(PyObject *self, PyObject *args)
     #endif
 
     // Initialize Dynamsoft Barcode Reader
-    STextResultArray *paryResult = NULL;
+    TextResultArray *paryResult = NULL;
 
     // Detect barcodes
     ImagePixelFormat format = IPF_RGB_888;
 
     if (width == stride) 
     {
-        format = IPF_GrayScaled;
+        format = IPF_GRAYSCALED;
     }
     else if (width == stride * 3) 
     {
@@ -310,6 +306,164 @@ decodeBuffer(PyObject *self, PyObject *args)
     return list;
 }
 
+void onResultCallback(int frameId, TextResultArray *pResults, void * pUser)
+{
+    // Get barcode results
+    int count = pResults->resultsCount;
+    int i = 0;
+
+    // https://docs.python.org/2/c-api/init.html
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    for (; i < count; i++)
+    {
+        // https://docs.python.org/2.5/ext/callingPython.html
+        PyObject *result = PyObject_CallFunction(py_callback, "ss", pResults->results[i]->barcodeFormatString, pResults->results[i]->barcodeText);
+        if (result == NULL) return NULL;
+        Py_DECREF(result);
+    }
+
+    PyGILState_Release(gstate);
+    /////////////////////////////////////////////
+
+    // Release memory
+    DBR_FreeTextResults(&pResults);
+}
+
+/**
+ * Read barcodes from continuous video frames
+ */
+static PyObject *
+startVideoMode(PyObject *self, PyObject *args)
+{
+    printf("Start the video mode\n");
+    CHECK_DBR();
+
+    PyObject *callback = NULL;
+    int maxListLength, maxResultListLength, width, height, imageformat, iFormat, stride; 
+    if (!PyArg_ParseTuple(args, "iiiiiiO", &maxListLength, &maxResultListLength, &width, &height, &imageformat, &iFormat, &callback)) {
+        return NULL;
+    }
+
+    updateFormat(iFormat);
+
+    if (!PyCallable_Check(callback)) 
+    {
+        PyErr_SetString(PyExc_TypeError, "parameter must be callable");
+        return NULL;
+    }
+    else
+    {
+        Py_XINCREF(callback);         /* Add a reference to new callback */
+        Py_XDECREF(py_callback);      /* Dispose of previous callback */
+        py_callback = callback;     
+    }
+
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (imageformat == 0)
+    {
+        stride = width;
+        format = IPF_GRAYSCALED;
+    }
+    else {
+        stride = width * 3;
+        format = IPF_RGB_888;
+    }
+
+    DBR_SetTextResultCallback(hBarcode, onResultCallback, NULL);
+
+    int ret = DBR_StartFrameDecoding(hBarcode, maxListLength, maxResultListLength, width, height, stride, format, "");
+    return Py_BuildValue("i", ret);
+}
+
+static PyObject *
+stopVideoMode(PyObject *self, PyObject *args)
+{
+    printf("Stop the video mode\n");
+    if (hBarcode) 
+    {
+        int ret = DBR_StopFrameDecoding(hBarcode);
+        return Py_BuildValue("i", ret);
+    }
+
+    return 0;
+}
+
+static PyObject *
+appendVideoFrame(PyObject *self, PyObject *args)
+{
+    CHECK_DBR();
+
+    PyObject *o;
+    if (!PyArg_ParseTuple(args, "O", &o))
+        return NULL;
+    
+    #if defined(IS_PY3K)
+    //Refer to numpy/core/src/multiarray/ctors.c
+    Py_buffer *view;
+    int nd;
+    PyObject *memoryview = PyMemoryView_FromObject(o);
+    if (memoryview == NULL) {
+        PyErr_Clear();
+        return -1;
+    }
+
+    view = PyMemoryView_GET_BUFFER(memoryview);
+    unsigned char *buffer = (unsigned char *)view->buf;
+    nd = view->ndim;
+    int len = view->len;
+    int stride = view->strides[0];
+    int width = view->strides[0] / view->strides[1];
+    int height = len / stride;
+    #else
+
+    PyObject *ao = PyObject_GetAttrString(o, "__array_struct__");
+
+    if ((ao == NULL) || !PyCObject_Check(ao)) {
+        PyErr_SetString(PyExc_TypeError, "object does not have array interface");
+        return NULL;
+    }
+
+    PyArrayInterface *pai = (PyArrayInterface*)PyCObject_AsVoidPtr(ao);
+    
+    if (pai->two != 2) {
+        PyErr_SetString(PyExc_TypeError, "object does not have array interface");
+        Py_DECREF(ao);
+        return NULL;
+    }
+
+    // Get image information
+    unsigned char *buffer = (unsigned char *)pai->data; // The address of image data
+    int width = (int)pai->shape[1];       // image width
+    int height = (int)pai->shape[0];      // image height
+    int stride = (int)pai->strides[0]; // image stride
+    #endif
+
+    // Initialize Dynamsoft Barcode Reader
+    TextResultArray *paryResult = NULL;
+
+    // Detect barcodes
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (width == stride) 
+    {
+        format = IPF_GRAYSCALED;
+    }
+    else if (width == stride * 3) 
+    {
+        format = IPF_RGB_888;
+    }
+    else if (width == stride * 4)
+    {
+        format = IPF_ARGB_8888;
+    }
+
+    int frameId = DBR_AppendFrame(hBarcode, buffer);
+    return 0;
+}
+
 static PyMethodDef dbr_methods[] =
 {
     {"create", create, METH_VARARGS, NULL},
@@ -317,6 +471,9 @@ static PyMethodDef dbr_methods[] =
     {"initLicense", initLicense, METH_VARARGS, NULL},
     {"decodeFile", decodeFile, METH_VARARGS, NULL},
     {"decodeBuffer", decodeBuffer, METH_VARARGS, NULL},
+    {"startVideoMode", startVideoMode, METH_VARARGS, NULL},
+    {"stopVideoMode", stopVideoMode, METH_VARARGS, NULL},
+    {"appendVideoFrame", appendVideoFrame, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
