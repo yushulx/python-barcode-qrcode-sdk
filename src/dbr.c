@@ -464,6 +464,24 @@ appendVideoFrame(PyObject *self, PyObject *args)
     return 0;
 }
 
+static PyObject *
+initLicenseFromLicenseContent(PyObject *self, PyObject *args)
+{
+    if (!createDBR()) 
+    {
+        return NULL;
+    }
+
+    char *pszLicenseKey; 
+    char* pszLicenseContent;
+    if (!PyArg_ParseTuple(args, "ss", &pszLicenseKey, &pszLicenseContent)) {
+        return NULL;
+    }
+
+    int ret = DBR_InitLicenseFromLicenseContent(hBarcode, pszLicenseKey, pszLicenseContent);
+    return Py_BuildValue("i", ret);
+}
+
 static PyMethodDef dbr_methods[] =
 {
     {"create", create, METH_VARARGS, NULL},
@@ -474,6 +492,7 @@ static PyMethodDef dbr_methods[] =
     {"startVideoMode", startVideoMode, METH_VARARGS, NULL},
     {"stopVideoMode", stopVideoMode, METH_VARARGS, NULL},
     {"appendVideoFrame", appendVideoFrame, METH_VARARGS, NULL},
+    {"initLicenseFromLicenseContent", initLicenseFromLicenseContent, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
