@@ -310,6 +310,24 @@ decodeBuffer(PyObject *self, PyObject *args)
     return list;
 }
 
+static PyObject *
+initLicenseFromLicenseContent(PyObject *self, PyObject *args)
+{
+    if (!createDBR()) 
+    {
+        return NULL;
+    }
+
+    char *pszLicenseKey; 
+    char* pszLicenseContent;
+    if (!PyArg_ParseTuple(args, "ss", &pszLicenseKey, &pszLicenseContent)) {
+        return NULL;
+    }
+
+    int ret = DBR_InitLicenseFromLicenseContent(hBarcode, pszLicenseKey, pszLicenseContent);
+    return Py_BuildValue("i", ret);
+}
+
 static PyMethodDef dbr_methods[] =
 {
     {"create", create, METH_VARARGS, NULL},
@@ -317,6 +335,7 @@ static PyMethodDef dbr_methods[] =
     {"initLicense", initLicense, METH_VARARGS, NULL},
     {"decodeFile", decodeFile, METH_VARARGS, NULL},
     {"decodeBuffer", decodeBuffer, METH_VARARGS, NULL},
+    {"initLicenseFromLicenseContent", initLicenseFromLicenseContent, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
