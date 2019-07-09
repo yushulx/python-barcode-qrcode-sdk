@@ -45,8 +45,8 @@ SET VS90COMNTOOLS=%VS140COMNTOOLS%
 Edit `setup.py`. Replace the **dbr_lib_dir** and **dbr_dll** with yours:
 
 ```
-dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.5.2\Components\C_C++\Lib'
-dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.5.2\Components\C_C++\Redist\x64\DynamsoftBarcodeReaderx64.dll'
+dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.0\Components\C_C++\Lib'
+dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.0\Components\C_C++\Redist\x64\DynamsoftBarcodeReaderx64.dll'
 ```
 
 Build and install the Python extension:
