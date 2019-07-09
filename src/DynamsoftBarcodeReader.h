@@ -102,10 +102,10 @@
 *	@file DynamsoftBarcodeReader.h
 *	
 *	Dynamsoft Barcode Reader C/C++ API header file.
-*	Copyright 2018 Dynamsoft Corporation. All rights reserved.
+*	Copyright 2019 Dynamsoft Corporation. All rights reserved.
 *	
 *	@author Dynamsoft
-*	@date 19/09/2018
+*	@date 02/07/2019
 */
 
 #ifndef __DYNAMSOFT_BARCODE_READER_H__
@@ -133,7 +133,7 @@ typedef void* HANDLE;
 * @{
 * Dynamsoft Barcode Reaeder - C/C++ APIs Description.
 */
-#define DBR_VERSION                  "6.5.2.0513"
+#define DBR_VERSION                  "6.5.3.0702"
 
 /**
  * @defgroup ErrorCode ErrorCode
