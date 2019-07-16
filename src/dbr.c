@@ -234,7 +234,7 @@ decodeBuffer(PyObject *self, PyObject *args)
     PyObject *memoryview = PyMemoryView_FromObject(o);
     if (memoryview == NULL) {
         PyErr_Clear();
-        return -1;
+        return NULL;
     }
 
     view = PyMemoryView_GET_BUFFER(memoryview);
@@ -407,7 +407,7 @@ appendVideoFrame(PyObject *self, PyObject *args)
     PyObject *memoryview = PyMemoryView_FromObject(o);
     if (memoryview == NULL) {
         PyErr_Clear();
-        return -1;
+        return NULL;
     }
 
     view = PyMemoryView_GET_BUFFER(memoryview);
