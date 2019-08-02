@@ -538,7 +538,7 @@ initLicenseFromServer(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    int ret = DBR_InitLicenseFromLicenseContent(hBarcode, pLicenseServer, pszLicenseKey);
+    int ret = DBR_InitLicenseFromServer(hBarcode, pLicenseServer, pszLicenseKey);
     return Py_BuildValue("i", ret);
 }
 
