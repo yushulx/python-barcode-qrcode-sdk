@@ -464,6 +464,15 @@ appendVideoFrame(PyObject *self, PyObject *args)
     return 0;
 }
 
+/**
+ * Initializes barcode reader license from the license content on the client machine for offline verification.
+ *
+ * @param pLicenseKey: The license key of Barcode Reader.
+ * @param pLicenseContent: An encrypted string representing the license content (runtime number, expiry date, barcode type, etc.) obtained from the method DBR_OutputLicenseToString().
+ *
+ * @return Return 0 if the function operates successfully, otherwise call
+ * 		   DBR_GetErrorString to get detail message.
+ */
 static PyObject *
 initLicenseFromLicenseContent(PyObject *self, PyObject *args)
 {
@@ -482,6 +491,57 @@ initLicenseFromLicenseContent(PyObject *self, PyObject *args)
     return Py_BuildValue("i", ret);
 }
 
+/**
+ * Outputs the license content as an encrypted string from the license server to be used for offline license verification.
+ *
+ *
+ * @return if successful, return encypted string. Otherwise return error code. 
+ */
+static PyObject *
+outputLicenseToString(PyObject *self, PyObject *args)
+{
+    if (!createDBR()) 
+    {
+        return NULL;
+    }
+
+    char content[512];
+    int ret = DBR_OutputLicenseToString(hBarcode, content, 512);
+    if (ret)
+    {
+        printf("%s\n", DBR_GetErrorString(ret));
+        return Py_BuildValue("i", ret);
+    }
+    else
+        return Py_BuildValue("s", content);
+}
+
+/**
+ * Initializes barcode reader license from the license content on the client machine for offline verification.
+ *
+ * @param pLicenseKey: The license key of Barcode Reader.
+ * @param pLicenseContent: An encrypted string representing the license content (runtime number, expiry date, barcode type, etc.) obtained from the method DBR_OutputLicenseToString().
+ *
+ * @return Return 0 if the function operates successfully, otherwise call
+ * 		   DBR_GetErrorString to get detail message.
+ */
+static PyObject *
+initLicenseFromServer(PyObject *self, PyObject *args)
+{
+    if (!createDBR()) 
+    {
+        return NULL;
+    }
+
+    char *pszLicenseKey, *pLicenseServer;
+    if (!PyArg_ParseTuple(args, "ss", &pLicenseServer, &pszLicenseKey)) {
+        return NULL;
+    }
+
+    int ret = DBR_InitLicenseFromLicenseContent(hBarcode, pLicenseServer, pszLicenseKey);
+    return Py_BuildValue("i", ret);
+}
+
 static PyMethodDef dbr_methods[] =
 {
     {"create", create, METH_VARARGS, NULL},
@@ -493,6 +553,8 @@ static PyMethodDef dbr_methods[] =
     {"stopVideoMode", stopVideoMode, METH_VARARGS, NULL},
     {"appendVideoFrame", appendVideoFrame, METH_VARARGS, NULL},
     {"initLicenseFromLicenseContent", initLicenseFromLicenseContent, METH_VARARGS, NULL},
+    {"outputLicenseToString", outputLicenseToString, METH_VARARGS, NULL},
+    {"initLicenseFromServer", initLicenseFromServer, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
