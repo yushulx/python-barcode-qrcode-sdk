@@ -586,46 +586,48 @@ static void setModeValue(PyObject *iter, char *mode)
         {
             pSettings.furtherModes.colourClusteringModes[index] = attribute;
         }
-        if(!strcmp("colourConversionModes", mode))
+        else if(!strcmp("colourConversionModes", mode))
         {
             pSettings.furtherModes.colourConversionModes[index] = attribute;
         }
-        if(!strcmp("regionPredetectionModes", mode))
+        else if(!strcmp("regionPredetectionModes", mode))
         {
             pSettings.furtherModes.regionPredetectionModes[index] = attribute;
         }
-        if(!strcmp("imagePreprocessingModes ", mode))
+        else if(!strcmp("imagePreprocessingModes ", mode))
         {
             pSettings.furtherModes.imagePreprocessingModes [index] = attribute;
         }
-        if(!strcmp("textureDetectionModes", mode))
+        else if(!strcmp("textureDetectionModes", mode))
         {
             pSettings.furtherModes.textureDetectionModes[index] = attribute;
         }
-        if(!strcmp("textFilterModes", mode))
+        else if(!strcmp("textFilterModes", mode))
         {
             pSettings.furtherModes.textFilterModes[index] = attribute;
         }
-        if(!strcmp("dpmCodeReadingModes", mode))
+        else if(!strcmp("dpmCodeReadingModes", mode))
         {
             pSettings.furtherModes.dpmCodeReadingModes[index] = attribute;
         }
-        if(!strcmp("deformationResistingModes ", mode))
+        else if(!strcmp("deformationResistingModes ", mode))
         {
             pSettings.furtherModes.deformationResistingModes [index] = attribute;
         }
-        if(!strcmp("barcodeComplementModes ", mode))
+        else if(!strcmp("barcodeComplementModes ", mode))
         {
             pSettings.furtherModes.barcodeComplementModes [index] = attribute;
         }
-        if(!strcmp("barcodeColourModes ", mode))
+        else if(!strcmp("barcodeColourModes ", mode))
         {
             pSettings.furtherModes.barcodeColourModes [index] = attribute;
         }
-        if(!strcmp("textAssistedCorrectionMode", mode))
+        else if(!strcmp("textAssistedCorrectionMode", mode))
         {
             pSettings.furtherModes.textAssistedCorrectionMode = attribute;
         }
+
+        ++index;
     }
 
     char szErrorMsgBuffer[256];
