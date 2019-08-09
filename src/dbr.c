@@ -717,8 +717,52 @@ DynamsoftBarcodeReader_clear(DynamsoftBarcodeReader *self)
 {
     PyObject *tmp;
 
+    tmp = self->COLOR_CLUTERING_MODE;
+    self->COLOR_CLUTERING_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->COLOR_CONVERSION_MODE;
+    self->COLOR_CONVERSION_MODE = NULL;
+    Py_XDECREF(tmp);
+
     tmp = self->GRAY_SCALE_TRANSFORMATION_MODE;
     self->GRAY_SCALE_TRANSFORMATION_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->REGION_PREDETECTION_MODE;
+    self->REGION_PREDETECTION_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->IMAGE_PREPROCESSING_MODE;
+    self->IMAGE_PREPROCESSING_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->TEXTURE_DETECTION_MODE;
+    self->TEXTURE_DETECTION_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->TEXTURE_FILTER_MODE;
+    self->TEXTURE_FILTER_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->TEXT_ASSISTED_CORRECTION_MODE;
+    self->TEXT_ASSISTED_CORRECTION_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->DPM_CODE_READING_MODE;
+    self->DPM_CODE_READING_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->DEFORMATION_RESISTING_MODE;
+    self->DEFORMATION_RESISTING_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->BARCODE_COMPLEMENT_MODE;
+    self->BARCODE_COMPLEMENT_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    tmp = self->BARCODE_COLOR_MODE;
+    self->BARCODE_COLOR_MODE = NULL;
     Py_XDECREF(tmp);
 
     return 0;
