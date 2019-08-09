@@ -515,7 +515,6 @@ initLicenseFromLicenseContent(PyObject *self, PyObject *args)
 /**
  * Outputs the license content as an encrypted string from the license server to be used for offline license verification.
  *
- *
  * @return if successful, return encypted string. Otherwise return error code. 
  */
 static PyObject *
@@ -633,6 +632,14 @@ static void setModeValue(PyObject *iter, char *mode)
     DBR_UpdateRuntimeSettings(hBarcode, &pSettings, szErrorMsgBuffer, 256);
 }
 
+/**
+ * Set modes for different scenarios.
+ *
+ * @param mode: The mode name. E.g. dbr.GRAY_SCALE_TRANSFORMATION_MODE
+ * @param values: A list of enumeration items. E.g. [dbr.GTM_INVERTED, dbr.GTM_ORIGINAL]
+ *
+ * @return Return NULL if failed.
+ */
 static PyObject *
 setFurtherModes(PyObject *self, PyObject *args)
 {
