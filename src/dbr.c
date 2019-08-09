@@ -1,6 +1,7 @@
 #include <Python.h>
 #include "DynamsoftBarcodeReader.h"
 #include <ndarraytypes.h>
+#include <structmember.h>
 
 #ifndef DEBUG
 #define DEBUG 0
@@ -46,6 +47,26 @@ error_out(PyObject *m) {
 // Barcode reader handler
 static void* hBarcode = NULL; 
 static PyObject *py_callback = NULL;
+
+typedef struct {
+    PyObject_HEAD
+    PyObject *COLOR_CLUTERING_MODE;
+    PyObject *COLOR_CONVERSION_MODE;
+    PyObject *GRAY_SCALE_TRANSFORMATION_MODE; 
+    PyObject *REGION_PREDETECTION_MODE;   
+    PyObject *IMAGE_PREPROCESSING_MODE;    
+    PyObject *TEXTURE_DETECTION_MODE;  
+    PyObject *TEXTURE_FILTER_MODE;     
+    PyObject *TEXT_ASSISTED_CORRECTION_MODE;   
+    PyObject *DPM_CODE_READING_MODE;   
+    PyObject *DEFORMATION_RESISTING_MODE;  
+    PyObject *BARCODE_COMPLEMENT_MODE;     
+    PyObject *BARCODE_COLOR_MODE;  
+    // GRAY_SCALE_TRANSFORMATION_MODE
+    int GTM_INVERTED;
+    int GTM_ORIGINAL;
+    int GTM_SKIP;
+} DynamsoftBarcodeReader;
 
 /**
  * Create DBR instance
@@ -542,9 +563,136 @@ initLicenseFromServer(PyObject *self, PyObject *args)
     return Py_BuildValue("i", ret);
 }
 
-static PyMethodDef dbr_methods[] =
+static void setModeValue(PyObject *iter, char *mode)
 {
-    {"create", create, METH_VARARGS, NULL},
+    PublicRuntimeSettings pSettings = {0};
+    DBR_GetRuntimeSettings(hBarcode, &pSettings);
+    int index = 0;
+    pSettings.furtherModes.grayscaleTransformationModes[0] = GTM_INVERTED;
+
+    while (1) {
+        PyObject *next = PyIter_Next(iter);
+        if (!next) {
+            break;
+        }
+
+        // Set attributes for different modes
+        int attribute = PyLong_AsLong(next);
+        if(!strcmp("grayscaleTransformationModes", mode))
+        {
+            // printf("Set grayscaleTransformationModes %d\n", attribute);
+            pSettings.furtherModes.grayscaleTransformationModes[index] = attribute;
+        }
+        else if(!strcmp("colourClusteringModes", mode))
+        {
+            pSettings.furtherModes.colourClusteringModes[index] = attribute;
+        }
+        if(!strcmp("colourConversionModes", mode))
+        {
+            pSettings.furtherModes.colourConversionModes[index] = attribute;
+        }
+        if(!strcmp("regionPredetectionModes", mode))
+        {
+            pSettings.furtherModes.regionPredetectionModes[index] = attribute;
+        }
+        if(!strcmp("imagePreprocessingModes ", mode))
+        {
+            pSettings.furtherModes.imagePreprocessingModes [index] = attribute;
+        }
+        if(!strcmp("textureDetectionModes", mode))
+        {
+            pSettings.furtherModes.textureDetectionModes[index] = attribute;
+        }
+        if(!strcmp("textFilterModes", mode))
+        {
+            pSettings.furtherModes.textFilterModes[index] = attribute;
+        }
+        if(!strcmp("dpmCodeReadingModes", mode))
+        {
+            pSettings.furtherModes.dpmCodeReadingModes[index] = attribute;
+        }
+        if(!strcmp("deformationResistingModes ", mode))
+        {
+            pSettings.furtherModes.deformationResistingModes [index] = attribute;
+        }
+        if(!strcmp("barcodeComplementModes ", mode))
+        {
+            pSettings.furtherModes.barcodeComplementModes [index] = attribute;
+        }
+        if(!strcmp("barcodeColourModes ", mode))
+        {
+            pSettings.furtherModes.barcodeColourModes [index] = attribute;
+        }
+        if(!strcmp("textAssistedCorrectionMode", mode))
+        {
+            pSettings.furtherModes.textAssistedCorrectionMode = attribute;
+        }
+    }
+
+    char szErrorMsgBuffer[256];
+    DBR_UpdateRuntimeSettings(hBarcode, &pSettings, szErrorMsgBuffer, 256);
+}
+
+static PyObject *
+setFurtherModes(PyObject *self, PyObject *args)
+{
+    if (!createDBR()) 
+    {
+        return NULL;
+    }
+
+    char *mode;
+    PyObject *value;
+    if (!PyArg_ParseTuple(args, "sO", &mode, &value)) {
+        return NULL;
+    }
+
+    PyObject *iter = PyObject_GetIter(value);
+    if (!iter) {
+        printf("Please input a list\n");
+        return NULL;
+    }
+
+    setModeValue(iter, mode);
+    return Py_BuildValue("i", 0);
+}
+
+static PyMemberDef dbr_members[] = {
+    {"COLOR_CLUTERING_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, COLOR_CLUTERING_MODE), 0,
+     NULL},
+     {"COLOR_CONVERSION_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, COLOR_CONVERSION_MODE), 0,
+     NULL},
+     {"GRAY_SCALE_TRANSFORMATION_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, GRAY_SCALE_TRANSFORMATION_MODE), 0,
+     NULL},
+     {"REGION_PREDETECTION_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, REGION_PREDETECTION_MODE), 0,
+     NULL},
+     {"IMAGE_PREPROCESSING_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, IMAGE_PREPROCESSING_MODE), 0,
+     NULL},
+     {"TEXTURE_DETECTION_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, TEXTURE_DETECTION_MODE), 0,
+     NULL},
+     {"TEXTURE_FILTER_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, TEXTURE_FILTER_MODE), 0,
+     NULL},
+     {"TEXT_ASSISTED_CORRECTION_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, TEXT_ASSISTED_CORRECTION_MODE), 0,
+     NULL},
+     {"DPM_CODE_READING_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, DPM_CODE_READING_MODE), 0,
+     NULL},
+     {"DEFORMATION_RESISTING_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, DEFORMATION_RESISTING_MODE), 0,
+     NULL},
+     {"BARCODE_COMPLEMENT_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, BARCODE_COMPLEMENT_MODE), 0,
+     NULL},
+     {"BARCODE_COLOR_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, BARCODE_COLOR_MODE), 0,
+     NULL},
+     {"GTM_INVERTED", T_INT, offsetof(DynamsoftBarcodeReader, GTM_INVERTED), 0,
+     NULL},
+     {"GTM_ORIGINAL", T_INT, offsetof(DynamsoftBarcodeReader, GTM_ORIGINAL), 0,
+     NULL},
+     {"GTM_SKIP", T_INT, offsetof(DynamsoftBarcodeReader, GTM_SKIP), 0,
+     NULL},
+    {NULL}  /* Sentinel */
+};
+
+static PyMethodDef dbr_methods[] = {
+    {"create", create, METH_VARARGS, "Create Dynamsoft Barcode Reader"},
     {"destroy", destroy, METH_VARARGS, NULL},
     {"initLicense", initLicense, METH_VARARGS, NULL},
     {"decodeFile", decodeFile, METH_VARARGS, NULL},
@@ -555,11 +703,138 @@ static PyMethodDef dbr_methods[] =
     {"initLicenseFromLicenseContent", initLicenseFromLicenseContent, METH_VARARGS, NULL},
     {"outputLicenseToString", outputLicenseToString, METH_VARARGS, NULL},
     {"initLicenseFromServer", initLicenseFromServer, METH_VARARGS, NULL},
+    {"setFurtherModes", setFurtherModes, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
-#if defined(IS_PY3K)
+static PyMethodDef module_methods[] =
+{
+    {NULL}
+};
 
+static int
+DynamsoftBarcodeReader_clear(DynamsoftBarcodeReader *self)
+{
+    PyObject *tmp;
+
+    tmp = self->GRAY_SCALE_TRANSFORMATION_MODE;
+    self->GRAY_SCALE_TRANSFORMATION_MODE = NULL;
+    Py_XDECREF(tmp);
+
+    return 0;
+}
+
+static void
+DynamsoftBarcodeReader_dealloc(DynamsoftBarcodeReader* self)
+{
+    #if defined(IS_PY3K)
+        DynamsoftBarcodeReader_clear(self);
+        Py_TYPE(self)->tp_free((PyObject*)self);
+    #else
+        DynamsoftBarcodeReader_clear(self);
+        self->ob_type->tp_free((PyObject*)self);
+    #endif
+}
+
+static PyObject *
+DynamsoftBarcodeReader_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    DynamsoftBarcodeReader *self;
+
+    self = (DynamsoftBarcodeReader *)type->tp_alloc(type, 0);
+    if (self != NULL) {
+        #ifdef IS_PY3K
+            self->COLOR_CLUTERING_MODE = PyUnicode_FromString("colourClusteringModes");
+            self->COLOR_CONVERSION_MODE = PyUnicode_FromString("colourConversionModes");
+            self->GRAY_SCALE_TRANSFORMATION_MODE = PyUnicode_FromString("grayscaleTransformationModes");
+            self->REGION_PREDETECTION_MODE = PyUnicode_FromString("regionPredetectionMode");
+            self->IMAGE_PREPROCESSING_MODE = PyUnicode_FromString("imagePreprocessingModes");
+            self->TEXTURE_DETECTION_MODE = PyUnicode_FromString("textureDetectionModes");
+            self->TEXTURE_FILTER_MODE = PyUnicode_FromString("textFilterModes");
+            self->TEXT_ASSISTED_CORRECTION_MODE = PyUnicode_FromString("textAssistedCorrectionMode ");
+            self->DPM_CODE_READING_MODE = PyUnicode_FromString("dpmCodeReadingModes");
+            self->DEFORMATION_RESISTING_MODE = PyUnicode_FromString("deformationResistingModes");
+            self->BARCODE_COMPLEMENT_MODE = PyUnicode_FromString("barcodeComplementModes");
+            self->BARCODE_COLOR_MODE = PyUnicode_FromString("barcodeColourModes");
+            self->GTM_INVERTED = 0x01;
+            self->GTM_ORIGINAL = 0x02;
+            self->GTM_SKIP = 0x00;
+        #else
+            self->COLOR_CLUTERING_MODE = PyString_FromString("colourClusteringModes");
+            self->COLOR_CONVERSION_MODE = PyString_FromString("colourConversionModes");
+            self->GRAY_SCALE_TRANSFORMATION_MODE = PyString_FromString("grayscaleTransformationModes");
+            self->REGION_PREDETECTION_MODE = PyString_FromString("regionPredetectionMode");
+            self->IMAGE_PREPROCESSING_MODE = PyString_FromString("imagePreprocessingModes");
+            self->TEXTURE_DETECTION_MODE = PyString_FromString("textureDetectionModes");
+            self->TEXTURE_FILTER_MODE = PyString_FromString("textFilterModes");
+            self->TEXT_ASSISTED_CORRECTION_MODE = PyString_FromString("textAssistedCorrectionMode ");
+            self->DPM_CODE_READING_MODE = PyString_FromString("dpmCodeReadingModes");
+            self->DEFORMATION_RESISTING_MODE = PyString_FromString("deformationResistingModes");
+            self->BARCODE_COMPLEMENT_MODE = PyString_FromString("barcodeComplementModes");
+            self->BARCODE_COLOR_MODE = PyString_FromString("barcodeColourModes");
+            self->GTM_INVERTED = 0x01;
+            self->GTM_ORIGINAL = 0x02;
+            self->GTM_SKIP = 0x00;
+        #endif
+        
+        if (self->GRAY_SCALE_TRANSFORMATION_MODE == NULL)
+          {
+            Py_DECREF(self);
+            return NULL;
+          }
+    }
+
+    return (PyObject *)self;
+}
+
+static int
+DynamsoftBarcodeReader_init(DynamsoftBarcodeReader *self, PyObject *args, PyObject *kwds)
+{
+    return 0;
+}
+
+static PyTypeObject dbrType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "dbr.DynamsoftBarcodeReader",             /* tp_name */
+    sizeof(DynamsoftBarcodeReader),             /* tp_basicsize */
+    0,                         /* tp_itemsize */
+    (destructor)DynamsoftBarcodeReader_dealloc, /* tp_dealloc */
+    0,                         /* tp_print */
+    0,                         /* tp_getattr */
+    0,                         /* tp_setattr */
+    0,                         /* tp_reserved */
+    0,                         /* tp_repr */
+    0,                         /* tp_as_number */
+    0,                         /* tp_as_sequence */
+    0,                         /* tp_as_mapping */
+    0,                         /* tp_hash  */
+    0,                         /* tp_call */
+    0,                         /* tp_str */
+    0,                         /* tp_getattro */
+    0,                         /* tp_setattro */
+    0,                         /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "Dynamsoft Barcode Reader objects",       /* tp_doc */
+    0,                         /* tp_traverse */
+    0,                         /* tp_clear */
+    0,                         /* tp_richcompare */
+    0,                         /* tp_weaklistoffset */
+    0,                         /* tp_iter */
+    0,                         /* tp_iternext */
+    dbr_methods,             /* tp_methods */
+    dbr_members,             /* tp_members */
+    0,                         /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)DynamsoftBarcodeReader_init,      /* tp_init */
+    0,                         /* tp_alloc */
+    DynamsoftBarcodeReader_new,                 /* tp_new */
+};
+
+#if defined(IS_PY3K)
 static int dbr_traverse(PyObject *m, visitproc visit, void *arg) {
     Py_VISIT(GETSTATE(m)->error);
     return 0;
@@ -573,13 +848,9 @@ static int dbr_clear(PyObject *m) {
 static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
     "dbr",
-    NULL,
-    sizeof(struct module_state),
-    dbr_methods,
-    NULL,
-    dbr_traverse,
-    dbr_clear,
-    NULL
+    "Extension with Dynamsoft Barcode Reader.",
+    -1,
+    NULL, NULL, NULL, NULL, NULL
 };
 
 #define INITERROR return NULL
@@ -593,23 +864,20 @@ void
 initdbr(void)
 #endif
 {
+    if (PyType_Ready(&dbrType) < 0)
+        INITERROR;
+
 #if defined(IS_PY3K)
     PyObject *module = PyModule_Create(&moduledef);
 #else
-    PyObject *module = Py_InitModule("dbr", dbr_methods);
+    PyObject *module = Py_InitModule("dbr", module_methods);
 #endif
-
     if (module == NULL)
         INITERROR;
-    struct module_state *st = GETSTATE(module);
 
-    st->error = PyErr_NewException("dbr.Error", NULL, NULL);
-    if (st->error == NULL) {
-        Py_DECREF(module);
-        INITERROR;
-    }
-
-#if defined(IS_PY3K)
-    return module;
-#endif
+    Py_INCREF(&dbrType);
+    PyModule_AddObject(module, "DynamsoftBarcodeReader", (PyObject *)&dbrType);
+    #if defined(IS_PY3K)
+        return module;
+    #endif
 }

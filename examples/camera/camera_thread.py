@@ -1,5 +1,6 @@
 import cv2
-import dbr
+from dbr import DynamsoftBarcodeReader
+dbr = DynamsoftBarcodeReader()
 import time
 import threading
 import sys

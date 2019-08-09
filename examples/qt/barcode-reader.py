@@ -4,7 +4,8 @@ from PySide2.QtGui import QPixmap, QImage
 from PySide2.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QTextEdit, QSizePolicy, QMessageBox, QHBoxLayout
 from PySide2.QtCore import Slot, Qt, QStringListModel, QSize, QTimer
 
-import dbr
+from dbr import DynamsoftBarcodeReader
+dbr = DynamsoftBarcodeReader()
 import os
 import cv2
 

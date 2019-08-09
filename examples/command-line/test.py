@@ -1,5 +1,8 @@
 import os
-import dbr
+from dbr import DynamsoftBarcodeReader
+dbr = DynamsoftBarcodeReader()
+# print(dir(dbr))
+
 import cv2
 
 import sys
@@ -56,6 +59,7 @@ if __name__ == "__main__":
         print("It is not a valid file.")
     else:
         initLicense(config.license)
+        # dbr.setFurtherModes(dbr.GRAY_SCALE_TRANSFORMATION_MODE, [dbr.GTM_INVERTED, dbr.GTM_ORIGINAL])
         decodeFile(barcode_image)
         image = cv2.imread(barcode_image, 1)
         decodeBuffer(image)
