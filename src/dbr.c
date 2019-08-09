@@ -844,7 +844,7 @@ DynamsoftBarcodeReader_init(DynamsoftBarcodeReader *self, PyObject *args, PyObje
     return 0;
 }
 
-static PyTypeObject dbrType = {
+static PyTypeObject DynamsoftBarcodeReaderType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "dbr.DynamsoftBarcodeReader",             /* tp_name */
     sizeof(DynamsoftBarcodeReader),             /* tp_basicsize */
@@ -915,7 +915,7 @@ void
 initdbr(void)
 #endif
 {
-    if (PyType_Ready(&dbrType) < 0)
+    if (PyType_Ready(&DynamsoftBarcodeReaderType) < 0)
         INITERROR;
 
 #if defined(IS_PY3K)
@@ -926,8 +926,8 @@ initdbr(void)
     if (module == NULL)
         INITERROR;
 
-    Py_INCREF(&dbrType);
-    PyModule_AddObject(module, "DynamsoftBarcodeReader", (PyObject *)&dbrType);
+    Py_INCREF(&DynamsoftBarcodeReaderType);
+    PyModule_AddObject(module, "DynamsoftBarcodeReader", (PyObject *)&DynamsoftBarcodeReaderType);
     #if defined(IS_PY3K)
         return module;
     #endif
