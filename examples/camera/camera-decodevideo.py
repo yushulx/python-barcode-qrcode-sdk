@@ -84,7 +84,6 @@ def read_barcode():
             break
 
     dbr.stopVideoMode()
-    dbr.destroy()
     cv2.destroyWindow(windowName)
 
 

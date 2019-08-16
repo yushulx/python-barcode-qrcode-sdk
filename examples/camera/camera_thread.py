@@ -82,7 +82,6 @@ def read_barcode():
         if key == 27:
             barcodeReaderThread.isRunning = False
             barcodeReaderThread.join()
-            dbr.destroy()
             break
 
     cv2.destroyWindow(windowName)

@@ -35,7 +35,6 @@ def dbr_run(frame_queue, finish_queue):
         except:
             pass
 
-    dbr.destroy()
     print("Detection is done.")
     clear_queue(frame_queue)
     clear_queue(finish_queue)

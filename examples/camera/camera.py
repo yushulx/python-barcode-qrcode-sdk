@@ -41,7 +41,6 @@ def read_barcode():
         # 'ESC' for quit
         key = cv2.waitKey(20)
         if key == 27:
-            dbr.destroy()
             break
 
     cv2.destroyWindow(windowName)
