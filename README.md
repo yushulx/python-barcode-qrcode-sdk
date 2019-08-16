@@ -93,8 +93,19 @@ sudo python3 setup.py build install
 
 ## Functions
 - initLicense(license-key)
-- decodeFile(filename)
-- decodeBuffer(frame-by-opencv-capture)
+- decodeFile(filename, barcodeTypes) 
+
+    ```
+    barcodeTypes = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000 | 0x10000000 
+
+    1D: 0x3FF 
+    PDF417: 0x2000000
+    QRCODE: 0x4000000 
+    DataMatrix: 0x8000000 
+    Aztec Code: 0x10000000
+    ```
+
+- decodeBuffer(frame-by-opencv-capture, barcodeTypes)
 - startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, callback)
 - stopVideoMode()
 - appendVideoFrame(frame-by-opencv-capture)
