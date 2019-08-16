@@ -680,6 +680,32 @@ setFurtherModes(PyObject *self, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
+/**
+ * Set public settings with JSON object.
+ *
+ * @param json: the stringified JSON object.
+ * 
+ * @return Return 0 if the function operates successfully.
+ */
+static PyObject *
+setParameters(PyObject *self, PyObject *args)
+{
+    if (!createDBR()) 
+    {
+        return NULL;
+    }
+
+    char *json;
+    if (!PyArg_ParseTuple(args, "s", &json)) {
+        return NULL;
+    }
+
+    char errorMessage[256];
+    int ret = DBR_InitRuntimeSettingsWithString(hBarcode, json, CM_OVERWRITE, errorMessage, 256);
+
+    return Py_BuildValue("i", ret);
+}
+
 static PyMemberDef dbr_members[] = {
     {"COLOR_CLUTERING_MODE", T_OBJECT_EX, offsetof(DynamsoftBarcodeReader, COLOR_CLUTERING_MODE), 0,
      NULL},
@@ -727,6 +753,7 @@ static PyMethodDef dbr_methods[] = {
     {"outputLicenseToString", outputLicenseToString, METH_VARARGS, NULL},
     {"initLicenseFromServer", initLicenseFromServer, METH_VARARGS, NULL},
     {"setFurtherModes", setFurtherModes, METH_VARARGS, NULL},
+    {"setParameters", setParameters, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
