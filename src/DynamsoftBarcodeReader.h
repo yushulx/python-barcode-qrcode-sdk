@@ -31,10 +31,12 @@ typedef void* HANDLE;
 /**
 * @defgroup CandCPlus C/C++ APIs
 * @{
-* Dynamsoft Barcode Reaeder - C/C++ APIs Description.
+* Dynamsoft Barcode Reader - C/C++ APIs Description.
 */
 
-#define DBR_VERSION                  "7.0.0.0627"
+#define DBR_VERSION                  "7.1.0.0808"
+
+#pragma region ErrorCode
 
 /**
  * @defgroup ErrorCode ErrorCode
@@ -65,7 +67,7 @@ typedef void* HANDLE;
  /**The file type is not supported. */
 #define DBRERR_FILETYPE_NOT_SUPPORTED		-10006 
 
- /**The BPP(Bits per pixel) is not supported. */
+ /**The BPP (Bits Per Pixel) is not supported. */
 #define DBRERR_BPP_NOT_SUPPORTED			-10007 
 
  /**The index is invalid. */
@@ -92,7 +94,7 @@ typedef void* HANDLE;
  /**The 1D Barcode license is invalid. */
 #define DBRERR_1D_LICENSE_INVALID			-10017
 
- /**The DIB(Device-independent bitmaps) buffer is invalid. */
+ /**The DIB (Device-Independent Bitmaps) buffer is invalid. */
 #define DBRERR_DIB_BUFFER_INVALID			-10018
 
  /**The PDF417 license is invalid. */
@@ -119,7 +121,7 @@ typedef void* HANDLE;
  /**Recognition timeout. */
 #define DBRERR_RECOGNITION_TIMEOUT			-10026
 
- /**Failed to parse json string. */
+ /**Failed to parse JSON string. */
 #define DBRERR_JSON_PARSE_FAILED			-10030
 
  /**The value type is invalid. */
@@ -158,7 +160,7 @@ typedef void* HANDLE;
 /**The License DLL is missing. */
 #define	DBRERR_LICENSE_DLL_MISSING		    -10042
 
-/**The license key is not match the license content. */
+/**The license key does not match the license content. */
 #define DBRERR_LICENSEKEY_NOT_MATCHED       -10043
 
 /**Failed to request the license content. */
@@ -176,7 +178,7 @@ typedef void* HANDLE;
 /**The DPM license is invalid. */
 #define DBRERR_DPM_LICENSE_INVALID          -10048
 
-/**The frame decoding thread is already existed. */
+/**The frame decoding thread already exists. */
 #define DBRERR_FRAME_DECODING_THREAD_EXISTS -10049
 
 /**Failed to stop the frame decoding thread. */
@@ -198,7 +200,9 @@ typedef void* HANDLE;
 /**
  * @}defgroup ErrorCode
  */
+#pragma endregion
 
+#pragma region Enum
  /**
  * @defgroup Enum Enumerations
  * @{
@@ -207,7 +211,7 @@ typedef void* HANDLE;
  /**
  * @enum BarcodeFormat
  *
- * Describes the type of the barcode. All the formats can be combined, such as BF_CODE_39 | BF_CODE_128.
+ * Describes the barcode types. All the formats can be combined, such as BF_CODE_39 | BF_CODE_128.
  */
 typedef enum
 {
@@ -298,7 +302,7 @@ typedef enum
 	/**Complements the barcode using the general algorithm. */
 	BCM_GENERAL = 0x02,
 
-	/**Skip the barcode complement. */
+	/**Skips the barcode complement. */
 	BCM_SKIP = 0x00
 
 }BarcodeComplementMode;
@@ -349,25 +353,25 @@ typedef enum
 */
 typedef enum
 {
-	/**Dark items on the light background. */
+	/**Dark items on a light background. */
 	BICM_DARK_ON_LIGHT = 0x01,
 	
-	/**Light items on the dark background. Not supported yet. */
+	/**Light items on a dark background. Not supported yet. */
 	BICM_LIGHT_ON_DARK = 0x02,
 	
-	/**Dark items on the dark background. Not supported yet. */
+	/**Dark items on a dark background. Not supported yet. */
 	BICM_DARK_ON_DARK = 0x04,
 	
-	/**Light items on the light background. Not supported yet. */
+	/**Light items on a light background. Not supported yet. */
 	BICM_LIGHT_ON_LIGHT = 0x08,
 	
 	/**The background is mixed by dark and light. Not supported yet. */
 	BICM_DARK_LIGHT_MIXED = 0x10,
 	
-	/**Dark on light items on the dark background */
+	/**Dark item on a light background surrounded by dark. */
 	BICM_DARK_ON_LIGHT_DARK_SURROUNDING = 0x20,
 	
-	/**Skip the barcode colour operation.  */
+	/**Skips the barcode colour operation.  */
 	BICM_SKIP = 0x00
 
 }BarcodeColourMode;
@@ -385,7 +389,7 @@ typedef enum
 	/**Binarizes the image based on the local block. */
 	BM_LOCAL_BLOCK = 0x02,
 	
-	/**Skip the binarization. */
+	/**Skips the binarization. */
 	BM_SKIP = 0x00
 
 }BinarizationMode;
@@ -403,7 +407,7 @@ typedef enum
 	/**Clusters colours using the general algorithm based on HSV. */
 	CCM_GENERAL_HSV = 0x00000002,
 	
-	/**Skip the colour clustering. */
+	/**Skips the colour clustering. */
 	CCM_SKIP = 0x00
 	
 }ColourClusteringMode;	
@@ -418,7 +422,7 @@ typedef enum
 	/**Converts a colour image to a grayscale image using the general algorithm. */
 	CICM_GENERAL = 0x00000001,
 	
-	/**Skip the colour conversion. */
+	/**Skips the colour conversion. */
 	CICM_SKIP = 0x00
 	
 }ColourConversionMode;	
@@ -436,7 +440,7 @@ typedef enum
 	/**Reads DPM code using the general algorithm. */
 	DPMCRM_GENERAL = 0x02,
 	
-	/**Skip the DPM code reading. */
+	/**Skips DPM code reading. */
 	DPMCRM_SKIP = 0x00
 	
 }DPMCodeReadingMode;	
@@ -448,10 +452,10 @@ typedef enum
 */	
 typedef enum	
 {	
-	/**Ignore new settings and inherit from previous settings. */
+	/**Ignores new settings and inherits the previous settings. */
 	CM_IGNORE = 1,
 	
-	/**overwrite and replace by new settings. */
+	/**Overwrites the old settings with new settings. */
 	CM_OVERWRITE = 2
 	
 }ConflictMode;	
@@ -466,7 +470,7 @@ typedef enum
 	/**Not supported yet. */
 	IPM_AUTO = 0x01,
 	
-	/**Take the unpreprocessed image as the preprocessed result for further reference. */
+	/**Takes the unpreprocessed image for following operations. */
 	IPM_GENERAL = 0x02,
 	
 	/**Preprocesses the image using the gray equalization algorithm. */
@@ -478,7 +482,7 @@ typedef enum
 	/**Preprocesses the image using the sharpening and smoothing algorithm. */
 	IPM_SHARPEN_SMOOTH = 0x10,
 	
-	/**Skip the image preprocess */
+	/**Skips image preprocessing. */
 	IPM_SKIP = 0x00
 	
 }ImagePreprocessingMode;	
@@ -499,7 +503,7 @@ typedef enum
 	/**Colour clustered image. Not supported yet. */
 	IRT_COLOUR_CLUSTERED_IMAGE = 0x00000002,
 	
-	/**Colour converted grayscale image */
+	/**Colour image converted to grayscale  */
 	IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE = 0x00000004,
 	
 	/**Transformed grayscale image */
@@ -544,7 +548,7 @@ typedef enum
 	/**Not supported yet. */
 	LM_AUTO = 0x01,
 	
-	/**Localizes barcodes by searching connected blocks. This algorithm usually gives best result and it is recommended to set ConnectedBlocks to the highest priority. */
+	/**Localizes barcodes by searching for connected blocks. This algorithm usually gives best result and it is recommended to set ConnectedBlocks to the highest priority. */
 	LM_CONNECTED_BLOCKS = 0x02,
 	
 	/**Localizes barcodes by groups of contiguous black-white regions. This is optimized for QRCode and DataMatrix. */
@@ -555,8 +559,11 @@ typedef enum
 	
 	/**Localizes barcodes quickly. This mode is recommended in interactive scenario. */
 	LM_SCAN_DIRECTLY = 0x10,
+
+	/**Localizes barcodes by groups of marks.This is optimized for DPM codes. Not supported yet.*/
+	LM_STATISTICS_MARKS = 0x20,
 	
-	/**Skip the localization. */
+	/**Skips localization. */
 	LM_SKIP = 0x00
 	
 }LocalizationMode;	
@@ -589,10 +596,10 @@ typedef enum
 */	
 typedef enum	
 {	
-	/**The library will automatically choose the algorithm to detect region. */
+	/**Lets the library choose an algorithm automatically to detect region. */
 	RPM_AUTO = 0x01,
 	
-	/**Take the whole image as a region. */
+	/**Takes the whole image as a region. */
 	RPM_GENERAL = 0x02,
 	
 	/**Detects region using the general algorithm based on RGB colour contrast. */
@@ -604,7 +611,7 @@ typedef enum
 	/**Detects region using the general algorithm based on HSV colour contrast. */
 	RPM_GENERAL_HSV_CONTRAST = 0x10,
 	
-	/**Skip the region detection. */
+	/**Skips region detection. */
 	RPM_SKIP = 0x00
 	
 }RegionPredetectionMode;	
@@ -622,7 +629,7 @@ typedef enum
 	/**Resists deformation using the general algorithm. */
 	DRM_GENERAL = 0x02,
 	
-	/**Skip the deformation resisting. */
+	/**Skips deformation resisting. */
 	DRM_SKIP = 0x00
 	
 }DeformationResistingMode;	
@@ -643,7 +650,7 @@ typedef enum
 	/**Specifies all the candidate text. This means all the standard text results decoded from the barcode. */
 	RT_CANDIDATE_TEXT,
 	
-	/**Specifies the partial Text. This means part of the text result decoded from the barcode. */
+	/**Specifies the partial text. This means part of the text result decoded from the barcode. */
 	RT_PARTIAL_TEXT
 	
 }ResultType;	
@@ -661,16 +668,16 @@ typedef enum
 	/**Exits the barcode reading algorithm after the region predetection and image pre-processing is done. */
 	TP_IMAGE_PREPROCESSED = 0x00000002,
 	
-	/**Exits the barcode reading algorithm after the region predetection, image pre-processing and image binarization are done. */
+	/**Exits the barcode reading algorithm after the region predetection, image pre-processing, and image binarization are done. */
 	TP_IMAGE_BINARIZED = 0x00000004,
 	
-	/**Exits the barcode reading algorithm after the region predetection, image pre-processing, image binarization and barcode localization are done. */
+	/**Exits the barcode reading algorithm after the region predetection, image pre-processing, image binarization, and barcode localization are done. */
 	TP_BARCODE_LOCALIZED = 0x00000008,
 	
-	/**Exits the barcode reading algorithm after the region predetection, image pre-processing, image binarization, barcode localization and barcode type determining are done. */
+	/**Exits the barcode reading algorithm after the region predetection, image pre-processing, image binarization, barcode localization, and barcode type determining are done. */
 	TP_BARCODE_TYPE_DETERMINED = 0x00000010,
 	
-	/**Exits the barcode reading algorithm after the region predetection, image pre-processing, image binarization, barcode localization, barcode type determining and barcode recognition are done. */
+	/**Exits the barcode reading algorithm after the region predetection, image pre-processing, image binarization, barcode localization, barcode type determining, and barcode recognition are done. */
 	TP_BARCODE_RECOGNIZED = 0x00000020
 	
 }TerminatePhase;	
@@ -685,13 +692,13 @@ typedef enum
 	/**Not supported yet. */
 	TACM_AUTO = 0x01,
 	
-	/**The accompanying text will be used to verify the decoded barcode result. */
+	/**Uses the accompanying text to verify the decoded barcode result. */
 	TACM_VERIFYING = 0x02,
 	
-	/**The accompanying text will be used to verify and patch the decoded barcode result. */
+	/**Uses the accompanying text to verify and patch the decoded barcode result. */
 	TACM_VERIFYING_PATCHING = 0x04,
 	
-	/**Skip the text assisted correction. */
+	/**Skips the text assisted correction. */
 	TACM_SKIP = 0x00
 	
 }TextAssistedCorrectionMode;	
@@ -709,11 +716,29 @@ typedef enum
 	/**Filters text using the general algorithm based on contour. */
 	TFM_GENERAL_CONTOUR = 0x02,
 	
-	/**Skip the text filtering. */
+	/**Skips text filtering. */
 	TFM_SKIP = 0x00
 	
 }TextFilterMode;	
-	
+
+/**
+* @enum IntermediateResultSavingMode
+*
+* Describes the intermediate result saving mode.
+*/
+typedef enum
+{
+	/**Saves intermediate results in memory.*/
+	IRSM_MEMORY = 0x01,
+
+	/**Saves intermediate results in file system.*/
+	IRSM_FILESYSTEM = 0x02,
+
+	/**Saves intermediate results in both memory and file system.*/
+	IRSM_BOTH = 0x04
+
+}IntermediateResultSavingMode;
+
 /**	
 * @enum TextResultOrderMode	
 *	
@@ -730,7 +755,7 @@ typedef enum
 	/**Returns the text results in alphabetical and numerical order by barcode format string. */
 	TROM_FORMAT = 0x04,
 	
-	/**Skip the ordering operation. */
+	/**Skips the result ordering operation. */
 	TROM_SKIP = 0x00
 	
 }TextResultOrderMode;	
@@ -748,7 +773,7 @@ typedef enum
 	/**Detects texture using the general algorithm. */
 	TDM_GENERAL_WIDTH_CONCENTRATION = 0X02,
 	
-	/**Skip the texture detection. */
+	/**Skips texture detection. */
 	TDM_SKIP = 0x00
 	
 }TextureDetectionMode;	
@@ -760,13 +785,13 @@ typedef enum
 */	
 typedef enum	
 {	
-	/**Transforms to the inverted grayscale for further reference. This value is recommand for light on dark images. */
+	/**Transforms to inverted grayscale. Recommended for light on dark images. */
 	GTM_INVERTED = 0x01,
 	
-	/**Keeps the original grayscale for further reference. This value is recommand for dark on light images. */
+	/**Keeps the original grayscale. Recommended for dark on light images. */
 	GTM_ORIGINAL = 0x02,
 	
-	/**Skip the grayscale transformation. */
+	/**Skips grayscale transformation. */
 	GTM_SKIP = 0x00
 	
 }GrayscaleTransformationMode;	
@@ -810,11 +835,13 @@ typedef enum
 	
 }IMResultDataType;	
 
-
 /**
  * @} defgroup Enum Enumerations
  */
 
+#pragma endregion
+
+#pragma region Struct
 //---------------------------------------------------------------------------
 // Structures
 //---------------------------------------------------------------------------
@@ -876,14 +903,14 @@ typedef struct tagRegionDefinition
 	*/
 	int regionBottom;
 
-	/**Sets whether or not to use percentages to measure the Region size.
+	/**Sets whether or not to use percentage to measure the region size.
 	*
 	* @par Value range:
 	* 	    [0, 1]
 	* @par Default value:
 	* 	    0
 	* @par Remarks:
-	*     When itos set to 1, the values of Top, Left, Right, Bottom indicates the percentage (from 0 to 100). Otherwise, they refer to the coordinates.
+	*     When it's set to 1, the values of Top, Left, Right, Bottom indicate percentage (from 0 to 100); Otherwise, they indicate coordinates.
 	*     0: not by percentage
 	*     1: by percentage
 	*/
@@ -904,7 +931,7 @@ typedef struct tagRegionDefinition
 */
 typedef struct tagFurtherModes
 {
-	/**Sets the mode and priority for colour categorization. Not supported yet..
+	/**Sets the mode and priority for colour categorization. Not supported yet.
 	*
 	* @par Value range:
 	* 	    Each array item can be any one of the ColourClusteringMode Enumeration items.
@@ -931,7 +958,7 @@ typedef struct tagFurtherModes
 	/**Sets the mode and priority for the grayscale image conversion.
 	*
 	* @par Value range:
-	* 	    Each array item can be any one of the GrayscaleTransformationMode Enumeration items
+	* 	    Each array item can be any one of the GrayscaleTransformationMode Enumeration items.
 	* @par Default value:
 	* 	    [GTM_ORIGINAL,GTM_SKIP,GTM_SKIP,GTM_SKIP,GTM_SKIP,GTM_SKIP,GTM_SKIP,GTM_SKIP]
 	* @par Remarks:
@@ -956,7 +983,7 @@ typedef struct tagFurtherModes
 	/**Sets the mode and priority for image preprocessing algorithms.
 	*
 	* @par Value range:
-	* 	    Each array item can be any one of the ImagePreprocessingMode Enumeration items
+	* 	    Each array item can be any one of the ImagePreprocessingMode Enumeration items.
 	* @par Default value:
 	* 	    [IPM_GENERAL,IPM_SKIP,IPM_SKIP,IPM_SKIP,IPM_SKIP,IPM_SKIP,IPM_SKIP,IPM_SKIP]
 	* @par Remarks:
@@ -980,7 +1007,7 @@ typedef struct tagFurtherModes
 	/**Sets the mode and priority for text filter.
 	*
 	* @par Value range:
-	* 	    Each array item can be any one of the TextFilterMode Enumeration items
+	* 	    Each array item can be any one of the TextFilterMode Enumeration items.
 	* @par Default value:
 	* 	    [TFM_GENERAL_CONTOUR,TFM_SKIP,TFM_SKIP,TFM_SKIP,TFM_SKIP,TFM_SKIP,TFM_SKIP,TFM_SKIP]
 	* @par Remarks:
@@ -1003,7 +1030,7 @@ typedef struct tagFurtherModes
 	/**Sets the mode and priority for DPM code reading. Not supported yet.
 	*
 	* @par Value range:
-	* 	    Each array item can be any one of the ColourConversionMode Enumeration items
+	* 	    Each array item can be any one of the ColourConversionMode Enumeration items.
 	* @par Default value:
 	* 	    [DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP]
 	* @par Remarks:
@@ -1027,7 +1054,7 @@ typedef struct tagFurtherModes
 	/**Sets the mode and priority to complement the missing parts in the barcode. Not supported yet.
 	*
 	* @par Value range:
-	* 	    Each array item can be any one of the BarcodeComplementMode Enumeration items
+	* 	    Each array item can be any one of the BarcodeComplementMode Enumeration items.
 	* @par Default value:
 	* 	    [BCM_SKIP,BCM_SKIP,BCM_SKIP,BCM_SKIP,BCM_SKIP,BCM_SKIP,BCM_SKIP,BCM_SKIP]
 	* @par Remarks:
@@ -1064,31 +1091,31 @@ typedef struct tagFurtherModes
 */
 /**
 * Defines a struct to configure the barcode reading runtime settings.
-* These settings are used to control the barcode recognition process such as which barcode types are to be decoded.
+* These settings control the barcode recognition process such as which barcode types to decode.
 *
 */
 typedef struct tagPublicRuntimeSettings
 {
-	/**Sets the phase where the algorithm stops.
+	/**Sets the phase to stop the barcode reading algorithm.
 	*
 	* @par Value range:
 	* 	    Any one of the TerminatePhase Enumeration items
 	* @par Default value:
 	* 	    TP_BARCODE_RECOGNIZED
 	* @par Remarks:
-	*	    When the recognition result is not desired, this parameter can be set to skip certain processing stages.
+	*	    When the recognition result is not desired, you can set this parameter can be set to skip certain processing stages.
 	* @sa TerminatePhase
 	*/
 	TerminatePhase terminatePhase;
 
-	/**Sets the maximum amount of time (in milliseconds) that should be spent searching for a barcode per page. It does not include the time taken to load/decode an image (Tiff, PNG, etc) from disk into memory.
+	/**Sets the maximum amount of time (in milliseconds) that should be spent searching for a barcode per page. It does not include the time taken to load/decode an image (TIFF, PNG, etc.) from disk into memory.
 	*
 	* @par Value range:
 	* 	    [0, 0x7fffffff]
 	* @par Default value:
 	* 	    10000
 	* @par Remarks:
-	*	    If you want to stop reading barcodes after a specified amount of time, you can use this parameter to set a timeout.
+	*	    If you want to stop reading barcodes after a certain period of time, you can use this parameter to set a timeout.
 	*/
 	int timeout;
 
@@ -1099,7 +1126,7 @@ typedef struct tagPublicRuntimeSettings
 	* @par Default value:
 	* 	    4
 	* @par Remarks:
-	*	    By default, the library concurrently runs four different threads for decoding barcodes in order to keep a balance between speed and quality. For some devices (e.g. Raspberry Pi) that only use one core, you can set it to 1 for best speed. If you create BarcodeReader.
+	*	    To keep a balance between speed and quality, the library concurrently runs four different threads for barcode decoding by default. 
 	*/
 	int maxAlgorithmThreadCount;
 
@@ -1112,7 +1139,7 @@ typedef struct tagPublicRuntimeSettings
 	* @par Remarks:
 	*	    0: means Unknown and it will find at least one barcode.
 	*	    1: try to find one barcode. If one barcode is found, the library will stop the localization process and perform barcode decoding.
-	*	    n: try to find n barcodes. If the library only finds m (m<n) barcode, it will try different algorithms till n barcodes are found or all algorithms are used.
+	*	    n: try to find n barcodes. If the library only finds m (m<n) barcode, it will try different algorithms till n barcodes are found or all algorithms are tried.
 	*/
 	int expectedBarcodesCount;
 
@@ -1123,7 +1150,7 @@ typedef struct tagPublicRuntimeSettings
 	* @par Default value:
 	* 	    BF_ALL
 	* @par Remarks:
-	*	    If you already know the barcode type(s) before performing barcode reading, specifying the barcode type(s) to be read will speed up the recognition process.
+	*	    If the barcode type(s) are certain, specifying the barcode type(s) to be read will speed up the recognition process.
 	* @sa BarcodeFormat
 	*/
 	int barcodeFormatIds;
@@ -1135,7 +1162,7 @@ typedef struct tagPublicRuntimeSettings
 	* @par Default value:
 	* 	    300
 	* @par Remarks:
-	*	    When you are trying to decode a PDF file using DecodeFile method, the library will convert the pdf file to image(s) first, then perform barcode recognition.
+	*	    When decoding barcodes from a PDF file using the DecodeFile method, the library will convert the PDF file to image(s) first, then perform barcode recognition.
 	*/
 	int pdfRasterDPI;
 
@@ -1146,14 +1173,14 @@ typedef struct tagPublicRuntimeSettings
 	* @par Default value:
 	* 	    2300
 	* @par Remarks:
-	*	    If the shorter edge size is larger than the given value, the library will calculate the required height and width of the barcode image and shrink the image to that size before localization. Otherwise, it will perform barcode localization on the original image.
+	*	    If the shorter edge size is larger than the given threshold value, the library will calculate the required height and width of the barcode image and shrink the image to that size before localization. Otherwise, the library will perform barcode localization on the original image.
 	*/
 	int scaleDownThreshold;
 
 	/**Sets the mode and priority for binarization.
 	*
 	* @par Value range:
-	* 	    Each array item can be any one of the BinarizationMode Enumeration items
+	* 	    Each array item can be any one of the BinarizationMode Enumeration items.
 	* @par Default value:
 	* 	    [BM_LOCAL_BLOCK,BM_SKIP,BM_SKIP,BM_SKIP,BM_SKIP,BM_SKIP,BM_SKIP,BM_SKIP]
 	* @par Remarks:
@@ -1165,16 +1192,16 @@ typedef struct tagPublicRuntimeSettings
 	/**Sets the mode and priority for localization algorithms.
 	*
 	* @par Value range:
-	* 	    Each array item can be any one of the LocalizationMode Enumeration items
+	* 	    Each array item can be any one of the LocalizationMode Enumeration items.
 	* @par Default value:
-	* 	    [LM_CONNECTED_BLOCKS,LM_SCAN_DIRECTLY,LM_STATISTICS,LM_LINES,LM_SKIP,LM_SKIP,LM_SKIP,LM_SKIP]
+	* 	    [LM_CONNECTED_BLOCKS, LM_SCAN_DIRECTLY, LM_STATISTICS, LM_LINES, LM_SKIP, LM_SKIP, LM_SKIP, LM_SKIP]
 	* @par Remarks:
-	*     The array index represents the priority of the item. The smaller index is, the higher priority is.
+	*     The array index represents the priority of the item. The smaller the index, the higher the priority.
 	* @sa LocalizationMode
 	*/
 	LocalizationMode localizationModes[8];
 
-	/**Sets the further modes.
+	/**Sets further modes.
 	*
 	*/
 	FurtherModes furtherModes;
@@ -1186,7 +1213,7 @@ typedef struct tagPublicRuntimeSettings
 	* @par Default value:
 	* 	    9
 	* @par Remarks:
-	*	    If you have a blurry image, you can set this property to a larger value. The higher value set, the more effort the library will spend to decode images, but it may also slow down the recognition process.
+	*	    If you have a blurry image, you can set this property to a larger value. The higher the value set, the more effort the library will spend to decode images, but it may also slow down the recognition process.
 	*/
 	int deblurLevel;
 
@@ -1199,6 +1226,16 @@ typedef struct tagPublicRuntimeSettings
 	* @sa IntermediateResultType
 	*/
 	int intermediateResultTypes;
+
+	/**Sets the mode for saving intermediate result.
+	*
+	* @par Value range:
+	* 	    A value of IntermediateResultSavingMode Enumeration items
+	* @par Default value:
+	* 	    IRSM_MEMORY
+	* @sa IntermediateResultSavingMode
+	*/
+	IntermediateResultSavingMode intermediateResultSavingMode;
 
 	/**Specifies the format for the coordinates returned.
 	*
@@ -1213,16 +1250,16 @@ typedef struct tagPublicRuntimeSettings
 	/**Sets the mode and priority for the order of the text results returned.
 	*
 	* @par Value range:
-	* 	    Each array item can be any one of the TextResultOrderMode Enumeration items
+	* 	    Each array item can be any one of the TextResultOrderMode Enumeration items.
 	* @par Default value:
-	* 	    [TROM_CONFIDENCE,TROM_POSITION,TROM_FORMAT,TROM_SKIP,TROM_SKIP,TROM_SKIP,TROM_SKIP,TROM_SKIP]
+	* 	    [TROM_CONFIDENCE, TROM_POSITION, TROM_FORMAT, TROM_SKIP, TROM_SKIP, TROM_SKIP, TROM_SKIP, TROM_SKIP]
 	* @par Remarks:
-	*     The array index represents the priority of the item. The smaller index is, the higher priority is.
+	*     The array index represents the priority of the item. The smaller the index, the higher the priority.
 	* @sa TextResultOrderMode
 	*/
 	TextResultOrderMode textResultOrderModes[8];
 
-	/**Sets the region definition including the regionTop, regionLeft, regionRight, regionBottom and regionMeasuredByPercentage.
+	/**Sets the region definition including regionTop, regionLeft, regionRight, regionBottom, and regionMeasuredByPercentage.
 	*
 	*/
 	RegionDefinition region;
@@ -1245,18 +1282,130 @@ typedef struct tagPublicRuntimeSettings
 	* @par Default value:
 	* 	    0
 	* @par Remarks:
-	*     0: means no limitation on the confidence.
+	*     0: means no limitation on the result confidence.
 	*/
 	int minResultConfidence;
 
 	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct.
 	*
 	*/
-	char reserved[128];
+	char reserved[124];
 }PublicRuntimeSettings;
 
 /**
 * @} defgroup CPublicRuntimeSettings
+*/
+
+/**
+* @defgroup CFrameDecodingParameters FrameDecodingParameters
+* @{
+*/
+/**
+* Defines a struct to configure the frame decoding Parameters.
+*
+*/
+typedef struct tagFrameDecodingParameters
+{
+	/**The maximum number of frames waiting for decoding.
+	*
+	* @par Value range:
+	* 	    [0,0x7fffffff]
+	* @par Default value:
+	* 	    3
+	*/
+	int maxQueueLength;
+
+	/**The maximum number of frames waiting results (text result/localization result) will be kept for further reference.
+	*
+	* @par Value range:
+	* 	    [0, 0x7fffffff]
+	* @par Default value:
+	* 	    10
+	*/
+	int maxResultQueueLength;
+
+	/**The width of the frame image in pixels.
+	*
+	* @par Value range:
+	* 	    [0, 0x7fffffff]
+	* @par Default value:
+	* 	    0
+	*/
+	int width;
+
+	/**The height of the frame image in pixels.
+	*
+	* @par Value range:
+	* 	    [0, 0x7fffffff]
+	* @par Default value:
+	* 	    0
+	*/
+	int height;
+
+	/**The stride (or scan width) of the frame image.
+	*
+	* @par Value range:
+	* 	    [0,0x7fffffff]
+	* @par Default value:
+	* 	    0
+	*/
+	int stride;
+
+	/**The image pixel format used in the image byte array.
+	*
+	* @par Value range:
+	* 	    A value of ImagePixelFormat Enumeration items
+	* @par Default value:
+	* 	    IPF_GRAYSCALED
+	* @sa ImagePixelFormat
+	*/
+	ImagePixelFormat imagePixelFormat;	
+
+	/**The region definition of the frame to calculate the internal indicator.
+	*
+	* @par Default Value:
+	*		{
+	*			regionLeft = 0,
+	*			regionRight = 100,
+	*			regionTop = 0,
+	*			regionBottom = 100,
+	*			regionMeasuredByPercentage = 1
+	*		}
+	* @sa RegionDefinition
+	*/
+	RegionDefinition region;
+
+	/**The threshold used for filtering frames.
+	*
+	* @par Value range:
+	* 	    [0, 1]
+	* @par Default value:
+	* 	    0.1
+	* @par Remarks:
+	*	      The SDK will calculate an inner indicator for each frame from AppendFrame(), if the change rate of the indicators
+	*		between the current frame and the history frames is larger than the given threshold, the current frame will not be added to the inner frame queue waiting for decoding.
+	*/
+	float threshold;
+
+	/**The frequency of calling AppendFrame() per second.
+	*
+	* @par Value range:
+	* 	    [0,0x7fffffff]
+	* @par Default value:
+	* 	    0
+	* @par Remarks:
+	*		  0 means the frequency will be calculated automatically by the SDK.
+	*/
+	int fps;
+
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct.
+	*
+	*/
+	char reserved[32];
+}FrameDecodingParameters;
+
+/**
+* @} defgroup CFrameDecodingSettings
 */
 
 /**
@@ -1299,7 +1448,7 @@ typedef struct tagExtendedResult
 	/**One of the following: @ref QRCodeDetails, @ref PDF417Details, @ref DataMatrixDetails, @ref AztecDetails, @ref OneDCodeDetails */
 	void* detailedResult;
 	
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[64];
 }ExtendedResult, *PExtendedResult;
 
@@ -1320,7 +1469,7 @@ typedef struct tagLocalizationResult
 	/**The terminate phase of localization result. */
 	TerminatePhase terminatePhase;
 	
-	/**Barcode type. */
+	/**Barcode type */
 	BarcodeFormat barcodeFormat;
 	
 	/**Barcode type as string */
@@ -1350,7 +1499,7 @@ typedef struct tagLocalizationResult
 	/**The Y coordinate of the fourth point in a clockwise direction */
 	int y4;
 	
-	/**The angle of a barcode. Values range from 0 to 360. */
+	/**The angle of a barcode. Values range is from 0 to 360. */
 	int angle;
 
 	/**The barcode module size (the minimum bar width in pixel) */
@@ -1362,19 +1511,19 @@ typedef struct tagLocalizationResult
 	/**The region name the barcode located in. */
 	const char* regionName;
 
-	/**The document name. */
+	/**The document name */
 	const char* documentName;
 	
-	/**The coordinate type.*/
+	/**The coordinate type */
 	ResultCoordinateType resultCoordinateType;
 
-	/**The accompanying text content in a byte array.*/
+	/**The accompanying text content in a byte array */
 	unsigned char* accompanyingTextBytes;
 
-	/**The length of the accompanying text byte array.*/
+	/**The length of the accompanying text byte array */
 	int accompanyingTextBytesLength;
 
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[64];
 }LocalizationResult, *PLocalizationResult;
 
@@ -1387,7 +1536,7 @@ typedef struct tagLocalizationResult
 * @{
 */
 /**
-* Stores the text result
+* Stores the text result.
 *
 */
 typedef struct tagTextResult
@@ -1414,13 +1563,13 @@ typedef struct tagTextResult
 	/**One of the following: @ref QRCodeDetails, @ref PDF417Details, @ref DataMatrixDetails, @ref AztecDetails, @ref OneDCodeDetails */
 	void* detailedResult;
 
-	/**The total extended result count. */
+	/**The total count of extended result */
 	int resultsCount;
 
-	/**The extended result array. */
+	/**The extended result array */
 	PExtendedResult* results;
 
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[64];
 }TextResult, *PTextResult;
 
@@ -1433,12 +1582,12 @@ typedef struct tagTextResult
 * @{
 */
 /**
-* Stores the text result array
+* Stores the text result array.
 *
 */
 typedef struct tagTextResultArray
 {
-	/**The total text result count */
+	/**The total count of text result */
 	int resultsCount;
 
 	/**The text result array */
@@ -1454,7 +1603,7 @@ typedef struct tagTextResultArray
 * @{
 */
 /**
-* Stores the OneD code details
+* Stores the OneD code details.
 *
 */
 typedef struct tagOneDCodeDetails
@@ -1480,7 +1629,7 @@ typedef struct tagOneDCodeDetails
 	/**The length of the check digit chars byte array */
 	int checkDigitBytesLength;
 
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[32];
 }OneDCodeDetails;
 
@@ -1493,7 +1642,7 @@ typedef struct tagOneDCodeDetails
 * @{
 */
 /**
-* Stores the QRCode details
+* Stores the QRCode details.
 *
 */
 typedef struct tagQRCodeDetails
@@ -1516,7 +1665,7 @@ typedef struct tagQRCodeDetails
 	/**Number of the models */
 	int model;
 
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[32];
 }QRCodeDetails;
 
@@ -1529,7 +1678,7 @@ typedef struct tagQRCodeDetails
 * @{
 */
 /**
-* Stores the PDF417 details
+* Stores the PDF417 details.
 *
 */
 typedef struct tagPDF417Details
@@ -1546,7 +1695,7 @@ typedef struct tagPDF417Details
 	/**The error correction level of the barcode */
 	int errorCorrectionLevel;
 
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[32];
 }PDF417Details;
 
@@ -1559,7 +1708,7 @@ typedef struct tagPDF417Details
 * @{
 */
 /**
-* Stores the DataMatrix details
+* Stores the DataMatrix details.
 *
 */
 typedef struct tagDataMatrixDetails
@@ -1582,7 +1731,7 @@ typedef struct tagDataMatrixDetails
 	/**The data region count */
 	int dataRegionNumber;
 
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[32];
 }DataMatrixDetails;
 
@@ -1595,7 +1744,7 @@ typedef struct tagDataMatrixDetails
 * @{
 */
 /**
-* Stores the Aztec details
+* Stores the Aztec details.
 *
 */
 typedef struct tagAztecDetails
@@ -1613,7 +1762,7 @@ typedef struct tagAztecDetails
     *  A positive number (1, 2, .. 32) specifies a normal (full-rang) Aztec code*/
 	int layerNumber;
 
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[32];
 }AztecDetails;
 
@@ -1626,7 +1775,7 @@ typedef struct tagAztecDetails
 * @{
 */
 /**
-* Stores the intermediate result
+* Stores the intermediate result.
 *
 */
 typedef struct tagIntermediateResult
@@ -1637,7 +1786,7 @@ typedef struct tagIntermediateResult
 	/**One of the following types: Array of @ref Contour, Array of @ref ImageData, Array of @ref LineSegment, Array of @ref LocalizationResult, Array of @ref RegionOfInterest */
 	const void** results;
 
-	/**The data type of the intermediate result. */
+	/**The data type of the intermediate result */
 	IMResultDataType dataType;
 
 	/**Intermediate result type */
@@ -1646,40 +1795,40 @@ typedef struct tagIntermediateResult
 	/**The BarcodeComplementMode used when generating the current intermediate result */
 	BarcodeComplementMode barcodeComplementMode;
 
-	/**The array index of current used ColourClusteringMode in ColourClusteringModes setting */
+	/**The array index of current used ColourClusteringMode in the ColourClusteringModes setting */
 	int bcmIndex;
 
 	/**The DeformationResistingMode used when generating the current intermediate result */
 	DeformationResistingMode deformationResistingMode;
 
-	/**The array index of current used DeformationResistingMode in DeformationResistingModes setting */
+	/**The array index of current used DeformationResistingMode in the DeformationResistingModes setting */
 	int drmIndex;
 
 	/**The DPMCodeReadingMode used when generating the current intermediate result */
 	DPMCodeReadingMode dpmCodeReadingMode;
 
-	/**The array index of current used DPMCodeReadingMode in DPMCodeReadingModes setting */
+	/**The array index of current used DPMCodeReadingMode in the DPMCodeReadingModes setting */
 	int dpmcrmIndex;
 
-	/**The rotation matrix. */
+	/**The rotation matrix */
 	double rotationMatrix[9];
 
 	/**The TextFilterMode used when generating the current intermediate result */
 	TextFilterMode textFilterMode;
 
-	/**The array index of current used TextFilterMode in TextFilterModes setting */
+	/**The array index of current used TextFilterMode in the TextFilterModes setting */
 	int tfmIndex;
 
 	/**The LocalizationMode used when generating the current intermediate result */
 	LocalizationMode localizationMode;
 
-	/**The array index of current used LocalizationMode in LocalizationModes setting */ 
+	/**The array index of current used LocalizationMode in the LocalizationModes setting */ 
 	int lmIndex;
 
 	/**The BinarizationMode used when generating the current intermediate result */
 	BinarizationMode binarizationMode;
 
-	/**The array index of current used BinarizationMode in BinarizationModes setting */
+	/**The array index of current used BinarizationMode in the BinarizationModes setting */
 	int bmIndex;
 
 	/**The ImagePreprocessingMode used when generating the current intermediate result */
@@ -1688,40 +1837,40 @@ typedef struct tagIntermediateResult
 	/**The array index of current used ImagePreprocessingMode in ImagePreprocessingModes setting */
 	int ipmIndex;
 
-	/**The id of the ROI(Region Of Interest) generated by the SDK. -1 means the original image. */
+	/**The ID of the ROI (Region Of Interest) generated by the SDK. -1 means the original image. */
 	int roiId;
 
 	/**The RegionPredetectionMode used when generating the current intermediate result */
 	RegionPredetectionMode regionPredetectionMode;
 
-	/**The array index of current used RegionPredetectionMode in RegionPredetectionModes setting */
+	/**The array index of current used RegionPredetectionMode in the RegionPredetectionModes setting */
 	int rpmIndex;
 
 	/**The GrayscaleTransformationMode used when generating the current intermediate result */
 	GrayscaleTransformationMode grayscaleTransformationMode;
 
-	/**The array index of current used GrayscaleTransformationMode in GrayscaleTransformationModes setting */
+	/**The array index of current used GrayscaleTransformationMode in the GrayscaleTransformationModes setting */
 	int gtmIndex;
 
 	/**The ColourConversionMode used when generating the current intermediate result */
 	ColourConversionMode colourConversionMode;
 
-	/**The array index of current used ColourConversionMode in ColourConversionModes setting */
+	/**The array index of current used ColourConversionMode in the ColourConversionModes setting */
 	int cicmIndex;
 
 	/**The ColourClusteringMode used when generating the current intermediate result */
 	ColourClusteringMode colourClusteringMode;
 
-	/**The array index of current used ColourClusteringMode in ColourClusteringModes setting */
+	/**The array index of current used ColourClusteringMode in the ColourClusteringModes setting */
 	int ccmIndex;
 
-	/**The scal down ratio */
+	/**The scale down ratio */
 	int scaleDownRatio;
 
-	/**The id of the operated frame */
+	/**The ID of the operated frame */
 	int frameId;
 
-	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[64];
 }IntermediateResult, *PIntermediateResult;
 
@@ -1734,12 +1883,12 @@ typedef struct tagIntermediateResult
 * @{
 */
 /**
-* Stores the intermediate result array
+* Stores the intermediate result array.
 *
 */
 typedef struct tagIntermediateResultArray
 {
-	/**The total intermediate result count */
+	/**The total count of intermediate result */
 	int resultsCount;
 
 	/**The intermediate result array */
@@ -1755,7 +1904,7 @@ typedef struct tagIntermediateResultArray
 * @{
 */
 /**
-* Stores the DBRPoint
+* Stores an x- and y-coordinate pair in two-dimensional space.
 *
 */
 typedef struct tagDBRPoint
@@ -1776,12 +1925,12 @@ typedef struct tagDBRPoint
 * @{
 */
 /**
-* Stores the region of interest
+* Stores the region of interest.
 *
 */
 typedef struct tagRegionOfInterest
 {
-	/**The id generated by the SDK */
+	/**The ID generated by the SDK */
 	int roiId;
 
 	/**The left top point of the region */
@@ -1841,7 +1990,7 @@ typedef struct tagImageData
 	/**The height of the image in pixels */
 	int height;
 
-	/**The stride of the image (also called scan width) */
+	/**The stride (or scan width) of the image */
 	int stride;
 
 	/**The image pixel format used in the image byte array */
@@ -1857,7 +2006,7 @@ typedef struct tagImageData
 * @{
 */
 /**
-* Stores the line segment.
+* Stores line segment data.
 *
 */
 typedef struct tagLineSegment
@@ -1876,6 +2025,9 @@ typedef struct tagLineSegment
 
 #pragma pack(pop)
 
+#pragma endregion
+
+#pragma region FunctionPointer
  /**
  * @defgroup FunctionPointer Function Pointer
  * @{
@@ -1883,9 +2035,9 @@ typedef struct tagLineSegment
  /**
  * Represents the method that will handle the error code returned by the SDK.
  *
- * @param frameId The id of the frame.
+ * @param frameId The ID of the frame.
  * @param errorCode Error Code generated when decoding the frame.
- * @param pUser Arguments pass to your function.
+ * @param pUser Customized arguments passed to your function.
  *
  * @sa ErrorCode
  */
@@ -1894,9 +2046,9 @@ typedef void(*CB_Error)(int frameId, int errorCode, void * pUser);
 /**
 * Represents the method that will handle the text result array returned by the SDK.
 *
-* @param frameId The id of the frame.
-* @param pResults Recognized barcode results of the frame..
-* @param pUser Arguments pass to your function.
+* @param frameId The ID of the frame.
+* @param pResults Recognized barcode results of the frame.
+* @param pUser Arguments passed to your function.
 *
 * @sa TextResultArray
 */
@@ -1905,9 +2057,9 @@ typedef void(*CB_TextResult)(int frameId, TextResultArray *pResults, void * pUse
 /**
 * Represents the method that will handle the intermediate result array returned by the SDK.
 *
-* @param frameId The id of the frame.
+* @param frameId The ID of the frame.
 * @param pResults The intermediate results of the frame.
-* @param pUser Arguments pass to your function.
+* @param pUser Arguments passed to your function.
 *
 * @sa IntermediateResultArray
 */
@@ -1917,6 +2069,9 @@ typedef void(*CB_IntermediateResult)(int frameId, IntermediateResultArray *pResu
 * @}defgroup Function Pointer
 */
 
+#pragma endregion
+
+#pragma region C/C++ Function
 //---------------------------------------------------------------------------
 // Functions
 //---------------------------------------------------------------------------
@@ -1929,17 +2084,17 @@ extern "C" {
 	* @defgroup CFunctions C Functions
 	* @{
 	*   
-	* Four methods are now supported for editing runtime settings - reset, initialize, append, update. 
-	* - Reset runtime settings: reset all parameters in runtime setting to default value.     
+	* Four methods are now supported for editing runtime settings - reset, initialize, append, and update. 
+	* - Reset runtime settings: reset all parameters in runtime setting to default values.     
 	*  
-	* - Initialize with template: reset runtime settings firstly and replace all parameters in runtime setting with the values specified in given template regardless of the current runtime settings.   
+	* - Initialize with template: reset runtime settings firstly and replace all parameters in runtime setting with the values specified in the given template regardless of the current runtime settings.   
 	*  
-	* - Append template to runtime settings: append template and update runtime settings; the conflicting values will be assigned by the rules shown in PublicRuntimeSettings.    
+	* - Append template to runtime settings: append a template and update the runtime settings; the conflicting values will be assigned by the rules shown in PublicRuntimeSettings.    
 	*
-	* - Update with struct: update current runtime settings by the values specified in given struct directly; the parameter not be defined in struct will remain its original value.   
+	* - Update with struct: update current runtime settings with the values specified in the given struct directly; the parameters not defined in the struct will remain their original values.   
 	* 
 	* @par References
-	* More information about public parameters and template file can be found in file DBR_Developer's_Guide.pdf.
+	* More information about public parameters and template file can be found in the DBR_Developer's_Guide.pdf file.
 	*
 	* 
 	* @sa PublicRuntimeSettings
@@ -1970,7 +2125,7 @@ extern "C" {
 	DBR_API const char* DBR_GetErrorString(int errorCode);
 
 	/**
-	 * Returns the version info string for the SDK.
+	 * Returns the version info of the SDK.
 	 * 
 	 * @return The version info string.
 	 *
@@ -1994,10 +2149,10 @@ extern "C" {
 	/**
 	 * Creates an instance of Dynamsoft Barcode Reader.
 	 * 
-	 * @return Returns an instance of Dynamsoft Barcode Reader. If failed, return NULL.
+	 * @return Returns an instance of Dynamsoft Barcode Reader. If failed, returns NULL.
 	 *
 	 * @par Remarks:
-	 *		The decoding result maybe unreliable without loading license key.
+	 *		Partial of the decoding result will be masked with "*" without a valid license key.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2023,13 +2178,13 @@ extern "C" {
 	DBR_API void DBR_DestroyInstance(void* barcodeReader);
 
 	/**
-	 * Reads product key and activate the SDK.
+	 * Reads product key and activates the SDK.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in] pLicense The product keys.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2045,10 +2200,10 @@ extern "C" {
 	 *
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in] pLicenseServer The name/IP of the license server.
-	 * @param [in] pLicenseKey The license key of Barcode Reader.
+	 * @param [in] pLicenseKey The license key.
 	 *
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 */
 	DBR_API int DBR_InitLicenseFromServer(void* barcodeReader, const char* pLicenseServer, const char* pLicenseKey);
 
@@ -2056,11 +2211,11 @@ extern "C" {
 	 * Initializes barcode reader license from the license content on the client machine for offline verification.
 	 *
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
-	 * @param [in] pLicenseKey The license key of Barcode Reader.
-	 * @param [in] pLicenseContent An encrypted string representing the license content (runtime number, expiry date, barcode type, etc.) obtained from the method DBR_OutputLicenseToString().
+	 * @param [in] pLicenseKey The license key.
+	 * @param [in] pLicenseContent An encrypted string representing the license content (quota, expiration date, barcode type, etc.) obtained from the method DBR_OutputLicenseToString().
 	 *
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 */
 	DBR_API int DBR_InitLicenseFromLicenseContent(void* barcodeReader, const char* pLicenseKey, const char* pLicenseContent);
 
@@ -2069,13 +2224,13 @@ extern "C" {
 	 * Outputs the license content as an encrypted string from the license server to be used for offline license verification.
 	 *
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
-	 * @param [in, out] content The output string which stores the contents of license.
-	 * @param [in] contentLen The length of output string.
+	 * @param [in, out] content The output string which stores the content of license.
+	 * @param [in] contentLen The length of output string. The recommended length is 512 per license key.
 	 *
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 * @par Remarks:
-	 *	    DBR_InitLicenseFromServer has to be successfully called before calling this method.
+	 *	    DBR_InitLicenseFromServer() has to be successfully called before calling this method.
 	 */
 	DBR_API int DBR_OutputLicenseToString(void* barcodeReader, char content[], int contentLen);
 
@@ -2087,7 +2242,7 @@ extern "C" {
 	/**
 	* @defgroup CDecoding Decoding Functions
 	* @{
-	*   APIs for Decoding.
+	*   APIs for barcode decoding.
 	*/
 	
 	/**
@@ -2097,8 +2252,8 @@ extern "C" {
 	 * @param [in] pFileName A string defining the file name.
 	 * @param [in] pTemplateName The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2111,15 +2266,15 @@ extern "C" {
 	DBR_API int  DBR_DecodeFile(void* barcodeReader, const char* pFileName, const char* pTemplateName);
 
 	/**
-	 * Decodes barcode from an image file in memory.
+	 * Decodes barcodes from an image file in memory.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in] pFileBytes The image file bytes in memory.
 	 * @param [in] fileSize The length of the file bytes in memory.
 	 * @param [in] pTemplateName The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 *
 	 * @par Code Snippet:
@@ -2142,12 +2297,12 @@ extern "C" {
 	 * @param [in] pBufferBytes The array of bytes which contain the image data.
 	 * @param [in] width The width of the image in pixels.
 	 * @param [in] height The height of the image in pixels.
-	 * @param [in] stride The stride of the image (also called scan width).
+	 * @param [in] stride The stride (or scan width) of the image.
 	 * @param [in] format The image pixel format used in the image byte array.
 	 * @param [in] pTemplateName The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2166,14 +2321,14 @@ extern "C" {
 	DBR_API int  DBR_DecodeBuffer(void* barcodeReader, const unsigned char* pBufferBytes, const int width, const int height, const int stride, const ImagePixelFormat format, const char* pTemplateName);
 
 	/**
-	 * Decodes barcode from an image file encoded as a base64 string.
+	 * Decodes barcodes from an image file encoded as a base64 string.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in] pBase64String A base64 encoded string that represents an image.
 	 * @param [in] pTemplateName The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2191,14 +2346,14 @@ extern "C" {
 	DBR_API int  DBR_DecodeBase64String(void* barcodeReader, const char* pBase64String, const char* pTemplateName);
 
 	/**
-	 * Decodes barcode from a handle of device-independent bitmap (DIB).
+	 * Decodes barcodes from a handle of device-independent bitmap (DIB).
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in] hDIB Handle of the device-independent bitmap.
 	 * @param [in] pTemplateName The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2213,19 +2368,33 @@ extern "C" {
 	DBR_API int  DBR_DecodeDIB(void* barcodeReader, const HANDLE hDIB, const char* pTemplateName);
 
 	/**
+	* Init frame decoding parameters.
+	*
+	* @param [in] barcodeReader Handle of the barcode reader instance.
+	* @param [in,out] pParameters The frame decoding parameters.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	* 		  DBR_GetErrorString() to get detailed error message. Possible returns are:
+	*		  DBR_OK;
+	*		  DBRERR_NULL_POINTER;
+	*
+	*/
+	DBR_API int DBR_InitFrameDecodingParameters(void *barcodeReader, FrameDecodingParameters *pParameters);
+
+	/**
 	 * Starts a new thread to decode barcodes from the inner frame queue.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
-	 * @param [in] maxListLength The max count of frames waiting for decoding.
-	 * @param [in] maxResultListLength The max count of frames whose results (text result/localization result) will be kept for further reference.
+	 * @param [in] maxQueueLength The max number of frames waiting for decoding.
+	 * @param [in] maxResultQueueLength The max number of frames whose results (text result/localization result) will be kept.
 	 * @param [in] width The width of the frame image in pixels.
 	 * @param [in] height The height of the frame image in pixels.
-	 * @param [in] stride The stride of the frame image (also called scan width).
+	 * @param [in] stride The stride (or scan width) of the frame image.
 	 * @param [in] format The image pixel format used in the image byte array.
 	 * @param [in] pTemplateName The template name.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
 	 * 		   DBRERR_PARAMETER_VALUE_INVALID;
@@ -2240,15 +2409,58 @@ extern "C" {
 	 * @endcode
 	 *
 	 */
-	DBR_API int DBR_StartFrameDecoding(void *barcodeReader, const int maxListLength, const int maxResultListLength, const int width, const int height, const int stride, const ImagePixelFormat format, const char *pTemplateName);
+	DBR_API int DBR_StartFrameDecoding(void *barcodeReader, const int maxQueueLength, const int maxResultQueueLength, const int width, const int height, const int stride, const ImagePixelFormat format, const char *pTemplateName);
 
 	/**
-	 * Append a frame image buffer to the inner frame queue.
+	* Starts a new thread to decode barcodes from the inner frame queue.
+	*
+	* @param [in] barcodeReader Handle of the barcode reader instance.
+	* @param [in] parameters The frame decoding parameters.
+	* @param [in] pTemplateName The template name.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	* 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
+	* 		   DBR_OK;
+	* 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
+	* 		   DBRERR_PARAMETER_VALUE_INVALID;
+	* 		   DBRERR_NULL_POINTER;
+	*
+	* @par Code Snippet:
+	* @code
+	*		void* barcodeReader = DBR_CreateInstance();
+	*		DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
+	*		FrameDecodingParameters parameters;
+	*		int errorCode = DBR_InitFrameDecodingParameters(barcodeReader, &parameters);
+	*		if(errorCode == DBR_OK)
+	*		{
+	*			parameters.maxQueueLength = 3;
+	*			parameters.maxResultQueueLength = 10;
+	*			parameters.width = 20;
+	*			parameters.height = 30;
+	*			parameters.stride = 10;
+	*			parameters.imagePixelFormat = IPF_GRAYSCALED;
+	*			parameters.region.regionMeasuredByPercentage = 1;
+	*			parameters.region.regionTop = 0;
+	*			parameters.region.regionBottom = 100;
+	*			parameters.region.regionLeft = 0;
+	*			parameters.region.regionRight = 100;
+	*			parameters.threshold = 0.1;
+	*			parameters.fps = 0;
+	*			int errorCode = DBR_StartFrameDecodingEx(barcodeReader, parameters, "");
+	*			DBR_DestroyInstance(barcodeReader);
+	*		}
+	* @endcode
+	*
+	*/
+	DBR_API int DBR_StartFrameDecodingEx(void *barcodeReader, FrameDecodingParameters parameters, const char* pTemplateName);
+
+	/**
+	 * Appends a frame image buffer to the inner frame queue.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in] pBufferBytes The array of bytes which contain the image data.
      *				   
-	 * @return Returns the Id of the appended frame
+	 * @return Returns the ID of the appended frame.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2262,7 +2474,7 @@ extern "C" {
 	DBR_API int DBR_AppendFrame(void *barcodeReader, unsigned char *pBufferBytes);
 
 	/**
-	 * Get current length of the inner frame queue.
+	 * Gets current length of the inner frame queue.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
      *				   
@@ -2280,12 +2492,12 @@ extern "C" {
 	DBR_API int DBR_GetLengthOfFrameQueue(void *barcodeReader);
 
 	/**
-	 * Stops the frame decoding thread created by StartFrameDecoding.
+	 * Stops the frame decoding thread created by StartFrameDecoding().
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_STOP_DECODING_THREAD_FAILED;
 	 *
@@ -2307,7 +2519,7 @@ extern "C" {
 	/**
 	* @defgroup CBasicSetting Basic Setting Functions
 	* @{
-	*   Basic APIs used for customizing runtime settings. 
+	*   Basic APIs used for customizing runtime settings 
 	*/
 
 	/**
@@ -2321,8 +2533,8 @@ extern "C" {
 	 * @param [in,out] errorMsgBuffer The buffer is allocated by the caller and the recommended length is 256. The error message will be copied to the buffer.
 	 * @param [in] errorMsgBufferLen The length of the allocated buffer.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_SET_MODE_ARGUMENT_ERROR;
 	 * @par Code Snippet:
@@ -2334,7 +2546,7 @@ extern "C" {
 			pSettings->binarizationModes[0] = BM_LOCAL_BLOCK;
 			char errorMessage[256];
 			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
-			DBR_SetModeArgument(barcodeReader, "BinarizationModes", 0, "EnableFillBinaryVacancy", 1, errorMessage, 256);
+			DBR_SetModeArgument(barcodeReader, "BinarizationModes", 0, "EnableFillBinaryVacancy", "1", errorMessage, 256);
 			DBR_DestroyInstance(barcodeReader);
 	 * @endcode
 	 *
@@ -2345,12 +2557,12 @@ extern "C" {
 	DBR_API int DBR_SetModeArgument(void *barcodeReader, const char *pModesName,const int index, const char *pArgumentName, const char *pArgumentValue, char errorMsgBuffer[], const int errorMsgBufferLen);
 
 	/**
-	 * Gets current settings and save it into a struct.
+	 * Gets current settings and save them into a struct.
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in,out] pSettings The struct of template settings.
 	 *
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2365,7 +2577,7 @@ extern "C" {
 	DBR_API int DBR_GetRuntimeSettings(void* barcodeReader, PublicRuntimeSettings *pSettings);
 
 	/**
-	 * Update runtime settings with a given struct.
+	 * Updates runtime settings with a given struct.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in] pSettings The struct of template settings.
@@ -2373,8 +2585,8 @@ extern "C" {
 	 * 				   is 256.The error message will be copied to the buffer.
 	 * @param [in] errorMsgBufferLen The length of the allocated buffer.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 *		  DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 *		  DBR_GetErrorString() to get detailed error message.
 	 * 
 	 * @par Code Snippet:
 	 * @code
@@ -2382,8 +2594,7 @@ extern "C" {
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			int errorCode = DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->mAntiDamageLevel = 7;
-			pSettings->mDeblurLevel = 9;
+			pSettings->deblurLevel = 9;
 			char errorMessage[256];
 			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
 			delete pSettings;
@@ -2397,8 +2608,8 @@ extern "C" {
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call  
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2406,7 +2617,7 @@ extern "C" {
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			int errorCode = DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->mDeblurLevel = 9;
+			pSettings->deblurLevel = 9;
 			DBR_UpdateRuntimeSettings(barcodeReader, pSettings);
 			DBR_ResetRuntimeSettings(barcodeReader);
 			delete pSettings;
@@ -2422,21 +2633,21 @@ extern "C" {
 	/**
 	* @defgroup CAdvancedSettings Advanced Setting Functions
 	* @{
-	*   Advanced APIs for customizing parameters with template file to fit specified scenarios.
+	*   Advanced APIs for customizing scanning parameters with a template file to fit specified scenarios.
 	*/
 	/**
-	* Initialize runtime settings with the parameters obtained from JSON file.
+	* Initialize runtime settings with the parameters obtained from a JSON file.
 	*
 	* @param [in] barcodeReader Handle of the barcode reader instance.
 	* @param [in] pFilePath The settings file path.
-	* @param [in] conflictMode The parameter setting mode, which decides to inherit parameters from 
-	* 			  previous template setting or overwrite previous settings and replace by new template.  
+	* @param [in] conflictMode The parameter setting mode, which decides whether to inherit parameters from 
+	* 			  previous template settings or to overwrite previous settings with the new template.  
 	* @param [in,out] errorMsgBuffer The buffer is allocated by caller and the recommending 
-	* 				  length is 256. The error message would be copy to the buffer.
+	* 				  length is 256. The error message will be copied to the buffer.
 	* @param [in] errorMsgBufferLen The length of allocated buffer.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	* 		  DBR_GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	* 		  DBR_GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
@@ -2452,25 +2663,25 @@ extern "C" {
 	DBR_API int  DBR_InitRuntimeSettingsWithFile(void* barcodeReader, const char* pFilePath, const ConflictMode conflictMode, char errorMsgBuffer[], const int errorMsgBufferLen);
 
 	/**
-	* Initialize runtime settings with the parameters obtained from JSON string.
+	* Initializes runtime settings with the parameters obtained from a JSON string.
 	*
 	* @param [in] barcodeReader Handle of the barcode reader instance.
 	* @param [in] content A JSON string that represents the content of the settings.
-	* @param [in] conflictMode The parameter setting mode, which decides to inherit parameters from 
-	* 			  previous template setting or overwrite previous settings and replace by new template.  
+	* @param [in] conflictMode The parameter setting mode, which decides whether to inherit parameters from 
+	* 			  previous template setting or to overwrite previous settings with the new template.  
 	* @param [in,out] errorMsgBuffer The buffer is allocated by caller and the recommending
-	* 				  length is 256. The error message would be copy to the buffer.
+	* 				  length is 256. The error message will be copied to the buffer.
 	* @param [in] errorMsgBufferLen The length of allocated buffer.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	* 		  DBR_GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. YOu can call 
+	* 		  DBR_GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
 			char errorMessage[256];
-			DBR_InitRuntimeSettingsWithString(barcodeReader, "{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_OVERWRITE, errorMessage, 256);
+			DBR_InitRuntimeSettingsWithString(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_OVERWRITE, errorMessage, 256);
 			DBR_DestroyInstance(barcodeReader);
 	* @endcode
 	*
@@ -2479,18 +2690,18 @@ extern "C" {
 	DBR_API int  DBR_InitRuntimeSettingsWithString(void* barcodeReader, const char* content, const ConflictMode conflictMode, char errorMsgBuffer[], const int errorMsgBufferLen);
 
 	/**
-	* Append a new template file to current runtime settings.
+	* Appends a new template file to the current runtime settings.
 	*
 	* @param [in] barcodeReader Handle of the barcode reader instance.
 	* @param [in] pFilePath The settings file path.
-	* @param [in] conflictMode The parameter setting mode, which decides to inherit parameters from
-	* 			  previous template setting or overwrite previous settings and replace by new template.
+	* @param [in] conflictMode The parameter setting mode, which decides whether to inherit parameters from
+	* 			  previous template settings or to overwrite previous settings with the new template.
 	* @param [in,out] errorMsgBuffer The buffer is allocated by caller and the recommending
-	* 				  length is 256. The error message would be copy to the buffer.
+	* 				  length is 256. The error message will be copied to the buffer.
 	* @param [in] errorMsgBufferLen The length of allocated buffer.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		  DBR_GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		  DBR_GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
@@ -2506,25 +2717,25 @@ extern "C" {
 	DBR_API int  DBR_AppendTplFileToRuntimeSettings(void* barcodeReader, const char* pFilePath, const ConflictMode conflictMode, char errorMsgBuffer[],const int errorMsgBufferLen);
 
 	/**
-	* Append a new template string to current runtime settings.
+	* Appends a new template string to the current runtime settings.
 	*
 	* @param [in] barcodeReader Handle of the barcode reader instance.
 	* @param [in] content A JSON string that represents the content of the settings.
-	* @param [in] conflictMode The parameter setting mode, which decides to inherit parameters from
-	* 			  previous template setting or overwrite previous settings and replace by new template.
+	* @param [in] conflictMode The parameter setting mode, which decides whether to inherit parameters from
+	* 			  previous template setting or to overwrite previous settings with the new template.
 	* @param [in,out] errorMsgBuffer The buffer is allocated by caller and the recommending
-	* 				  length is 256. The error message would be copy to the buffer.
+	* 				  length is 256. The error message will be copied to the buffer.
 	* @param [in] errorMsgBufferLen The length of allocated buffer.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		  DBR_GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		  DBR_GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
 			char errorMessage[256];
-			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessage, 256);
+			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessage, 256);
 			DBR_DestroyInstance(barcodeReader);
 	* @endcode
 	*
@@ -2533,11 +2744,11 @@ extern "C" {
 	DBR_API int  DBR_AppendTplStringToRuntimeSettings(void* barcodeReader, const char* content, const ConflictMode conflictMode, char errorMsgBuffer[], const int errorMsgBufferLen);
 
 	/**
-	* Get count of parameter template.
+	* Gets count of parameter templates.
 	*
 	* @param [in] barcodeReader Handle of the barcode reader instance.
 	*
-	* @return Returns the count of parameter template.
+	* @return Returns the count of parameter templates.
 	*
 	* @par Code Snippet:
 	* @code
@@ -2546,7 +2757,7 @@ extern "C" {
 			char errorMessageInit[256];
 			char errorMessageAppend[256];
 			DBR_InitRuntimeSettingsWithFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
-			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
 			int currentTemplateCount = DBR_GetParameterTemplateCount(barcodeReader);
 			DBR_DestroyInstance(barcodeReader);
 	* @endcode
@@ -2555,16 +2766,16 @@ extern "C" {
 	DBR_API int  DBR_GetParameterTemplateCount(void* barcodeReader);
 
 	/**
-	* Get paramter template name by index.
+	* Gets parameter template name by index.
 	*
 	* @param [in] barcodeReader Handle of the barcode reader instance.
 	* @param [in] index The index of parameter template array.
 	* @param [in,out] nameBuffer The buffer is allocated by caller and the recommended
-	* 				  length is 256. The template name would be copy to the buffer.
+	* 				  length is 256. The template name will be copied to the buffer.
 	* @param [in] nameBufferLen The length of allocated buffer
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		  DBR_GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		  DBR_GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
@@ -2573,7 +2784,7 @@ extern "C" {
 			char errorMessageInit[256];
 			char errorMessageAppend[256];
 			DBR_InitRuntimeSettingsWithFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
-			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
 			int currentTemplateCount = DBR_GetParameterTemplateCount(barcodeReader);
 			int templateIndex = 1;
 			// notice that the value of 'templateIndex' should less than currentTemplateCount.
@@ -2593,8 +2804,8 @@ extern "C" {
 	 * @param [in] contentLen The length of output string.
 	 * @param [in] pSettingsName A unique name for declaring current runtime settings.	
      *	 
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2603,7 +2814,7 @@ extern "C" {
 			char errorMessageInit[256];
 			char errorMessageAppend[256];
 			 DBR_InitRuntimeSettingsWithFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
-			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
 			char pContent[256];
 			DBR_OutputSettingsToString(barcodeReader, pContent, 256, "currentRuntimeSettings");
 			DBR_DestroyInstance(barcodeReader);
@@ -2613,14 +2824,14 @@ extern "C" {
 	DBR_API int DBR_OutputSettingsToString(void* barcodeReader, char content[], const int contentLen, const char* pSettingsName);
 
 	/**
-	 * Outputs runtime settings and save it into a settings file (JSON file).
+	 * Outputs runtime settings and save them into a settings file (JSON file).
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
-	 * @param [in] pFilePath The output file path which stores current settings.
+	 * @param [in] pFilePath The path of the output file which stores current settings.
 	 * @param [in] pSettingsName A unique name for declaring current runtime settings.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2629,7 +2840,7 @@ extern "C" {
 			char errorMessageInit[256];
 			char errorMessageAppend[256];
 			DBR_InitRuntimeSettingsWithFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
-			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
 			DBR_OutputSettingsToFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\CurrentRuntimeSettings.json", "currentRuntimeSettings");
 			DBR_DestroyInstance(barcodeReader);
 	 * @endcode
@@ -2652,11 +2863,11 @@ extern "C" {
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [out] pResults Barcode text results returned by last calling function 
-	 * 				DBR_DecodeFile/DBR_DecodeFileInMemory/DBR_DecodeBuffer/DBR_DecodeBase64String/DBR_DecodeDIB.
+	 * 				DBR_DecodeFile() / DBR_DecodeFileInMemory() / DBR_DecodeBuffer() / DBR_DecodeBase64String() / DBR_DecodeDIB().
 	 * 				The results is allocated by SDK and should be freed by calling function DBR_FreeTextResults.
 	 * 
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call 
-	 * 		   DBR_GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call 
+	 * 		   DBR_GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2691,13 +2902,13 @@ extern "C" {
 	DBR_API void  DBR_FreeTextResults(TextResultArray **pResults);
 
 	/**
-	 * Returns intermediate results containing the original image, the colour clustered image, the binarized Image, contours, Lines, TextBlocks, etc.
+	 * Returns intermediate results containing the original image, the colour clustered image, the binarized image, contours, lines, text blocks, etc.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [out] pResult The intermediate results returned by the SDK.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 *
 	 * @par Code Snippet:
@@ -2706,7 +2917,7 @@ extern "C" {
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->intermediateResultTypes = 7;
+			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
 			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
 			DBR_DecodeFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Images\\AllSupportedBarcodeTypes.tif", "");
@@ -2722,7 +2933,7 @@ extern "C" {
 	/**
 	 * Frees memory allocated for the intermediate results.
 	 * 
-	 * @param [int] pResult The intermediate results.
+	 * @param [in] pResults The intermediate results.
      *				   
 	 * @par Code Snippet:
 	 * @code
@@ -2730,7 +2941,7 @@ extern "C" {
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->intermediateResultTypes = 7;
+			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
 			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
 			DBR_DecodeFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Images\\AllSupportedBarcodeTypes.tif", "");
@@ -2754,14 +2965,14 @@ extern "C" {
 	*/
 
 	/**
-	 * Sets call back function to process errors generated during frame decoding.
+	 * Sets callback function to process errors generated during frame decoding.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
-	 * @param [in] cbFunction Call back function.
+	 * @param [in] cbFunction Callback function.
 	 * @param [in] pUser Customized arguments passed to your function.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
 	 *
@@ -2781,14 +2992,14 @@ extern "C" {
 	DBR_API	int DBR_SetErrorCallback(void *barcodeReader, CB_Error cbFunction, void * pUser);
 
 	/**
-	 * Sets call back function to process text results generated during frame decoding.
+	 * Sets callback function to process text results generated during frame decoding.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
-	 * @param [in] cbFunction Call back function.
+	 * @param [in] cbFunction Callback function.
 	 * @param [in] pUser Customized arguments passed to your function.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
 	 *
@@ -2808,14 +3019,14 @@ extern "C" {
 	DBR_API	int DBR_SetTextResultCallback(void *barcodeReader, CB_TextResult cbFunction, void * pUser);
 
 	/**
-	 * Sets call back function to process intermediate results generated during frame decoding.
+	 * Sets callback function to process intermediate results generated during frame decoding.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
-	 * @param [in] cbFunction Call back function.
+	 * @param [in] cbFunction Callback function.
 	 * @param [in] pUser Customized arguments passed to your function.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
 	 *
@@ -2829,7 +3040,7 @@ extern "C" {
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			int errorCode = DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->intermediateResultTypes = 7;
+			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
 			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
 			DBR_SetIntermediateResultCallback(barcodeReader, IntermediateResultFunction, NULL);
@@ -2848,7 +3059,7 @@ extern "C" {
 	 */
 #ifdef __cplusplus
 }
-#endif //endif of __cplusplus
+#endif // endif of __cplusplus.
 
 #ifdef __cplusplus
 class BarcodeReaderInner;
@@ -2865,23 +3076,23 @@ class BarcodeReaderInner;
 */
 
 /**
-* Defines a class that provides functions for working with extracting barcode data.
+* Defines a class that provides functions for working with barcode data extracting.
 * @class CBarcodeReader
 *
 * @nosubgrouping
 *
-* Four methods are now supported for editing runtime settings - reset, initialize, append, update.
-* - Reset runtime settings: reset all parameters in runtime setting to default value.
+* Four methods are now supported for editing runtime settings - reset, initialize, append, and update.
+* - Reset runtime settings: reset all parameters in runtime setting to default values.
 *
-* - Initialize with template: reset runtime settings firstly and replace all parameters in runtime setting with the values specified in given template regardless of the current runtime settings.
+* - Initialize with template: reset runtime settings firstly and replace all parameters in runtime setting with the values specified in the given template regardless of the current runtime settings.
 *
 * - Append template to runtime settings: append template and update runtime settings; the conflicting values will be assigned by the rules shown in PublicRuntimeSettings.
 *
-* - Update with struct: update current runtime settings by the values specified in given struct directly; the parameter not be defined in struct will remain its original value.
+* - Update with struct: update current runtime settings by the values specified in the given struct directly; the parameters not defined in the struct will remain their original values.
 *
 *
 * @par References
-* More information about public parameters and template file can be found in file DBR_Developer's_Guide.pdf.
+* More information about public parameters and template file can be found in the DBR_Developer's_Guide.pdf file.
 *
 *
 * @sa CPublicRuntimeSettings
@@ -2940,7 +3151,7 @@ public:
 	static const char* GetErrorString(const int iErrorCode);
 
 	/**
-	 * Returns the version info string for the SDK.
+	 * Returns the version info of the SDK.
 	 * 
 	 * @return The version info string.
 	 *
@@ -2963,12 +3174,12 @@ public:
 	*/
 
 	/**
-	 * Reads product key and activate the SDK.
+	 * Reads product key and activates the SDK.
 	 * 
 	 * @param [in] pLicense The product keys.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -2980,37 +3191,37 @@ public:
 	int InitLicense(const char* pLicense);
 
 	/**
-	 * Initializes barcode reader license and connects to the specified server for online verification.
+	 * Initializes the license and connects to the specified server for online verification.
 	 *
 	 * @param [in] pLicenseServer The URL of the license server.
-	 * @param [in] pLicenseKey The license key of Barcode Reader.
+	 * @param [in] pLicenseKey The license key.
 	 *
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 */
 	int InitLicenseFromServer(const char* pLicenseServer, const char* pLicenseKey);
 
 	/**
 	 * Initializes barcode reader license from the license content on the client machine for offline verification.
 	 *
-	 * @param [in] pLicenseKey The license key of Barcode Reader.
-	 * @param [in] pLicenseContent An encrypted string representing the license content (runtime number, expiry date, barcode type, etc.) obtained from the method OutputLicenseToString().
+	 * @param [in] pLicenseKey The license key.
+	 * @param [in] pLicenseContent An encrypted string representing the license content (quota, expiration date, barcode type, etc.) obtained from the method OutputLicenseToString().
 	 *
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 */
 	int InitLicenseFromLicenseContent(const char* pLicenseKey, const char* pLicenseContent);
 
 	/**
 	 * Outputs the license content as an encrypted string from the license server to be used for offline license verification.
 	 *
-	 * @param [in, out] content The output string which stores the contents of license.
-	 * @param [in] contentLen The length of output string.
+	 * @param [in, out] content The output string which stores the content of license.
+	 * @param [in] contentLen The length of output string. The recommended length is 512 per license key.
 	 *
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 * @par Remarks:
-	 *	    InitLicenseFromServer has to be successfully called before calling this method.
+	 *	    InitLicenseFromServer() has to be successfully called before calling this method.
 	 */
 	int OutputLicenseToString(char content[], const int contentLen);
 
@@ -3027,11 +3238,11 @@ public:
 	/**
 	 * Decodes barcodes in a specified image file.
 	 * 
-	 * @param [in] pszFileName A string defining the file name.
-	 * @param [in] pszTemplateName (Optional) The template name.
+	 * @param [in] pFileName A string defining the file name.
+	 * @param [in] pTemplateName (Optional) The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3053,8 +3264,8 @@ public:
 	 * @param [in] fileSize The length of the file bytes in memory.
 	 * @param [in] pTemplateName (Optional) The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3078,12 +3289,12 @@ public:
 	 * @param [in] pBufferBytes The array of bytes which contain the image data.
 	 * @param [in] iWidth The width of the image in pixels.
 	 * @param [in] iHeight The height of the image in pixels.
-	 * @param [in] iStride The stride of the image (also called scan width).
+	 * @param [in] iStride The stride (or scan width) of the image.
 	 * @param [in] format The image pixel format used in the image byte array.
 	 * @param [in] pszTemplateName (Optional) The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3110,8 +3321,8 @@ public:
 	 * @param [in] pBase64String A base64 encoded string that represents an image.
 	 * @param [in] pTemplateName (Optional) The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	  * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3137,8 +3348,8 @@ public:
 	 * @param [in] hDIB Handle of the device-independent bitmap.
 	 * @param [in] pszTemplateName (Optional) The template name.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	  * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3156,18 +3367,29 @@ public:
 	int  DecodeDIB(const HANDLE  hDIB, const char* pszTemplateName = "");
 
 	/**
+	* Initiates frame decoding parameters.
+	*
+	* @param [in,out] pParameters The frame decoding parameters.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message. Possible returns are:
+	* 		  DBR_OK;
+	*
+	*/
+	int InitFrameDecodingParameters(FrameDecodingParameters *pParameters);
+
+	/**
 	 * Starts a new thread to decode barcodes from the inner frame queue.
 	 * 
-	 * @param [in] maxListLength The max count of frames waiting for decoding.
-	 * @param [in] maxResultListLength The max count of frames whose results (text result/localization result) will be kept for further reference.
+	 * @param [in] maxQueueLength The max number of frames waiting for decoding.
+	 * @param [in] maxResultQueueLength The max number of frames whose results (text result/localization result) will be kept.
 	 * @param [in] width The width of the frame image in pixels.
 	 * @param [in] height The height of the frame image in pixels.
-	 * @param [in] stride The stride of the frame image (also called scan width).
+	 * @param [in] stride The stride (or scan width) of the frame image.
 	 * @param [in] format The image pixel format used in the image byte array.
 	 * @param [in] pTemplateName (Optional) The template name.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
 	 * 		   DBRERR_PARAMETER_VALUE_INVALID;
@@ -3181,14 +3403,55 @@ public:
 	 * @endcode
 	 *
 	 */
-	int StartFrameDecoding(const int maxListLength, const int maxResultListLength, const int width, const int height, const int stride, const ImagePixelFormat format, const char *pTemplateName = "");
+	int StartFrameDecoding(const int maxQueueLength, const int maxResultQueueLength, const int width, const int height, const int stride, const ImagePixelFormat format, const char *pTemplateName = "");
 	
 	/**
-	 * Append a frame image buffer to the inner frame queue.
+	* Starts a new thread to decode barcodes from the inner frame queue.
+	*
+	* @param [in] parameters The frame decoding parameters.
+	* @param [in] pTemplateName (Optional) The template name.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message. Possible returns are:
+	* 		   DBR_OK;
+	* 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
+	* 		   DBRERR_PARAMETER_VALUE_INVALID;
+	*
+	* @par Code Snippet:
+	* @code
+	*		CBarcodeReader* reader = new CBarcodeReader();
+	*		reader->InitLicense("t0260NwAAAHV***************");
+	*		FrameDecodingParameters parameters;
+	*		int errorCode = reader->InitFrameDecodingParameters(&parameters);
+	*		if(errorCode == DBR_OK)
+	*		{
+	*			parameters.maxQueueLength = 3;
+	*			parameters.maxResultQueueLength = 10;
+	*			parameters.width = 20;
+	*			parameters.height = 30;
+	*			parameters.stride = 10;
+	*			parameters.imagePixelFormat = IPF_GRAYSCALED;
+	*			parameters.region.regionMeasuredByPercentage = 1;
+	*			parameters.region.regionTop = 0;
+	*			parameters.region.regionBottom = 100;
+	*			parameters.region.regionLeft = 0;
+	*			parameters.region.regionRight = 100;
+	*			parameters.threshold = 0.1;
+	*			parameters.fps = 0;
+	*			reader->StartFrameDecodingEx(parameters, "");
+	*			delete reader;
+	*		}
+	* @endcode
+	*
+	*/
+	int StartFrameDecodingEx(FrameDecodingParameters parameters, const char* pTemplateName = "");
+
+	/**
+	 * Appends a frame image buffer to the inner frame queue.
 	 * 
 	 * @param [in] pBufferBytes The array of bytes which contain the image data.
      *				   
-	 * @return Returns the Id of the appended frame
+	 * @return Returns the ID of the appended frame.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3202,7 +3465,7 @@ public:
 	int AppendFrame(unsigned char *pBufferBytes);
 
 	/**
-	 * Get current length of the inner frame queue.
+	 * Gets current length of the inner frame queue.
      *				   
 	 * @return Returns the length of the inner frame queue.
 	 *
@@ -3218,10 +3481,10 @@ public:
 	int GetLengthOfFrameQueue();
 
 	/**
-	 * Stops the frame decoding thread created by StartFrameDecoding.
+	 * Stops the frame decoding thread created by StartFrameDecoding().
 	 * 
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   DBR_GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_STOP_DECODING_THREAD_FAILED;
 	 *
@@ -3246,12 +3509,12 @@ public:
 	*/
 
 	/**
-	 * Gets current settings and save it into a struct.
+	 * Gets current settings and save them into a struct.
 	 * 
 	 * @param [in,out] psettings The struct of template settings.
 	 * 				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3267,15 +3530,15 @@ public:
 	int GetRuntimeSettings(PublicRuntimeSettings *psettings);
 
 	/**
-	 * Update runtime settings with a given struct.
+	 * Updates runtime settings with a given struct.
 	 * 
 	 * @param [in] pSettings The struct of template settings.
 	 * @param [in,out] errorMsgBuffer (Optional) The buffer is allocated by caller and the recommended length 
 	 * 				   is 256. The error message will be copied to the buffer.
 	 * @param [in] errorMsgBufferLen (Optional) The length of the allocated buffer.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3283,7 +3546,7 @@ public:
 			reader->InitLicense("t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			int errorCode = reader->GetRuntimeSettings(pSettings);
-			pSettings->mDeblurLevel = 9;
+			pSettings->deblurLevel = 9;
 			char errorMessage[256];
 			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
 			delete pSettings;
@@ -3296,8 +3559,8 @@ public:
 	/**
 	* Resets all parameters to default values.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		  GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
@@ -3305,7 +3568,7 @@ public:
 			reader->InitLicense("t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			int errorCode = reader->GetRuntimeSettings(pSettings);
-			pSettings->mDeblurLevel = 9;
+			pSettings->deblurLevel = 9;
 			char errorMessage[256];
 			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
 			reader->ResetRuntimeSettings();
@@ -3326,8 +3589,8 @@ public:
 	 * @param [in,out] errorMsgBuffer (Optional) The buffer is allocated by the caller and the recommended length is 256. The error message will be copied to the buffer.
 	 * @param [in] errorMsgBufferLen (Optional) The length of the allocated buffer.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_SET_MODE_ARGUMENT_ERROR;
 	 *
@@ -3340,7 +3603,7 @@ public:
 			pSettings->binarizationModes[0] = BM_LOCAL_BLOCK;
 			char errorMessage[256];
 			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
-			reader->SetModeArgument("BinarizationModes", 0, "EnableFillBinaryVacancy", 1, errorMessage, 256);
+			reader->SetModeArgument("BinarizationModes", 0, "EnableFillBinaryVacancy", "1", errorMessage, 256);
 			delete pSettings;
 			delete reader;
 	 * @endcode
@@ -3349,7 +3612,7 @@ public:
 	 *		Check @ref ModesArgument for details
 	 *
 	 */
-	int SetModeArgument(const char *pModeName,const int index, const char *pArgumentName, const char *pArgumentValue, char errorMsgBuffer[] = NULL, const int errorMsgBufferLen = 0);
+	int SetModeArgument(const char *pModesName,const int index, const char *pArgumentName, const char *pArgumentValue, char errorMsgBuffer[] = NULL, const int errorMsgBufferLen = 0);
 
 	/**
 	* @}
@@ -3361,17 +3624,17 @@ public:
 	*/
 
 	/**
-	* Initialize runtime settings with the settings in given JSON file.
+	* Initialize runtime settings with the settings in a given JSON file.
 	*
 	* @param [in] pFilePath The path of the settings file.
-	* @param [in] conflictMode The parameter setting mode, which decides to inherit parameters from
-	* 			  previous template setting or overwrite previous settings and replace by new template.
+	* @param [in] conflictMode The parameter setting mode, which decides whether to inherit parameters from
+	* 			  previous template setting or to overwrite previous settings and replace with the new template.
 	* @param [in,out] errorMsgBuffer (Optional) The buffer is allocated by caller and the recommended length
 	* 				   is 256. The error message will be copied to the buffer.
 	* @param [in] errorMsgBufferLen (Optional) The length of the allocated buffer.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		  GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
@@ -3387,24 +3650,24 @@ public:
 	int  InitRuntimeSettingsWithFile(const char* pFilePath, const ConflictMode conflictMode, char errorMsgBuffer[] = NULL, int errorMsgBufferLen = 0);
 
 	/**
-	* Initialize runtime settings with the settings in given JSON string.
+	* Initializes runtime settings with the settings in a given JSON string.
 	*
 	* @param [in] content A JSON string that represents the content of the settings.
-	* @param [in] conflictMode The parameter setting mode, which decides to inherit parameters from
-	* 			  previous template setting or overwrite previous settings and replace by new template.
+	* @param [in] conflictMode The parameter setting mode, which decides whether to inherit parameters from
+	* 			  previous template setting or to overwrite previous settings with the new template.
 	* @param [in,out] errorMsgBuffer (Optional) The buffer is allocated by caller and the recommended length
 	* 				  is 256. The error message will be copied to the buffer.
 	* @param [in] errorMsgBufferLen (Optional) The length of the allocated buffer.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		  GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
 			CBarcodeReader* reader = new CBarcodeReader();
 			reader->InitLicense("t0260NwAAAHV***************");
 			char errorMessage[256];
-			reader->InitRuntimeSettingsWithString("{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_OVERWRITE, errorMessage, 256);
+			reader->InitRuntimeSettingsWithString("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_OVERWRITE, errorMessage, 256);
 			delete reader;
 	* @endcode
 	*
@@ -3413,17 +3676,17 @@ public:
 	int  InitRuntimeSettingsWithString(const char* content, const ConflictMode conflictMode, char errorMsgBuffer[] = NULL, int errorMsgBufferLen = 0);
 
 	/**
-	* Append a new template file to current runtime settings.
+	* Appends a new template file to the current runtime settings.
 	*
 	* @param [in] pFilePath The path of the settings file.
-	* @param [in] conflictMode The parameter setting mode, which decides to inherit parameters from
-	* 			  previous template setting or overwrite previous settings and replace by new template.
+	* @param [in] conflictMode The parameter setting mode, which decides whether to inherit parameters from
+	* 			  previous template setting or to overwrite previous settings with the new template.
 	* @param [in,out] errorMsgBuffer (Optional) The buffer is allocated by caller and the recommended length
 	* 				  is 256. The error message will be copied to the buffer.
 	* @param [in] errorMsgBufferLen (Optional) The length of the allocated buffer.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		  GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
@@ -3439,24 +3702,24 @@ public:
 	int  AppendTplFileToRuntimeSettings(const char* pFilePath, const ConflictMode conflictMode, char errorMsgBuffer[] = NULL, const int errorMsgBufferLen = 0);
 
 	/**
-	* Append a new template string to current runtime settings.
+	* Appends a new template string to the current runtime settings.
 	*
 	* @param [in] content A JSON string that represents the content of the settings.
-	* @param [in] conflictMode The parameter setting mode, which decides to inherit parameters from
-	* 			  previous template setting or overwrite previous settings and replace by new template.
+	* @param [in] conflictMode The parameter setting mode, which decides whether to inherit parameters from
+	* 			  previous template setting or to overwrite previous settings with the new template.
 	* @param [in,out] errorMsgBuffer (Optional) The buffer is allocated by caller and the recommended length
 	* 				  is 256. The error message will be copied to the buffer.
 	* @param [in] errorMsgBufferLen (Optional) The length of the allocated buffer.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		  GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
 			CBarcodeReader* reader = new CBarcodeReader();
 			reader->InitLicense("t0260NwAAAHV***************");
 			char errorMessage[256];
-			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessage, 256);
+			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessage, 256);
 			delete reader;
 	* @endcode
 	*
@@ -3476,7 +3739,7 @@ public:
 			char errorMessageInit[256];
 			char errorMessageAppend[256];
 			reader->InitRuntimeSettingsWithFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
-			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
 			int currentTemplateCount = reader->GetParameterTemplateCount();
 			delete reader;
 	* @endcode
@@ -3489,12 +3752,12 @@ public:
 	*
 	* @param [in] index The index of the parameter template array.
 	* @param [in,out] nameBuffer The buffer is allocated by caller and the recommended
-	* 				   nameBufferLen is 256. The template name would be copy to the buffer.
-	* @param [in] nNameBufferLen The length of allocated buffer.
+	* 				   nameBufferLen is 256. The template name will be copied to the buffer.
+	* @param [in] nameBufferLen The length of allocated buffer.
 
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		   GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
@@ -3503,7 +3766,7 @@ public:
 			char errorMessageInit[256];
 			char errorMessageAppend[256];
 			reader->InitRuntimeSettingsWithFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
-			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
 			int currentTemplateCount = reader->GetParameterTemplateCount();
 			int templateIndex = 1;
 			// notice that the value of 'templateIndex' should less than currentTemplateCount.
@@ -3517,13 +3780,13 @@ public:
 
 
 	/**
-	* Outputs runtime settings and save it into a settings file (JSON file).
+	* Outputs runtime settings and save them into a settings file (JSON file).
 	*
 	* @param [in] pFilePath The output file path which stores current settings.
 	* @param [in] pSettingsName A unique name for declaring current runtime settings.
 	*
-	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	* 		   GetErrorString to get detail message.
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
 	*
 	* @par Code Snippet:
 	* @code
@@ -3532,7 +3795,7 @@ public:
 			char errorMessageInit[256];
 			char errorMessageAppend[256];
 			reader->InitRuntimeSettingsWithFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
-			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
 			reader->OutputSettingsToFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\CurrentRuntimeSettings.json", "currentRuntimeSettings");
 			delete reader;
 	* @endcode
@@ -3545,11 +3808,11 @@ public:
 	 * Outputs runtime settings to a string.
 	 * 
 	 * @param [in,out] content The output string which stores the contents of current settings.
-	 * @param [in] contentLen The length of output string.
+	 * @param [in] contentLen The length of the output string.
 	 * @param [in] pSettingsName A unique name for declaring current runtime settings.
 	 * 			   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3558,7 +3821,7 @@ public:
 			char errorMessageInit[256];
 			char errorMessageAppend[256];
 			reader->InitRuntimeSettingsWithFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
-			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"2.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
 			char content[256];
 			reader->OutputSettingsToString(content, 256, "currentRuntimeSettings");
 			delete reader;
@@ -3581,10 +3844,10 @@ public:
 	 * 
 	 * @param [out] pResults Barcode text results returned by the last called function
 	 * 				DecodeFile/DecodeFileInMemory/DecodeBuffer/DecodeBase64String/DecodeDIB. The pResults is
-	 * 				allocated by our SDK and should be freed by calling the function FreeLocalizationResults.
+	 * 				allocated by the SDK and should be freed by calling the function FreeLocalizationResults.
 	 * 
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message.
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
 	 *
 	 * @par Code Snippet:
 	 * @code
@@ -3622,10 +3885,10 @@ public:
 	/**
 	 * Returns intermediate results containing the original image, the colour clustered image, the binarized Image, contours, Lines, TextBlocks, etc.
 	 * 
-	 * @param [out] pResult The intermediate results returned by the SDK.
+	 * @param [out] pResults The intermediate results returned by the SDK.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 *
 	 * @par Code Snippet:
@@ -3634,7 +3897,7 @@ public:
 			reader->InitLicense("t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			reader->GetRuntimeSettings(pSettings);
-			pSettings->intermediateResultTypes = 7;
+			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
 			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
 			reader->DecodeFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Images\\AllSupportedBarcodeTypes.tif", "");
@@ -3651,7 +3914,7 @@ public:
 	/**
 	 * Frees memory allocated for the intermediate results.
 	 * 
-	 * @param [int] pResult The intermediate results.
+	 * @param [in] pResults The intermediate results.
      *				   
 	 * @par Code Snippet:
 	 * @code
@@ -3659,7 +3922,7 @@ public:
 			reader->InitLicense("t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			reader->GetRuntimeSettings(pSettings);
-			pSettings->intermediateResultTypes = 7;
+			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
 			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
 			reader->DecodeFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Images\\AllSupportedBarcodeTypes.tif", "");
@@ -3684,13 +3947,13 @@ public:
 	*/
 
 	/**
-	 * Sets call back function to process errors generated during frame decoding.
+	 * Sets callback function to process errors generated during frame decoding.
 	 * 
-	 * @param [in] cbFunction Call back function.
+	 * @param [in] cbFunction Callback function.
 	 * @param [in] pUser Customized arguments passed to your function.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
 	 *
@@ -3710,13 +3973,13 @@ public:
 	int SetErrorCallback(CB_Error cbFunction, void * pUser);
 
 	/**
-	 * Sets call back function to process text results generated during frame decoding.
+	 * Sets callback function to process text results generated during frame decoding.
 	 * 
 	 * @param [in] cbFunction Call back function.
 	 * @param [in] pUser Customized arguments passed to your function.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
 	 *
@@ -3736,13 +3999,13 @@ public:
 	int SetTextResultCallback(CB_TextResult cbFunction, void * pUser);
 
 	/**
-	 * Sets call back function to process intermediate results generated during frame decoding.
+	 * Sets callback function to process intermediate results generated during frame decoding.
 	 * 
-	 * @param [in] cbFunction Call back function.
+	 * @param [in] cbFunction Callback function.
 	 * @param [in] pUser Customized arguments passed to your function.
      *				   
-	 * @return Returns error code. Returns 0 if the function operates successfully, otherwise call
-	 * 		   GetErrorString to get detail message. Possible returns are:
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   GetErrorString() to get detailed error message. Possible returns are:
 	 * 		   DBR_OK; 
 	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
 	 *
@@ -3756,7 +4019,7 @@ public:
 			reader->InitLicense("t0260NwAAAHV***************");
 			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
 			reader->GetRuntimeSettings(pSettings);
-			pSettings->intermediateResultTypes = 7;
+			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
 			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
 			reader->SetIntermediateResultCallback(IntermediateResultFunction, NULL);
@@ -3784,5 +4047,8 @@ private:
 * @}defgroup CandCPlus
  *
  */
-#endif
+#endif // endif of __cplusplus.
+
+#pragma endregion
+
 #endif

@@ -337,13 +337,27 @@ void onResultCallback(int frameId, TextResultArray *pResults, void * pUser)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
+    PyObject* list = PyList_New(count); 
     for (; i < count; i++)
     {
-        // https://docs.python.org/2.5/ext/callingPython.html
-        PyObject *result = PyObject_CallFunction(py_callback, "ss", pResults->results[i]->barcodeFormatString, pResults->results[i]->barcodeText);
-        if (result == NULL) return NULL;
-        Py_DECREF(result);
+        LocalizationResult* pLocalizationResult = pResults->results[i]->localizationResult;
+        int x1 = pLocalizationResult->x1;
+        int y1 = pLocalizationResult->y1;
+        int x2 = pLocalizationResult->x2;
+        int y2 = pLocalizationResult->y2;
+        int x3 = pLocalizationResult->x3;
+        int y3 = pLocalizationResult->y3;
+        int x4 = pLocalizationResult->x4;
+        int y4 = pLocalizationResult->y4;
+
+        PyObject* pyObject = Py_BuildValue("ssiiiiiiii", pResults->results[i]->barcodeFormatString, pResults->results[i]->barcodeText
+        , x1, y1, x2, y2, x3, y3, x4, y4);
+        PyList_SetItem(list, i, pyObject); // Add results to list
     }
+
+    PyObject *result = PyObject_CallFunction(py_callback, "O", list);
+    if (result == NULL) return NULL;
+    Py_DECREF(result);
 
     PyGILState_Release(gstate);
     /////////////////////////////////////////////

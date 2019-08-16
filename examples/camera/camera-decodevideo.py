@@ -8,10 +8,11 @@ import sys
 sys.path.append('../')
 import config
 
+results = None
 # The callback function for receiving barcode results
-def onBarcodeResult(format, text):
-    print("Type: " + format)
-    print("Value: " + text + "\n")
+def onBarcodeResult(data):
+    global results
+    results = data
 
 def get_time():
     localtime = time.localtime()
@@ -19,6 +20,7 @@ def get_time():
     return capturetime
 
 def read_barcode():
+    global results
     video_width = 640
     video_height = 480
 
@@ -42,6 +44,28 @@ def read_barcode():
     dbr.startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, onBarcodeResult)
 
     while True:
+        if results != None:
+            thickness = 2
+            color = (0,255,0)
+            for result in results:
+                print("barcode format: " + result[0])
+                print("barcode value: " + result[1])
+                x1 = result[2]
+                y1 = result[3]
+                x2 = result[4]
+                y2 = result[5]
+                x3 = result[6]
+                y3 = result[7]
+                x4 = result[8]
+                y4 = result[9]
+
+                cv2.line(frame, (x1, y1), (x2, y2), color, thickness)
+                cv2.line(frame, (x2, y2), (x3, y3), color, thickness)
+                cv2.line(frame, (x3, y3), (x4, y4), color, thickness)
+                cv2.line(frame, (x4, y4), (x1, y1), color, thickness)
+
+            results = None
+
         cv2.imshow(windowName, frame)
         rval, frame = vc.read()
 

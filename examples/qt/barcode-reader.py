@@ -113,7 +113,7 @@ class UI_Window(QWidget):
         self.stopCamera()
         # Load an image file.
         filename = QFileDialog.getOpenFileName(self, 'Open file',
-                                               'E:\\Program Files (x86)\\Dynamsoft\\Barcode Reader 7.0\\Images', "Barcode images (*)")
+                                               'E:\\Program Files (x86)\\Dynamsoft\\Barcode Reader 7.1\\Images', "Barcode images (*)")
         # Show barcode images
         pixmap = self.resizeImage(filename[0])
         self.label.setPixmap(pixmap)
