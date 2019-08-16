@@ -91,6 +91,21 @@ sudo python3 setup.py build install
     python test.py
     ```
 
+## Functions
+- initLicense(license-key)
+- decodeFile(filename)
+- decodeBuffer(frame-by-opencv-capture)
+- startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, callback)
+- stopVideoMode()
+- appendVideoFrame(frame-by-opencv-capture)
+- initLicenseFromLicenseContent(license-key, license-content)
+- outputLicenseToString()
+- initLicenseFromServer(license-key, license-server)
+- setFurtherModes(mode, [values])
+- setParameters(json-string)
+
+## Online Documentation
+https://www.dynamsoft.com/Products/Barcode-Reader-Resources.aspx#documentation
 
 ## Related Articles
 * [Python Barcode Decoding on Non-Python Created Thread](https://www.codepool.biz/python-decode-barcode-c-thread.html)
