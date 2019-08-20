@@ -169,7 +169,8 @@ decodeFile(PyObject *obj, PyObject *args)
 
     char *pFileName; // File name
     int iFormat;     // Barcode formats
-    if (!PyArg_ParseTuple(args, "si", &pFileName, &iFormat))
+    char *templateName = NULL;
+    if (!PyArg_ParseTuple(args, "si|s", &pFileName, &iFormat, &templateName))
     {
         return NULL;
     }
@@ -179,7 +180,7 @@ decodeFile(PyObject *obj, PyObject *args)
     TextResultArray *pResults = NULL;
 
     // Barcode detection
-    int ret = DBR_DecodeFile(self->hBarcode, pFileName, "");
+    int ret = DBR_DecodeFile(self->hBarcode, pFileName, templateName ? templateName : "");
     if (ret)
     {
         printf("Detection error: %s\n", DBR_GetErrorString(ret));
@@ -201,7 +202,8 @@ decodeBuffer(PyObject *obj, PyObject *args)
 
     PyObject *o;
     int iFormat;
-    if (!PyArg_ParseTuple(args, "Oi", &o, &iFormat))
+    char *templateName = NULL;
+    if (!PyArg_ParseTuple(args, "Oi|s", &o, &iFormat, &templateName))
         return NULL;
 
     updateFormat(self, iFormat);
@@ -270,7 +272,7 @@ decodeBuffer(PyObject *obj, PyObject *args)
     }
 
     PyObject *list = NULL;
-    int ret = DBR_DecodeBuffer(self->hBarcode, buffer, width, height, stride, format, "");
+    int ret = DBR_DecodeBuffer(self->hBarcode, buffer, width, height, stride, format, templateName ? templateName : "");
     if (ret)
     {
         printf("Detection error: %s\n", DBR_GetErrorString(ret));
