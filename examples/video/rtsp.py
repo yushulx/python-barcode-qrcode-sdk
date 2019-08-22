@@ -1,5 +1,6 @@
 import cv2
-import dbr
+from dbr import DynamsoftBarcodeReader
+dbr = DynamsoftBarcodeReader()
 import time
 import os
 
@@ -41,7 +42,6 @@ def read_barcode():
         # 'ESC' for quit
         key = cv2.waitKey(20)
         if key == 27:
-            dbr.destroy()
             break
 
     cv2.destroyWindow(windowName)

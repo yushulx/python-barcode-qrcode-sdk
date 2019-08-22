@@ -1,5 +1,5 @@
 # DBR Python Extension
-Version 6.5.3
+Version 7.1
 
 The repository aims to help developers build **Python barcode** apps with [Dynamsoft Barcode Reader](https://www.dynamsoft.com/Products/Dynamic-Barcode-Reader.aspx) in Windows, Linux, macOS, and Raspberry Pi.
 
@@ -25,9 +25,6 @@ Get the [trial license](https://www.dynamsoft.com/CustomerPortal/Portal/Triallic
     
     ```
     sudo apt-get install libopencv-dev python-opencv
-    # Or
-    sudo apt-get install python3-opencv
-
     ```
     
 * NumPy
@@ -35,15 +32,6 @@ Get the [trial license](https://www.dynamsoft.com/CustomerPortal/Portal/Triallic
     ```
     pip install numpy
     python3 -m pip install numpy
-    ```
-
-    For **Raspberry Pi**
-    
-    ```
-    sudo apt-get install python-numpy
-    # Or
-    sudo apt-get install python3-numpy
-
     ```
     
 ## HowTo
@@ -57,8 +45,8 @@ SET VS90COMNTOOLS=%VS140COMNTOOLS%
 Edit `setup.py`. Replace the **dbr_lib_dir** and **dbr_dll** with yours:
 
 ```
-dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.5.3\Components\C_C++\Lib'
-dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.5.3\Components\C_C++\Redist\x64'
+dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.1\Components\C_C++\Lib'
+dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.1\Components\C_C++\Redist\x64'
 ```
 
 Build and install the Python extension:
@@ -94,7 +82,7 @@ sudo python3 setup.py build install
 - examples/camera
 
     ```
-    python camera.py
+    python camera-decodevideo.py
     ```
     
 - examples/command-line
@@ -103,8 +91,35 @@ sudo python3 setup.py build install
     python test.py
     ```
 
+## Functions
+- initLicense(license-key)
+- decodeFile(filename, barcodeTypes) 
+
+    ```
+    barcodeTypes = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000 | 0x10000000 
+
+    1D: 0x3FF 
+    PDF417: 0x2000000
+    QRCODE: 0x4000000 
+    DataMatrix: 0x8000000 
+    Aztec Code: 0x10000000
+    ```
+
+- decodeBuffer(frame-by-opencv-capture, barcodeTypes)
+- startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, callback)
+- stopVideoMode()
+- appendVideoFrame(frame-by-opencv-capture)
+- initLicenseFromLicenseContent(license-key, license-content)
+- outputLicenseToString()
+- initLicenseFromServer(license-key, license-server)
+- setFurtherModes(mode, [values])
+- setParameters(json-string)
+
+## Online Documentation
+https://www.dynamsoft.com/Products/Barcode-Reader-Resources.aspx#documentation
 
 ## Related Articles
+* [Python Barcode Decoding on Non-Python Created Thread](https://www.codepool.biz/python-decode-barcode-c-thread.html)
 * [Things to Do with DBR 6.0 and Python Barcode Extension](http://www.codepool.biz/dynamsoft-barcode-python-extension-6-0.html)
 * [How to Port C/C++ Barcode Extension to Python 3](http://www.codepool.biz/cc-barcode-extension-python-3.html)
 * [Building Python Barcode Extension with DBR 5.0 on Windows](http://www.codepool.biz/python-barcode-extension-dbr-windows.html)

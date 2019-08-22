@@ -30,7 +30,7 @@ Set the default path for opening image files:
 
 ```python
 QFileDialog.getOpenFileName(self, 'Open file',
-                                               'E:\\Program Files (x86)\\Dynamsoft\\Barcode Reader 6.5.3\\Images', "Barcode images (*)")
+                                               'E:\\Program Files (x86)\\Dynamsoft\\Barcode Reader 7.1\\Images', "Barcode images (*)")
 ```
 
 Run the app:

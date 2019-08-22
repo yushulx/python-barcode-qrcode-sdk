@@ -1,5 +1,9 @@
 import os
-import dbr
+import json
+from dbr import DynamsoftBarcodeReader
+dbr = DynamsoftBarcodeReader()
+# print(dir(dbr))
+
 import cv2
 
 import sys
@@ -10,16 +14,16 @@ def initLicense(license):
     dbr.initLicense(license)
 
 
-def decodeFile(fileName):
-    results = dbr.decodeFile(fileName, config.barcodeTypes)
+def decodeFile(fileName, templateName = ""):
+    results = dbr.decodeFile(fileName, config.barcodeTypes, templateName)
 
     for result in results:
         print("barcode format: " + result[0])
         print("barcode value: " + result[1])
 
 
-def decodeBuffer(image):
-    results = dbr.decodeBuffer(image, config.barcodeTypes)
+def decodeBuffer(image, templateName = ""):
+    results = dbr.decodeBuffer(image, config.barcodeTypes, templateName)
 
     thickness = 2
     color = (0,255,0)
@@ -47,6 +51,7 @@ def decodeBuffer(image):
 if __name__ == "__main__":
     print("OpenCV version: " + cv2.__version__)
     import sys
+    barcode_image = ""
     if sys.version_info < (3, 0):
         barcode_image = raw_input("Enter the barcode file: ")
     else:
@@ -56,6 +61,16 @@ if __name__ == "__main__":
         print("It is not a valid file.")
     else:
         initLicense(config.license)
-        decodeFile(barcode_image)
+        templateName = ""
+        ##### Set dbr parameters
+        # templateName = "dbr"
+        # settings = {"ImageParameter": {"name": templateName,"IntermediateResultSavingMode":{"Mode":"IRSM_BOTH","FolderPath":"d:\\"}, "TerminatePhase" : "TP_BARCODE_RECOGNIZED", "IntermediateResultTypes": ["IRT_ORIGINAL_IMAGE", "IRT_COLOUR_CLUSTERED_IMAGE", "IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE", "IRT_BINARIZED_IMAGE"]}}
+        # params = json.dumps(settings)
+        # ret = dbr.setParameters(params)
+        # dbr.setFurtherModes(dbr.GRAY_SCALE_TRANSFORMATION_MODE, [dbr.GTM_INVERTED, dbr.GTM_ORIGINAL])
+        decodeFile(barcode_image, templateName)
         image = cv2.imread(barcode_image, 1)
-        decodeBuffer(image)
+        decodeBuffer(image, templateName)
+
+    
+    
