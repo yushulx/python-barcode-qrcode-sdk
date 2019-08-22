@@ -342,7 +342,7 @@ outputLicenseToString(PyObject *obj, PyObject *args)
     }
 
     char content[512];
-    int ret = DBR_OutputLicenseToString(self->hBarcode, content, 512);
+    int ret = DBR_OutputLicenseToString(hBarcode, content, 512);
     if (ret)
     {
         printf("%s\n", DBR_GetErrorString(ret));
@@ -375,7 +375,7 @@ initLicenseFromServer(PyObject *obj, PyObject *args)
         return NULL;
     }
 
-    int ret = DBR_InitLicenseFromServer(self->hBarcode, pLicenseServer, pszLicenseKey);
+    int ret = DBR_InitLicenseFromServer(hBarcode, pLicenseServer, pszLicenseKey);
     return Py_BuildValue("i", ret);
 }
 
