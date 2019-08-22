@@ -58,7 +58,7 @@ Edit `setup.py`. Replace the **dbr_lib_dir** and **dbr_dll** with yours:
 
 ```
 dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.5.3\Components\C_C++\Lib'
-dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.5.3\Components\C_C++\Redist\x64\DynamsoftBarcodeReaderx64.dll'
+dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 6.5.3\Components\C_C++\Redist\x64'
 ```
 
 Build and install the Python extension:
