@@ -128,29 +128,29 @@ static PyObject *createPyResults(TextResultArray *pResults, const char* encoding
             PyObject *result = PyUnicode_Decode(pResults->results[i]->barcodeBytes, pResults->results[i]->barcodeBytesLength, encoding, "strict");
             PyList_SetItem(pyObject, 1, result);
 
-            PyObject *x1 = Py_BuildValue("i", x1);
-            PyList_SetItem(pyObject, 2, x1);
+            PyObject *x1_pyobj = Py_BuildValue("i", x1);
+            PyList_SetItem(pyObject, 2, x1_pyobj);
 
-            PyObject *y1 = Py_BuildValue("i", y1);
-            PyList_SetItem(pyObject, 3, y1);
+            PyObject *y1_pyobj = Py_BuildValue("i", y1);
+            PyList_SetItem(pyObject, 3, y1_pyobj);
 
-            PyObject *x2 = Py_BuildValue("i", x2);
-            PyList_SetItem(pyObject, 4, x2);
+            PyObject *x2_pyobj = Py_BuildValue("i", x2);
+            PyList_SetItem(pyObject, 4, x2_pyobj);
 
             PyObject *y2 = Py_BuildValue("i", y2);
             PyList_SetItem(pyObject, 5, y2);
 
-            PyObject *x3 = Py_BuildValue("i", x3);
-            PyList_SetItem(pyObject, 6, x3);
+            PyObject *x3_pyobj = Py_BuildValue("i", x3);
+            PyList_SetItem(pyObject, 6, x3_pyobj);
 
-            PyObject *y3 = Py_BuildValue("i", y3);
-            PyList_SetItem(pyObject, 7, y3);
+            PyObject *y3_pyobj = Py_BuildValue("i", y3);
+            PyList_SetItem(pyObject, 7, y3_pyobj);
 
-            PyObject *x4 = Py_BuildValue("i", x4);
-            PyList_SetItem(pyObject, 8, x4);
+            PyObject *x4_pyobj = Py_BuildValue("i", x4);
+            PyList_SetItem(pyObject, 8, x4_pyobj);
 
-            PyObject *y4 = Py_BuildValue("i", y4);
-            PyList_SetItem(pyObject, 9, y4);
+            PyObject *y4_pyobj = Py_BuildValue("i", y4);
+            PyList_SetItem(pyObject, 9, y4_pyobj);
 
         }
         else
