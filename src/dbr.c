@@ -126,6 +126,11 @@ static PyObject *createPyResults(TextResultArray *pResults, const char* encoding
             PyList_SetItem(pyObject, 0, format);
             
             PyObject *result = PyUnicode_Decode(pResults->results[i]->barcodeBytes, pResults->results[i]->barcodeBytesLength, encoding, "strict");
+            if (result == NULL) 
+            {
+                PyErr_SetString(PyExc_TypeError, "Failed to decode barcode results!");
+                return NULL;
+            }
             PyList_SetItem(pyObject, 1, result);
 
             PyObject *x1_pyobj = Py_BuildValue("i", x1);
