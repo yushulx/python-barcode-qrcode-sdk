@@ -15,11 +15,13 @@ def initLicense(license):
 
 
 def decodeFile(fileName, templateName = ""):
-    results = dbr.decodeFile(fileName, config.barcodeTypes, templateName)
-
-    for result in results:
-        print("barcode format: " + result[0])
-        print("barcode value: " + result[1])
+    try:
+        results = dbr.decodeFile(fileName, config.barcodeTypes, templateName, "utf8")
+        for result in results:
+            print("barcode format: " + result[0])
+            print("barcode value: " + result[1])
+    except Exception as err:
+        print(err)
 
 
 def decodeBuffer(image, templateName = ""):

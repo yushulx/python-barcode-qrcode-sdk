@@ -89,7 +89,7 @@ initLicense(PyObject *obj, PyObject *args)
     return Py_BuildValue("i", ret);
 }
 
-static PyObject *createPyResults(TextResultArray *pResults)
+static PyObject *createPyResults(TextResultArray *pResults, const char* encoding)
 {
     if (!pResults)
     {
@@ -115,8 +115,47 @@ static PyObject *createPyResults(TextResultArray *pResults)
         int y3 = pLocalizationResult->y3;
         int x4 = pLocalizationResult->x4;
         int y4 = pLocalizationResult->y4;
+        PyObject *pyObject = NULL;
+        if (encoding) {
+            pyObject = PyList_New(10);
+        #ifdef IS_PY3K
+            PyObject *format = PyUnicode_FromString(pResults->results[i]->barcodeFormatString);
+        #else
+            PyObject *format = PyString_FromString(pResults->results[i]->barcodeFormatString);
+        #endif
+            PyList_SetItem(pyObject, 0, format);
+            
+            PyObject *result = PyUnicode_Decode(pResults->results[i]->barcodeBytes, pResults->results[i]->barcodeBytesLength, encoding, "strict");
+            PyList_SetItem(pyObject, 1, result);
 
-        PyObject *pyObject = Py_BuildValue("ssiiiiiiii", pResults->results[i]->barcodeFormatString, pResults->results[i]->barcodeText, x1, y1, x2, y2, x3, y3, x4, y4);
+            PyObject *x1 = Py_BuildValue("i", x1);
+            PyList_SetItem(pyObject, 2, x1);
+
+            PyObject *y1 = Py_BuildValue("i", y1);
+            PyList_SetItem(pyObject, 3, y1);
+
+            PyObject *x2 = Py_BuildValue("i", x2);
+            PyList_SetItem(pyObject, 4, x2);
+
+            PyObject *y2 = Py_BuildValue("i", y2);
+            PyList_SetItem(pyObject, 5, y2);
+
+            PyObject *x3 = Py_BuildValue("i", x3);
+            PyList_SetItem(pyObject, 6, x3);
+
+            PyObject *y3 = Py_BuildValue("i", y3);
+            PyList_SetItem(pyObject, 7, y3);
+
+            PyObject *x4 = Py_BuildValue("i", x4);
+            PyList_SetItem(pyObject, 8, x4);
+
+            PyObject *y4 = Py_BuildValue("i", y4);
+            PyList_SetItem(pyObject, 9, y4);
+
+        }
+        else
+            pyObject = Py_BuildValue("ssiiiiiiii", pResults->results[i]->barcodeFormatString, pResults->results[i]->barcodeText, x1, y1, x2, y2, x3, y3, x4, y4);
+        
         PyList_SetItem(list, i, pyObject); // Add results to list
 
         // Print out PyObject if needed
@@ -170,7 +209,8 @@ decodeFile(PyObject *obj, PyObject *args)
     char *pFileName; // File name
     int iFormat;     // Barcode formats
     char *templateName = NULL;
-    if (!PyArg_ParseTuple(args, "si|s", &pFileName, &iFormat, &templateName))
+    char *encoding = NULL;
+    if (!PyArg_ParseTuple(args, "si|ss", &pFileName, &iFormat, &templateName, &encoding))
     {
         return NULL;
     }
@@ -188,7 +228,7 @@ decodeFile(PyObject *obj, PyObject *args)
     DBR_GetAllTextResults(self->hBarcode, &pResults);
 
     // Wrap results
-    PyObject *list = createPyResults(pResults);
+    PyObject *list = createPyResults(pResults, encoding);
     return list;
 }
 
@@ -203,7 +243,8 @@ decodeBuffer(PyObject *obj, PyObject *args)
     PyObject *o;
     int iFormat;
     char *templateName = NULL;
-    if (!PyArg_ParseTuple(args, "Oi|s", &o, &iFormat, &templateName))
+    char *encoding = NULL;
+    if (!PyArg_ParseTuple(args, "Oi|s", &o, &iFormat, &templateName, &encoding))
         return NULL;
 
     updateFormat(self, iFormat);
@@ -279,7 +320,7 @@ decodeBuffer(PyObject *obj, PyObject *args)
     }
     // Wrap results
     DBR_GetAllTextResults(self->hBarcode, &pResults);
-    list = createPyResults(pResults);
+    list = createPyResults(pResults, encoding);
 
 #if defined(IS_PY3K)
     Py_DECREF(memoryview);
