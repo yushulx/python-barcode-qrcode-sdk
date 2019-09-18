@@ -69,6 +69,20 @@ typedef struct
     PyObject *py_callback;
 } DynamsoftBarcodeReader;
 
+void ToHexString(unsigned char* pSrc, int iLen, char* pDest)
+{
+	const char HEXCHARS[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+	int i;
+	char* ptr = pDest;
+
+	for(i = 0; i < iLen; ++i)
+	{
+		sprintf_s(ptr, 4, "%c%c ", HEXCHARS[ ( pSrc[i] & 0xF0 ) >> 4 ], HEXCHARS[ ( pSrc[i] & 0x0F ) >> 0 ]);
+		ptr += 3;
+	}
+}
+
 /**
  * Set Dynamsoft Barcode Reader license.  
  * To get valid license, please contact support@dynamsoft.com
@@ -128,7 +142,12 @@ static PyObject *createPyResults(TextResultArray *pResults, const char* encoding
             PyObject *result = PyUnicode_Decode(pResults->results[i]->barcodeBytes, pResults->results[i]->barcodeBytesLength, encoding, "strict");
             if (result == NULL) 
             {
-                PyErr_SetString(PyExc_TypeError, "Failed to decode barcode results!");
+                char *hex = (char*)malloc(pResults->results[i]->barcodeBytesLength * 3 + 1);
+                ToHexString(pResults->results[i]->barcodeBytes, pResults->results[i]->barcodeBytesLength, hex);
+                printf("Hex Data: %s\n", hex);
+                free(hex);
+
+                PyErr_SetString(PyExc_TypeError, "Incorrect character set! Failed to decode barcode results!");
                 return NULL;
             }
             PyList_SetItem(pyObject, 1, result);
