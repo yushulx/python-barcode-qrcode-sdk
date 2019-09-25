@@ -1,5 +1,5 @@
 # DBR Python Extension
-Version 7.1
+Version 7.2
 
 The repository aims to help developers build **Python barcode** apps with [Dynamsoft Barcode Reader](https://www.dynamsoft.com/Products/Dynamic-Barcode-Reader.aspx) in Windows, Linux, macOS, and Raspberry Pi.
 
@@ -11,6 +11,34 @@ Get the [trial license](https://www.dynamsoft.com/CustomerPortal/Portal/Triallic
 
 ## Environment
 **Python 2/3**
+
+## Supported Symbologies
+- Linear Barcodes (1D)
+
+    - Code 39 (including Code 39 Extended)
+    - Code 93
+    - Code 128
+    - Codabar
+    - Interleaved 2 of 5
+    - EAN-8
+    - EAN-13
+    - UPC-A
+    - UPC-E
+    - Industrial 2 of 5
+
+- 2D Barcodes:
+    - QR Code (including Micro QR Code)
+    - Data Matrix
+    - PDF417 (including Micro PDF417)
+    - Aztec Code
+    - MaxiCode (mode 2-5)
+
+- Patch Code
+- GS1 DataBar (Omnidirectional,
+Truncated, Stacked, Stacked
+Omnidirectional, Limited,
+Expanded, Expanded Stacked)
+- GS1 Composite Code
 
 ## Installation
 * [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.com/Downloads/Dynamic-Barcode-Reader-Download.aspx).
@@ -45,8 +73,8 @@ SET VS90COMNTOOLS=%VS140COMNTOOLS%
 Edit `setup.py`. Replace the **dbr_lib_dir** and **dbr_dll** with yours:
 
 ```
-dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.1\Components\C_C++\Lib'
-dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.1\Components\C_C++\Redist\x64'
+dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.2\Components\C_C++\Lib'
+dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.2\Components\C_C++\Redist\x64'
 ```
 
 Build and install the Python extension:
@@ -96,14 +124,17 @@ sudo python3 setup.py build install
 - decodeFile(filename, barcodeTypes) 
 
     ```
-    barcodeTypes = 0x3FF | 0x2000000 | 0x4000000 | 0x8000000 | 0x10000000 
-
-    1D: 0x3FF 
-    PDF417: 0x2000000
-    QRCODE: 0x4000000 
-    DataMatrix: 0x8000000 
-    Aztec Code: 0x10000000
+    barcodeTypes = dbr.BF_ONED | dbr.BF_PDF417 | dbr.BF_QR_CODE | dbr.BF_DATAMATRIX | dbr.BF_AZTEC 
     ```
+
+    | Barcode Format| Values            |
+    | ------------- |-------------------|
+    | ALL           | dbr.BF_ALL        |
+    | 1D            | dbr.BF_ONED       |
+    | PDF417        | dbr.BF_PDF417     |
+    | QR Code       | dbr.BF_QR_CODE    |
+    | DataMatrix    | dbr.BF_DATAMATRIX |
+    | Aztec Code    | dbr.BF_AZTEC      |
 
 - decodeBuffer(frame-by-opencv-capture, barcodeTypes)
 - startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, callback)

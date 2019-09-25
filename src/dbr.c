@@ -63,6 +63,44 @@ typedef struct
     int GTM_INVERTED;
     int GTM_ORIGINAL;
     int GTM_SKIP;
+    // Barcode formats
+    int BF_ALL;
+    int BF_ONED;
+    int BF_GS1_DATABAR;
+    int BF_POSTALCODE;
+    int BF_CODE_39;
+    int BF_CODE_128;
+    int BF_CODE_93;
+    int BF_CODABAR;
+    int BF_ITF;
+    int BF_EAN_13;
+    int BF_EAN_8;
+    int BF_UPC_A;
+    int BF_UPC_E;
+    int BF_INDUSTRIAL_25;
+    int BF_CODE_39_EXTENDED;
+    int BF_GS1_DATABAR_OMNIDIRECTIONAL;
+    int BF_GS1_DATABAR_TRUNCATED;
+    int BF_GS1_DATABAR_STACKED;
+    int BF_GS1_DATABAR_STACKED_OMNIDIRECTIONAL;
+    int BF_GS1_DATABAR_EXPANDED;
+    int BF_GS1_DATABAR_EXPANDED_STACKED;
+    int BF_GS1_DATABAR_LIMITED;
+    int BF_PATCHCODE;
+    int BF_USPSINTELLIGENTMAIL;
+    int BF_POSTNET;
+    int BF_PLANET;
+    int BF_AUSTRALIANPOST;
+    int BF_UKROYALMAIL;
+    int BF_PDF417;
+    int BF_QR_CODE;
+    int BF_DATAMATRIX;
+    int BF_AZTEC;
+    int BF_MAXICODE;
+    int BF_MICRO_QR;
+    int BF_MICRO_PDF417;
+    int BF_GS1_COMPOSITE;
+    int BF_NULL;
     // Barcode reader handler
     void *hBarcode;
     // Callback function for video mode
@@ -764,6 +802,78 @@ static PyMemberDef dbr_members[] = {
      NULL},
     {"GTM_SKIP", T_INT, offsetof(DynamsoftBarcodeReader, GTM_SKIP), 0,
      NULL},
+     {"BF_ALL", T_INT, offsetof(DynamsoftBarcodeReader, BF_ALL), 0,
+     NULL},
+     {"BF_ONED", T_INT, offsetof(DynamsoftBarcodeReader, BF_ONED), 0,
+     NULL},
+     {"BF_GS1_DATABAR", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_DATABAR), 0,
+     NULL},
+     {"BF_POSTALCODE", T_INT, offsetof(DynamsoftBarcodeReader, BF_POSTALCODE), 0,
+     NULL},
+     {"BF_CODE_39", T_INT, offsetof(DynamsoftBarcodeReader, BF_CODE_39), 0,
+     NULL},
+     {"BF_CODE_128", T_INT, offsetof(DynamsoftBarcodeReader, BF_CODE_128), 0,
+     NULL},
+     {"BF_CODE_93", T_INT, offsetof(DynamsoftBarcodeReader, BF_CODE_93), 0,
+     NULL},
+     {"BF_CODABAR", T_INT, offsetof(DynamsoftBarcodeReader, BF_CODABAR), 0,
+     NULL},
+     {"BF_ITF", T_INT, offsetof(DynamsoftBarcodeReader, BF_ITF), 0,
+     NULL},
+      {"BF_EAN_13", T_INT, offsetof(DynamsoftBarcodeReader, BF_EAN_13), 0,
+     NULL},
+     {"BF_EAN_8", T_INT, offsetof(DynamsoftBarcodeReader, BF_EAN_8), 0,
+     NULL},
+     {"BF_UPC_A", T_INT, offsetof(DynamsoftBarcodeReader, BF_UPC_A), 0,
+     NULL},
+     {"BF_UPC_E", T_INT, offsetof(DynamsoftBarcodeReader, BF_UPC_E), 0,
+     NULL},
+     {"BF_INDUSTRIAL_25", T_INT, offsetof(DynamsoftBarcodeReader, BF_INDUSTRIAL_25), 0,
+     NULL},
+     {"BF_CODE_39_EXTENDED", T_INT, offsetof(DynamsoftBarcodeReader, BF_CODE_39_EXTENDED), 0,
+     NULL},
+     {"BF_GS1_DATABAR_OMNIDIRECTIONAL", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_DATABAR_OMNIDIRECTIONAL), 0,
+     NULL},
+     {"BF_GS1_DATABAR_TRUNCATED", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_DATABAR_TRUNCATED), 0,
+     NULL},
+     {"BF_GS1_DATABAR_STACKED", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_DATABAR_STACKED), 0,
+     NULL},
+     {"BF_GS1_DATABAR_STACKED_OMNIDIRECTIONAL", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_DATABAR_STACKED_OMNIDIRECTIONAL), 0,
+     NULL},
+      {"BF_GS1_DATABAR_EXPANDED", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_DATABAR_EXPANDED), 0,
+     NULL},
+     {"BF_GS1_DATABAR_EXPANDED_STACKED", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_DATABAR_EXPANDED_STACKED), 0,
+     NULL},
+     {"BF_GS1_DATABAR_LIMITED", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_DATABAR_LIMITED), 0,
+     NULL},
+     {"BF_PATCHCODE", T_INT, offsetof(DynamsoftBarcodeReader, BF_PATCHCODE), 0,
+     NULL},
+     {"BF_USPSINTELLIGENTMAIL", T_INT, offsetof(DynamsoftBarcodeReader, BF_USPSINTELLIGENTMAIL), 0,
+     NULL},
+     {"BF_PLANET", T_INT, offsetof(DynamsoftBarcodeReader, BF_PLANET), 0,
+     NULL},
+     {"BF_AUSTRALIANPOST", T_INT, offsetof(DynamsoftBarcodeReader, BF_AUSTRALIANPOST), 0,
+     NULL},
+     {"BF_UKROYALMAIL", T_INT, offsetof(DynamsoftBarcodeReader, BF_UKROYALMAIL), 0,
+     NULL},
+     {"BF_PDF417", T_INT, offsetof(DynamsoftBarcodeReader, BF_PDF417), 0,
+     NULL},
+      {"BF_QR_CODE", T_INT, offsetof(DynamsoftBarcodeReader, BF_QR_CODE), 0,
+     NULL},
+     {"BF_DATAMATRIX", T_INT, offsetof(DynamsoftBarcodeReader, BF_DATAMATRIX), 0,
+     NULL},
+     {"BF_AZTEC", T_INT, offsetof(DynamsoftBarcodeReader, BF_AZTEC), 0,
+     NULL},
+     {"BF_MAXICODE", T_INT, offsetof(DynamsoftBarcodeReader, BF_MAXICODE), 0,
+     NULL},
+     {"BF_MICRO_QR", T_INT, offsetof(DynamsoftBarcodeReader, BF_MICRO_QR), 0,
+     NULL},
+     {"BF_MICRO_PDF417", T_INT, offsetof(DynamsoftBarcodeReader, BF_MICRO_PDF417), 0,
+     NULL},
+     {"BF_GS1_COMPOSITE", T_INT, offsetof(DynamsoftBarcodeReader, BF_GS1_COMPOSITE), 0,
+     NULL},
+     {"BF_NULL", T_INT, offsetof(DynamsoftBarcodeReader, BF_NULL), 0,
+     NULL},
     {NULL} /* Sentinel */
 };
 
@@ -885,9 +995,6 @@ DynamsoftBarcodeReader_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->DEFORMATION_RESISTING_MODE = PyUnicode_FromString("deformationResistingModes");
         self->BARCODE_COMPLEMENT_MODE = PyUnicode_FromString("barcodeComplementModes");
         self->BARCODE_COLOR_MODE = PyUnicode_FromString("barcodeColourModes");
-        self->GTM_INVERTED = 0x01;
-        self->GTM_ORIGINAL = 0x02;
-        self->GTM_SKIP = 0x00;
 #else
         self->COLOR_CLUTERING_MODE = PyString_FromString("colourClusteringModes");
         self->COLOR_CONVERSION_MODE = PyString_FromString("colourConversionModes");
@@ -901,10 +1008,48 @@ DynamsoftBarcodeReader_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->DEFORMATION_RESISTING_MODE = PyString_FromString("deformationResistingModes");
         self->BARCODE_COMPLEMENT_MODE = PyString_FromString("barcodeComplementModes");
         self->BARCODE_COLOR_MODE = PyString_FromString("barcodeColourModes");
+#endif
         self->GTM_INVERTED = 0x01;
         self->GTM_ORIGINAL = 0x02;
         self->GTM_SKIP = 0x00;
-#endif
+        // Barcode formats
+        self->BF_ALL = BF_ALL;
+        self->BF_ONED = BF_ONED;
+        self->BF_GS1_DATABAR = BF_GS1_DATABAR;
+        self->BF_POSTALCODE = BF_POSTALCODE;
+        self->BF_CODE_39 = BF_CODE_39;
+        self->BF_CODE_128 = BF_CODE_128;
+        self->BF_CODE_93 = BF_CODE_93;
+        self->BF_CODABAR = BF_CODABAR;
+        self->BF_ITF = BF_ITF;
+        self->BF_EAN_13 = BF_EAN_13;
+        self->BF_EAN_8 = BF_EAN_8;
+        self->BF_UPC_A = BF_UPC_A;
+        self->BF_UPC_E = BF_UPC_E;
+        self->BF_INDUSTRIAL_25 = BF_INDUSTRIAL_25;
+        self->BF_CODE_39_EXTENDED = BF_CODE_39_EXTENDED;
+        self->BF_GS1_DATABAR_OMNIDIRECTIONAL = BF_GS1_DATABAR_OMNIDIRECTIONAL;
+        self->BF_GS1_DATABAR_TRUNCATED = BF_GS1_DATABAR_TRUNCATED;
+        self->BF_GS1_DATABAR_STACKED = BF_GS1_DATABAR_STACKED;
+        self->BF_GS1_DATABAR_STACKED_OMNIDIRECTIONAL = BF_GS1_DATABAR_STACKED_OMNIDIRECTIONAL;
+        self->BF_GS1_DATABAR_EXPANDED = BF_GS1_DATABAR_EXPANDED;
+        self->BF_GS1_DATABAR_EXPANDED_STACKED = BF_GS1_DATABAR_EXPANDED_STACKED;
+        self->BF_GS1_DATABAR_LIMITED = BF_GS1_DATABAR_LIMITED;
+        self->BF_PATCHCODE = BF_PATCHCODE;
+        self->BF_USPSINTELLIGENTMAIL = BF_USPSINTELLIGENTMAIL;
+        self->BF_POSTNET = BF_POSTNET;
+        self->BF_PLANET = BF_PLANET;
+        self->BF_AUSTRALIANPOST = BF_AUSTRALIANPOST;
+        self->BF_UKROYALMAIL = BF_UKROYALMAIL;
+        self->BF_PDF417 = BF_PDF417;
+        self->BF_QR_CODE = BF_QR_CODE;
+        self->BF_DATAMATRIX = BF_DATAMATRIX;
+        self->BF_AZTEC = BF_AZTEC;
+        self->BF_MAXICODE = BF_MAXICODE;
+        self->BF_MICRO_QR = BF_MICRO_QR;
+        self->BF_MICRO_PDF417 = BF_MICRO_PDF417;
+        self->BF_GS1_COMPOSITE = BF_GS1_COMPOSITE;
+        self->BF_NULL = BF_NULL;
 
         if (self->GRAY_SCALE_TRANSFORMATION_MODE == NULL)
         {

@@ -16,7 +16,7 @@ def initLicense(license):
 
 def decodeFile(fileName, templateName = ""):
     try:
-        results = dbr.decodeFile(fileName, config.barcodeTypes, templateName, "utf8")
+        results = dbr.decodeFile(fileName, dbr.BF_ONED | dbr.BF_PDF417 | dbr.BF_QR_CODE | dbr.BF_DATAMATRIX | dbr.BF_AZTEC, templateName, "utf8")
         for result in results:
             print("barcode format: " + result[0])
             print("barcode value: " + result[1])
@@ -25,7 +25,7 @@ def decodeFile(fileName, templateName = ""):
 
 
 def decodeBuffer(image, templateName = ""):
-    results = dbr.decodeBuffer(image, config.barcodeTypes, templateName)
+    results = dbr.decodeBuffer(image, dbr.BF_ALL, templateName)
 
     thickness = 2
     color = (0,255,0)

@@ -34,7 +34,7 @@ typedef void* HANDLE;
 * Dynamsoft Barcode Reader - C/C++ APIs Description.
 */
 
-#define DBR_VERSION                  "7.1.0.0808"
+#define DBR_VERSION                  "7.2.0.09242"
 
 #pragma region ErrorCode
 
@@ -191,11 +191,25 @@ typedef void* HANDLE;
 #define DBRERR_LICENSE_CONTENT_INVALID      -10052
 
 /**The license key is invalid. */
-#define DBRERR_LICENSE_KEY_INVALID      -10053
+#define DBRERR_LICENSE_KEY_INVALID			-10053
 
 /**The device number in the license key runs out. */
 #define DBRERR_LICENSE_DEVICE_RUNS_OUT      -10054
 
+/**Failed to get mode's argument. */
+#define DBRERR_GET_MODE_ARGUMENT_ERROR		-10055
+
+/**The Intermediate Result Types license is invalid. */
+#define DBRERR_IRT_LICENSE_INVALID			-10056
+
+/**The Maxicode license is invalid. */
+#define DBRERR_MAXICODE_LICENSE_INVALID		-10057
+
+/**The GS1 Databar license is invalid. */
+#define DBRERR_GS1_DATABAR_LICENSE_INVALID		-10058
+
+/**The GS1 Composite code license is invalid. */
+#define DBRERR_GS1_COMPOSITE_LICENSE_INVALID		-10059
 
 /**
  * @}defgroup ErrorCode
@@ -216,11 +230,18 @@ typedef void* HANDLE;
 typedef enum
 {
 	/**All supported formats */
-	BF_ALL = 0x1E0007FF,
+#if defined(_WIN32) || defined(_WIN64)
+	BF_ALL = 0xFE0FFFFF,
+#else
+	BF_ALL = -32505857,
+#endif
 	
 	/**Combined value of BF_CODABAR, BF_CODE_128, BF_CODE_39, BF_CODE_39_Extended, BF_CODE_93, BF_EAN_13, BF_EAN_8, INDUSTRIAL_25, BF_ITF, BF_UPC_A, BF_UPC_E; */
-	BF_ONED = 0x7FF,
-	
+	BF_ONED = 0x000007FF,
+
+	/**Combined value of BF_GS1_DATABAR_OMNIDIRECTIONAL, BF_GS1_DATABAR_TRUNCATED, BF_GS1_DATABAR_STACKED, BF_GS1_DATABAR_STACKED_OMNIDIRECTIONAL, BF_GS1_DATABAR_EXPANDED, BF_GS1_DATABAR_EXPANDED_STACKED, BF_GS1_DATABAR_LIMITED*/
+	BF_GS1_DATABAR = 0x0003F800,
+
 	/**Combined value of BF_USPSINTELLIGENTMAIL, BF_POSTNET, BF_PLANET, BF_AUSTRALIANPOST, BF_UKROYALMAIL. Not supported yet. */
 	BF_POSTALCODE = 0x01F00000,
 	
@@ -257,37 +278,91 @@ typedef enum
 	/**CODE39 Extended */
 	BF_CODE_39_EXTENDED = 0x400,
 	
-	/**PDF417 */
-	BF_PDF417 = 0x2000000,
-	
-	/**QRCode */
-	BF_QR_CODE = 0x4000000,
-	
-	/**DataMatrix */
-	BF_DATAMATRIX = 0x8000000,
-	
-	/**AZTEC */
-	BF_AZTEC = 0x10000000,
-	
+	/**GS1 Databar Omnidirectional*/
+	BF_GS1_DATABAR_OMNIDIRECTIONAL = 0x800,
+
+	/**GS1 Databar Truncated*/
+	BF_GS1_DATABAR_TRUNCATED = 0x1000,
+
+	/**GS1 Databar Stacked*/
+	BF_GS1_DATABAR_STACKED = 0x2000,
+
+	/**GS1 Databar Stacked Omnidirectional*/
+	BF_GS1_DATABAR_STACKED_OMNIDIRECTIONAL = 0x4000,
+
+	/**GS1 Databar Expanded*/
+	BF_GS1_DATABAR_EXPANDED = 0x8000,
+
+	/**GS1 Databar Expaned Stacked*/
+	BF_GS1_DATABAR_EXPANDED_STACKED = 0x10000,
+
+	/**GS1 Databar Limited*/
+	BF_GS1_DATABAR_LIMITED = 0x20000,
+
+	/**Patch code. */
+	BF_PATCHCODE = 0x00040000,
+
 	/**USPS Intelligent Mail. Not supported yet. */
 	BF_USPSINTELLIGENTMAIL = 0x00100000,
-	
+
 	/**Postnet. Not supported yet. */
 	BF_POSTNET = 0x00200000,
-	
+
 	/**Planet. Not supported yet. */
 	BF_PLANET = 0x00400000,
-	
+
 	/**Australian Post. Not supported yet. */
 	BF_AUSTRALIANPOST = 0x00800000,
-	
+
 	/**UK Royal Mail. Not supported yet. */
 	BF_UKROYALMAIL = 0x01000000,
-	
-	/**Patch code. Not supported yet. */
-	BF_PATCHCODE = 0x00010000
+
+	/**PDF417 */
+	BF_PDF417 = 0x02000000,
+
+	/**QRCode */
+	BF_QR_CODE = 0x04000000,
+
+	/**DataMatrix */
+	BF_DATAMATRIX = 0x08000000,
+
+	/**AZTEC */
+	BF_AZTEC = 0x10000000,
+
+	/**MAXICODE */
+	BF_MAXICODE = 0x20000000,
+
+	/**Micro QR Code*/
+	BF_MICRO_QR = 0x40000000,
+
+	/**Micro PDF417*/
+	BF_MICRO_PDF417 = 0x00080000,
+
+	/**GS1 Composite Code*/
+#if defined(_WIN32) || defined(_WIN64)
+	BF_GS1_COMPOSITE = 0x80000000,
+#else
+	BF_GS1_COMPOSITE = -2147483648,
+#endif
+
+	/**No barcode format */
+	BF_NULL = 0x00
 
 }BarcodeFormat;
+
+/**
+* @enum ExtendedBarcodeFormat
+*
+* Describes the extension barcode types.
+*/
+typedef enum
+{
+	/**No extended barcode format */
+	EBF_NULL = 0x00,
+
+	/**Nonstandard barcode */
+	EBF_NONSTANDARD_BARCODE = 0x01
+}ExtendedBarcodeFormat;
 
 /**
 * @enum BarcodeComplementMode
@@ -353,22 +428,22 @@ typedef enum
 */
 typedef enum
 {
-	/**Dark items on a light background. */
+	/**Dark items on a light background. Check @ref BICM for available argument settings.*/
 	BICM_DARK_ON_LIGHT = 0x01,
 	
-	/**Light items on a dark background. Not supported yet. */
+	/**Light items on a dark background. Not supported yet. Check @ref BICM for available argument settings.*/
 	BICM_LIGHT_ON_DARK = 0x02,
 	
-	/**Dark items on a dark background. Not supported yet. */
+	/**Dark items on a dark background. Not supported yet. Check @ref BICM for available argument settings.*/
 	BICM_DARK_ON_DARK = 0x04,
 	
-	/**Light items on a light background. Not supported yet. */
+	/**Light items on a light background. Not supported yet. Check @ref BICM for available argument settings.*/
 	BICM_LIGHT_ON_LIGHT = 0x08,
 	
-	/**The background is mixed by dark and light. Not supported yet. */
+	/**The background is mixed by dark and light. Not supported yet. Check @ref BICM for available argument settings.*/
 	BICM_DARK_LIGHT_MIXED = 0x10,
 	
-	/**Dark item on a light background surrounded by dark. */
+	/**Dark item on a light background surrounded by dark. Check @ref BICM for available argument settings.*/
 	BICM_DARK_ON_LIGHT_DARK_SURROUNDING = 0x20,
 	
 	/**Skips the barcode colour operation.  */
@@ -386,7 +461,7 @@ typedef enum
 	/**Not supported yet. */
 	BM_AUTO = 0x01,
 	
-	/**Binarizes the image based on the local block. */
+	/**Binarizes the image based on the local block. Check @ref BM for available argument settings.*/
 	BM_LOCAL_BLOCK = 0x02,
 	
 	/**Skips the binarization. */
@@ -404,7 +479,7 @@ typedef enum
 	/**Not supported yet. */
 	CCM_AUTO = 0x00000001,
 	
-	/**Clusters colours using the general algorithm based on HSV. */
+	/**Clusters colours using the general algorithm based on HSV. Check @ref CCM for available argument settings. */
 	CCM_GENERAL_HSV = 0x00000002,
 	
 	/**Skips the colour clustering. */
@@ -419,8 +494,8 @@ typedef enum
 */	
 typedef enum	
 {	
-	/**Converts a colour image to a grayscale image using the general algorithm. */
-	CICM_GENERAL = 0x00000001,
+	/**Converts a colour image to a grayscale image using the general algorithm. Check @ref CICM for available argument settings. */
+	CICM_GENERAL = 0x01,
 	
 	/**Skips the colour conversion. */
 	CICM_SKIP = 0x00
@@ -437,7 +512,7 @@ typedef enum
 	/**Not supported yet. */
 	DPMCRM_AUTO = 0x01,
 	
-	/**Reads DPM code using the general algorithm. */
+	/**Reads DPM code using the general algorithm.*/
 	DPMCRM_GENERAL = 0x02,
 	
 	/**Skips DPM code reading. */
@@ -473,13 +548,13 @@ typedef enum
 	/**Takes the unpreprocessed image for following operations. */
 	IPM_GENERAL = 0x02,
 	
-	/**Preprocesses the image using the gray equalization algorithm. */
+	/**Preprocesses the image using the gray equalization algorithm. Check @ref IPM for available argument settings.*/
 	IPM_GRAY_EQUALIZE = 0x04,
 	
-	/**Preprocesses the image using the gray smoothing algorithm. */
+	/**Preprocesses the image using the gray smoothing algorithm. Check @ref IPM for available argument settings.*/
 	IPM_GRAY_SMOOTH = 0x08,
 	
-	/**Preprocesses the image using the sharpening and smoothing algorithm. */
+	/**Preprocesses the image using the sharpening and smoothing algorithm. Check @ref IPM for available argument settings.*/
 	IPM_SHARPEN_SMOOTH = 0x10,
 	
 	/**Skips image preprocessing. */
@@ -554,13 +629,13 @@ typedef enum
 	/**Localizes barcodes by groups of contiguous black-white regions. This is optimized for QRCode and DataMatrix. */
 	LM_STATISTICS = 0x04,
 	
-	/**Localizes barcodes by searching for groups of lines. This is optimized for 1D and PDF417 barcodes.  */
+	/**Localizes barcodes by searching for groups of lines. This is optimized for 1D and PDF417 barcodes. */
 	LM_LINES = 0x08,
 	
-	/**Localizes barcodes quickly. This mode is recommended in interactive scenario. */
+	/**Localizes barcodes quickly. This mode is recommended in interactive scenario. Check @ref LM for available argument settings.*/
 	LM_SCAN_DIRECTLY = 0x10,
 
-	/**Localizes barcodes by groups of marks.This is optimized for DPM codes. Not supported yet.*/
+	/**Localizes barcodes by groups of marks.This is optimized for DPM codes. */
 	LM_STATISTICS_MARKS = 0x20,
 	
 	/**Skips localization. */
@@ -602,13 +677,13 @@ typedef enum
 	/**Takes the whole image as a region. */
 	RPM_GENERAL = 0x02,
 	
-	/**Detects region using the general algorithm based on RGB colour contrast. */
+	/**Detects region using the general algorithm based on RGB colour contrast. Check @ref RPM for available argument settings.*/
 	RPM_GENERAL_RGB_CONTRAST = 0x04,
 	
-	/**Detects region using the general algorithm based on gray contrast. */
+	/**Detects region using the general algorithm based on gray contrast. Check @ref RPM for available argument settings.*/
 	RPM_GENERAL_GRAY_CONTRAST = 0x08,
 	
-	/**Detects region using the general algorithm based on HSV colour contrast. */
+	/**Detects region using the general algorithm based on HSV colour contrast. Check @ref RPM for available argument settings.*/
 	RPM_GENERAL_HSV_CONTRAST = 0x10,
 	
 	/**Skips region detection. */
@@ -626,7 +701,7 @@ typedef enum
 	/**Not supported yet. */
 	DRM_AUTO = 0x01,
 	
-	/**Resists deformation using the general algorithm. */
+	/**Resists deformation using the general algorithm. Check @ref DRM for available argument settings.*/
 	DRM_GENERAL = 0x02,
 	
 	/**Skips deformation resisting. */
@@ -692,10 +767,10 @@ typedef enum
 	/**Not supported yet. */
 	TACM_AUTO = 0x01,
 	
-	/**Uses the accompanying text to verify the decoded barcode result. */
+	/**Uses the accompanying text to verify the decoded barcode result. Check @ref TACM for available argument settings.*/
 	TACM_VERIFYING = 0x02,
 	
-	/**Uses the accompanying text to verify and patch the decoded barcode result. */
+	/**Uses the accompanying text to verify and patch the decoded barcode result. Check @ref TACM for available argument settings.*/
 	TACM_VERIFYING_PATCHING = 0x04,
 	
 	/**Skips the text assisted correction. */
@@ -713,7 +788,7 @@ typedef enum
 	/**Not supported yet. */
 	TFM_AUTO = 0x01,
 	
-	/**Filters text using the general algorithm based on contour. */
+	/**Filters text using the general algorithm based on contour. Check @ref TFM for available argument settings.*/
 	TFM_GENERAL_CONTOUR = 0x02,
 	
 	/**Skips text filtering. */
@@ -731,10 +806,10 @@ typedef enum
 	/**Saves intermediate results in memory.*/
 	IRSM_MEMORY = 0x01,
 
-	/**Saves intermediate results in file system.*/
+	/**Saves intermediate results in file system. Check @ref IRSM for available argument settings.*/
 	IRSM_FILESYSTEM = 0x02,
 
-	/**Saves intermediate results in both memory and file system.*/
+	/**Saves intermediate results in both memory and file system. Check @ref IRSM for available argument settings.*/
 	IRSM_BOTH = 0x04
 
 }IntermediateResultSavingMode;
@@ -770,7 +845,7 @@ typedef enum
 	/**Not supported yet. */
 	TDM_AUTO = 0X01,
 	
-	/**Detects texture using the general algorithm. */
+	/**Detects texture using the general algorithm. Check @ref TDM for available argument settings.*/
 	TDM_GENERAL_WIDTH_CONCENTRATION = 0X02,
 	
 	/**Skips texture detection. */
@@ -852,6 +927,31 @@ typedef enum
 /**
 * @defgroup Struct Struct
 * @{
+*/
+
+/**
+* @defgroup SamplingImageData SamplingImageData
+* @{
+*/
+
+/**
+* Stores the sampling image data.
+*
+*/
+typedef struct tagSamplingImageData
+{
+	/**The sampling image data in a byte array.*/
+	unsigned char* bytes;
+
+	/**The width of the sampling image.*/
+	int width;
+
+	/**The height of the sampling image.*/
+	int height;
+}SamplingImageData;
+
+/**
+* @} defgroup SamplingImageData
 */
 
 /**
@@ -1027,12 +1127,12 @@ typedef struct tagFurtherModes
 	*/
 	TextAssistedCorrectionMode textAssistedCorrectionMode;
 
-	/**Sets the mode and priority for DPM code reading. Not supported yet.
+	/**Sets the mode and priority for DPM code reading.
 	*
 	* @par Value range:
 	* 	    Each array item can be any one of the ColourConversionMode Enumeration items.
 	* @par Default value:
-	* 	    [DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP]
+	* 	    [DPMCRM_GENERAL,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP,DPMCRM_SKIP]
 	* @par Remarks:
 	*     The array index represents the priority of the item. The smaller index is, the higher priority is.
 	* @sa ColourConversionMode
@@ -1155,6 +1255,18 @@ typedef struct tagPublicRuntimeSettings
 	*/
 	int barcodeFormatIds;
 
+	/**Sets the formats of the extended barcode to be read. Extended barcode formats can be combined.
+	*
+	* @par Value range:
+	* 	    A combined value of Extended BarcodeFormat Enumeration items
+	* @par Default value:
+	* 	    EBF_NULL
+	* @par Remarks:
+	*	    If the barcode type(s) are certain, specifying the barcode type(s) to be read will speed up the recognition process.
+	* @sa BarcodeFormat
+	*/
+	int extendedBarcodeFormatIds;
+
 	/**Sets the output image resolution.
 	*
 	* @par Value range:
@@ -1259,6 +1371,18 @@ typedef struct tagPublicRuntimeSettings
 	*/
 	TextResultOrderMode textResultOrderModes[8];
 
+	/*Sets whether or not to return the clarity of the barcode zone.
+	*
+	* @par Value range:
+	* 	    [0,1]
+	* @par Default value:
+	* 	    0
+	* @par Remarks:
+	*     0 : Do not return the clarity of the barcode zone;
+	*	  1 : Return the clarity of the batcode zone.
+	*/
+	int returnBarcodeZoneClarity;
+
 	/**Sets the region definition including regionTop, regionLeft, regionRight, regionBottom, and regionMeasuredByPercentage.
 	*
 	*/
@@ -1289,7 +1413,7 @@ typedef struct tagPublicRuntimeSettings
 	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct.
 	*
 	*/
-	char reserved[124];
+	char reserved[116];
 }PublicRuntimeSettings;
 
 /**
@@ -1427,6 +1551,12 @@ typedef struct tagExtendedResult
 	/**Barcode type as string */
 	const char* barcodeFormatString;
 
+	/**Extended barcode format */
+	ExtendedBarcodeFormat extendedBarcodeFormat;
+
+	/**Extended barcode type as string */
+	const char* extendedBarcodeFormatString;
+
 	/**The confidence of the result */
 	int confidence;
 
@@ -1448,8 +1578,14 @@ typedef struct tagExtendedResult
 	/**One of the following: @ref QRCodeDetails, @ref PDF417Details, @ref DataMatrixDetails, @ref AztecDetails, @ref OneDCodeDetails */
 	void* detailedResult;
 	
-	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
-	char reserved[64];
+	/**The sampling image info.*/
+	SamplingImageData samplingImage;
+	
+	/**The clarity of the barcode zone in percentage.*/
+	int clarity;
+
+	/**Reserved memory for struct. The length of this array indicates the size of the memory reserved for this struct. */
+	char reserved[40];
 }ExtendedResult, *PExtendedResult;
 
 /**
@@ -1474,6 +1610,12 @@ typedef struct tagLocalizationResult
 	
 	/**Barcode type as string */
 	const char* barcodeFormatString;
+
+	/**Extended barcode format */
+	ExtendedBarcodeFormat extendedBarcodeFormat;
+
+	/**Extended barcode type as string */
+	const char* extendedBarcodeFormatString;
 
 	/**The X coordinate of the left-most point */
 	int x1;
@@ -1523,8 +1665,11 @@ typedef struct tagLocalizationResult
 	/**The length of the accompanying text byte array */
 	int accompanyingTextBytesLength;
 
+	/**The confidence of the localization result*/
+	int confidence;
+
 	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
-	char reserved[64];
+	char reserved[52];
 }LocalizationResult, *PLocalizationResult;
 
 /**
@@ -1547,6 +1692,12 @@ typedef struct tagTextResult
 
 	/**Barcode type as string */
 	const char* barcodeFormatString;
+
+	/**Extended barcode format */
+	ExtendedBarcodeFormat extendedBarcodeFormat;
+
+	/**Extended barcode type as string */
+	const char* extendedBarcodeFormatString;
 	
 	/**The barcode text, ends by '\0' */
 	const char* barcodeText;
@@ -1570,7 +1721,7 @@ typedef struct tagTextResult
 	PExtendedResult* results;
 
 	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
-	char reserved[64];
+	char reserved[56];
 }TextResult, *PTextResult;
 
 /**
@@ -2016,6 +2167,15 @@ typedef struct tagLineSegment
 
 	/**The end point of the line segment */
 	DBRPoint endPoint;
+
+	/**The confidence coefficients for lines.
+	*There are 4 coefficients in this set:
+	*linesConfidenceCoefficients[0] is average positive amplitude;
+	*linesConfidenceCoefficients[1] is max positive amplitude;
+	*linesConfidenceCoefficients[2] is average negative amplitude;
+	*linesConfidenceCoefficients[3] is max negative amplitude.
+	*/
+	unsigned char* linesConfidenceCoefficients;
 }LineSegment;
 
 /**
@@ -2365,7 +2525,7 @@ extern "C" {
 			DBR_DestroyInstance(barcodeReader);
 	 * @endcode
 	 */
-	DBR_API int  DBR_DecodeDIB(void* barcodeReader, const HANDLE hDIB, const char* pTemplateName);
+	DBR_API int DBR_DecodeDIB(void* barcodeReader, const HANDLE hDIB, const char* pTemplateName);
 
 	/**
 	* Init frame decoding parameters.
@@ -2379,7 +2539,7 @@ extern "C" {
 	*		  DBRERR_NULL_POINTER;
 	*
 	*/
-	DBR_API int DBR_InitFrameDecodingParameters(void *barcodeReader, FrameDecodingParameters *pParameters);
+	DBR_API int DBR_InitFrameDecodingParameters(void *barcodeReader, FrameDecodingParameters* pParameters);
 
 	/**
 	 * Starts a new thread to decode barcodes from the inner frame queue.
@@ -2541,20 +2701,57 @@ extern "C" {
 	 * @code
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
-			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
-			DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->binarizationModes[0] = BM_LOCAL_BLOCK;
+			PublicRuntimeSettings settings;
+			DBR_GetRuntimeSettings(barcodeReader, &settings);
+			settings.binarizationModes[0] = BM_LOCAL_BLOCK;
 			char errorMessage[256];
-			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
+			DBR_UpdateRuntimeSettings(barcodeReader, &settings, errorMessage, 256);
 			DBR_SetModeArgument(barcodeReader, "BinarizationModes", 0, "EnableFillBinaryVacancy", "1", errorMessage, 256);
 			DBR_DestroyInstance(barcodeReader);
 	 * @endcode
 	 *
 	 * @par Remarks:
-	 *		Check @ref ModesArgument for details
+	 *		Check @ref ModesArgument for available argument settings
 	 *
 	 */	
 	DBR_API int DBR_SetModeArgument(void *barcodeReader, const char *pModesName,const int index, const char *pArgumentName, const char *pArgumentValue, char errorMsgBuffer[], const int errorMsgBufferLen);
+
+		/**
+	* Gets the optional argument for a specified mode in Modes parameters.
+	*
+	* @param [in] barcodeReader Handle of the barcode reader instance.
+	* @param [in] pModesName The mode parameter name to get argument.
+	* @param [in] index The array index of mode parameter to indicate a specific mode.
+	* @param [in] pArgumentName The name of the argument to get.
+	* @param [in,out] valueBuffer The buffer is allocated by caller and the recommended length is 480. The argument value would be copied to the buffer.
+	* @param [in] valueBufferLen The length of allocated buffer. 
+	* @param [in,out] errorMsgBuffer The buffer is allocated by the caller and the recommended length is 256. The error message will be copied to the buffer.
+	* @param [in] errorMsgBufferLen The length of the allocated buffer.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
+	* 		   DBR_GetErrorString to get detail message. Possible returns are:
+	* 		   DBR_OK;
+	* 		   DBRERR_GET_MODE_ARGUMENT_ERROR;
+	* @par Code Snippet:
+	* @code
+			void* barcodeReader = DBR_CreateInstance();
+			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
+			PublicRuntimeSettings settings;
+			DBR_GetRuntimeSettings(barcodeReader, &settings);
+			settings.binarizationModes[0] = BM_LOCAL_BLOCK;
+			char errorMessage[256];
+			char argumentValue[480];
+			DBR_UpdateRuntimeSettings(barcodeReader, &settings, errorMessage, 256);
+			DBR_SetModeArgument(barcodeReader, "BinarizationModes", 0, "EnableFillBinaryVacancy", "1", errorMessage, 256);
+			DBR_GetModeArgument(barcodeReader, "BinarizationModes", 0, "EnableFillBinaryVacancy", argumentValue, 480, errorMessage, 256);
+			DBR_DestroyInstance(barcodeReader);
+	* @endcode
+	*
+	* @par Remarks:
+	*		Check @ref ModesArgument for available argument settings
+	*
+	*/
+	DBR_API int DBR_GetModeArgument(void *barcodeReader, const char *pModesName, const int index, const char *pArgumentName, char valueBuffer[], const int valueBufferLen, char errorMsgBuffer[], const int errorMsgBufferLen);
 
 	/**
 	 * Gets current settings and save them into a struct.
@@ -2568,9 +2765,8 @@ extern "C" {
 	 * @code
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
-			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
-			int errorCode = DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			delete pSettings;
+			PublicRuntimeSettings settings;
+			int errorCode = DBR_GetRuntimeSettings(barcodeReader, &settings);
 			DBR_DestroyInstance(barcodeReader);
 	 * @endcode
 	 */
@@ -2592,12 +2788,11 @@ extern "C" {
 	 * @code
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
-			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
-			int errorCode = DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->deblurLevel = 9;
+			PublicRuntimeSettings settings;
+			int errorCode = DBR_GetRuntimeSettings(barcodeReader, &settings);
+			settings.deblurLevel = 9;
 			char errorMessage[256];
-			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
-			delete pSettings;
+			DBR_UpdateRuntimeSettings(barcodeReader, &settings, errorMessage, 256);
 			DBR_DestroyInstance(barcodeReader);
 	 * @endcode
 	 */
@@ -2615,12 +2810,11 @@ extern "C" {
 	 * @code
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
-			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
-			int errorCode = DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->deblurLevel = 9;
-			DBR_UpdateRuntimeSettings(barcodeReader, pSettings);
+			PublicRuntimeSettings settings;
+			int errorCode = DBR_GetRuntimeSettings(barcodeReader, &settings);
+			settings.deblurLevel = 9;
+			DBR_UpdateRuntimeSettings(barcodeReader, &settings);
 			DBR_ResetRuntimeSettings(barcodeReader);
-			delete pSettings;
 			DBR_DestroyInstance(barcodeReader);
 	 * @endcode
 	 */
@@ -2915,13 +3109,13 @@ extern "C" {
 	 * @code
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
-			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
-			DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
+			PublicRuntimeSettings settings;
+			DBR_GetRuntimeSettings(barcodeReader, &settings);
+			settings.intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
-			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
+			DBR_UpdateRuntimeSettings(barcodeReader, &settings, errorMessage, 256);
 			DBR_DecodeFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Images\\AllSupportedBarcodeTypes.tif", "");
-			IntermediateResultArray* pResults;
+			IntermediateResultArray* pResults = NULL;
 			DBR_GetIntermediateResults(barcodeReader, &pResults);
 			DBR_FreeIntermediateResults(&pResults);
 			DBR_DestroyInstance(barcodeReader);
@@ -2939,13 +3133,13 @@ extern "C" {
 	 * @code
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
-			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
-			DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
+			PublicRuntimeSettings settings;
+			DBR_GetRuntimeSettings(barcodeReader, &settings);
+			settings.intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
-			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
+			DBR_UpdateRuntimeSettings(barcodeReader, &settings, errorMessage, 256);
 			DBR_DecodeFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Images\\AllSupportedBarcodeTypes.tif", "");
-			IntermediateResultArray* pResults;
+			IntermediateResultArray* pResults = NULL;
 			DBR_GetIntermediateResults(barcodeReader, &pResults);
 			DBR_FreeIntermediateResults(&pResults);
 			DBR_DestroyInstance(barcodeReader);
@@ -3038,11 +3232,11 @@ extern "C" {
 			}
 			void* barcodeReader = DBR_CreateInstance();
 			DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
-			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
-			int errorCode = DBR_GetRuntimeSettings(barcodeReader, pSettings);
-			pSettings->intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
+			PublicRuntimeSettings settings;
+			int errorCode = DBR_GetRuntimeSettings(barcodeReader, &settings);
+			settings.intermediateResultTypes = IRT_ORIGINAL_IMAGE | IRT_COLOUR_CLUSTERED_IMAGE | IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE;
 			char errorMessage[256];
-			DBR_UpdateRuntimeSettings(barcodeReader, pSettings, errorMessage, 256);
+			DBR_UpdateRuntimeSettings(barcodeReader, &settings, errorMessage, 256);
 			DBR_SetIntermediateResultCallback(barcodeReader, IntermediateResultFunction, NULL);
 			DBR_StartFrameDecoding(barcodeReader, 2, 10, 1024, 720, 720, IPF_BINARY, "");
 	 * @endcode
@@ -3364,7 +3558,7 @@ public:
 	 * @par Remarks:
 	 * If no template name is specified, current runtime settings will be used.
 	 */
-	int  DecodeDIB(const HANDLE  hDIB, const char* pszTemplateName = "");
+	int DecodeDIB(const HANDLE  hDIB, const char* pszTemplateName = "");
 
 	/**
 	* Initiates frame decoding parameters.
@@ -3609,11 +3803,48 @@ public:
 	 * @endcode
 	 *
 	 * @par Remarks:
-	 *		Check @ref ModesArgument for details
+	 *		Check @ref ModesArgument for available argument settings
 	 *
 	 */
 	int SetModeArgument(const char *pModesName,const int index, const char *pArgumentName, const char *pArgumentValue, char errorMsgBuffer[] = NULL, const int errorMsgBufferLen = 0);
 
+	/**
+	* Gets the optional argument for a specified mode in Modes parameters.
+	*
+	* @param [in] pModesName The mode parameter name to get argument.
+	* @param [in] index The array index of mode parameter to indicate a specific mode.
+	* @param [in] pArgumentName The name of the argument to get.
+	* @param [in,out] valueBuffer The buffer is allocated by caller and the recommended length is 480. The argument value would be copied to the buffer.
+	* @param [in] valueBufferLen The length of allocated buffer. 
+	* @param [in,out] errorMsgBuffer (Optional) The buffer is allocated by the caller and the recommended length is 256. The error message will be copied to the buffer.
+	* @param [in] errorMsgBufferLen (Optional) The length of the allocated buffer.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully, otherwise call
+	* 		   GetErrorString to get detail message. Possible returns are:
+	* 		   DBR_OK;
+	* 		   DBRERR_GET_MODE_ARGUMENT_ERROR;
+	*
+	* @par Code Snippet:
+	* @code
+			CBarcodeReader* reader = new CBarcodeReader();
+			reader->InitLicense("t0260NwAAAHV***************");
+			PublicRuntimeSettings* pSettings = new PublicRuntimeSettings;
+			reader->GetRuntimeSettings(pSettings);
+			pSettings->binarizationModes[0] = BM_LOCAL_BLOCK;
+			char errorMessage[256];
+			char argumentValue[480];
+			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
+			reader->SetModeArgument("BinarizationModes", 0, "EnableFillBinaryVacancy", "1", errorMessage, 256);
+			reader->GetModeArgument("BinarizationModes", 0, "EnableFillBinaryVacancy", argumentValue, 480, errorMessage, 256);
+			delete pSettings;
+			delete reader;
+	* @endcode
+	*
+	* @par Remarks:
+	*		Check @ref ModesArgument for available argument settings
+	*
+	*/
+	int GetModeArgument(const char *pModesName, const int index, const char *pArgumentName, char valueBuffer[], const int valueBufferLen, char errorMsgBuffer[], const int errorMsgBufferLen);
 	/**
 	* @}
 	*/
@@ -3901,7 +4132,7 @@ public:
 			char errorMessage[256];
 			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
 			reader->DecodeFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Images\\AllSupportedBarcodeTypes.tif", "");
-			IntermediateResultArray* pResults;
+			IntermediateResultArray* pResults = NULL;
 			reader->GetIntermediateResults(&pResults);
 			CBarcodeReader::FreeIntermediateResults(&pResults);
 			delete pSettings;
@@ -3926,7 +4157,7 @@ public:
 			char errorMessage[256];
 			reader->UpdateRuntimeSettings(pSettings, errorMessage, 256);
 			reader->DecodeFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Images\\AllSupportedBarcodeTypes.tif", "");
-			IntermediateResultArray* pResults;
+			IntermediateResultArray* pResults = NULL;
 			reader->GetIntermediateResults(&pResults);
 			CBarcodeReader::FreeIntermediateResults(&pResults);
 			delete pSettings;
