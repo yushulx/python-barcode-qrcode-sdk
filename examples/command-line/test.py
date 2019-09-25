@@ -65,6 +65,8 @@ if __name__ == "__main__":
         initLicense(config.license)
         templateName = ""
         ##### Set dbr parameters
+        # with open('template.json', 'r') as file:
+        #     params = file.read().replace('\n', '')
         # templateName = "dbr"
         # settings = {"ImageParameter": {"name": templateName,"IntermediateResultSavingMode":{"Mode":"IRSM_BOTH","FolderPath":"d:\\"}, "TerminatePhase" : "TP_BARCODE_RECOGNIZED", "IntermediateResultTypes": ["IRT_ORIGINAL_IMAGE", "IRT_COLOUR_CLUSTERED_IMAGE", "IRT_COLOUR_CONVERTED_GRAYSCALE_IMAGE", "IRT_BINARIZED_IMAGE"]}}
         # params = json.dumps(settings)
