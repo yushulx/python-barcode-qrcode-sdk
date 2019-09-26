@@ -62,8 +62,21 @@ if __name__ == "__main__":
     if not os.path.isfile(barcode_image):
         print("It is not a valid file.")
     else:
-        initLicense(config.license)
-        templateName = ""
+        initLicense(config.license)        
+        # Get default barcode params
+        params = dbr.getParameters()
+        # Convert string to JSON object
+        json_obj = json.loads(params)
+        # Update JSON object
+        templateName = json_obj['ImageParameter']['Name']
+        # DPM
+        json_obj['ImageParameter']['DPMCodeReadingModes'][0]['Mode'] = 'DPMCRM_GENERAL'
+        json_obj['ImageParameter']['LocalizationModes'][0]['Mode'] = 'LM_STATISTICS_MARKS'
+        # Convert JSON object to string
+        params = json.dumps(json_obj)
+        # Set parameters
+        ret = dbr.setParameters(params)
+        
         ##### Set dbr parameters
         # with open('template.json', 'r') as file:
         #     params = file.read().replace('\n', '')

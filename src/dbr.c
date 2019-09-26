@@ -44,6 +44,8 @@ error_out(PyObject *m)
 
 #endif
 
+#define DEFAULT_MEMORY_SIZE 4096
+
 typedef struct
 {
     PyObject_HEAD
@@ -765,10 +767,39 @@ setParameters(PyObject *obj, PyObject *args)
         return NULL;
     }
 
-    char errorMessage[256];
+    char errorMessage[DEFAULT_MEMORY_SIZE];
     int ret = DBR_InitRuntimeSettingsWithString(self->hBarcode, json, CM_OVERWRITE, errorMessage, 256);
-
+    if (ret) 
+    {
+        printf("Returned value: %d, error message: %s\n", ret, errorMessage);
+        PyErr_SetString(PyExc_TypeError, "DBR_InitRuntimeSettingsWithString() failed");
+        return NULL;
+    }
     return Py_BuildValue("i", ret);
+}
+
+/**
+ * Get public settings.
+ *
+ * @return Return stringified JSON object.
+ */
+static PyObject *
+getParameters(PyObject *obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+
+    char errorMessage[DEFAULT_MEMORY_SIZE];
+    char pContent[DEFAULT_MEMORY_SIZE];
+
+    int ret = DBR_OutputSettingsToString(self->hBarcode, pContent, DEFAULT_MEMORY_SIZE, "currentRuntimeSettings");
+    // printf("pContent: %s\n, string len: %d", pContent, strlen(pContent));
+    if (ret) 
+    {
+        printf("Returned value: %d, error message: %s\n", ret, errorMessage);
+        PyErr_SetString(PyExc_TypeError, "DBR_OutputSettingsToString() failed");
+        return NULL;
+    }
+    return Py_BuildValue("s", pContent);
 }
 
 static PyMemberDef dbr_members[] = {
@@ -889,6 +920,7 @@ static PyMethodDef dbr_methods[] = {
     {"initLicenseFromServer", initLicenseFromServer, METH_VARARGS, NULL},
     {"setFurtherModes", setFurtherModes, METH_VARARGS, NULL},
     {"setParameters", setParameters, METH_VARARGS, NULL},
+    {"getParameters", getParameters, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}};
 
 static PyMethodDef module_methods[] =
