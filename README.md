@@ -45,8 +45,8 @@ Expanded, Expanded Stacked)
 * OpenCV
 
     ```
-    pip install opencv-python
-    python3 -m pip install opencv-python
+    py -2 -m pip install opencv-python
+    py -3 -m pip install opencv-python
     ```
     
     For **Raspberry Pi**
@@ -58,8 +58,8 @@ Expanded, Expanded Stacked)
 * NumPy
 	
     ```
-    pip install numpy
-    python3 -m pip install numpy
+    py -2 -m pip install numpy
+    py -3 -m pip install numpy
     ```
     
 ## HowTo
@@ -81,8 +81,8 @@ Build and install the Python extension:
 
 ```
 cd src
-python setup.py build install
-python3 setup.py build install
+py -2 setup.py build install
+py -3 setup.py build install
 ```
 
 ### Linux, macOS and Raspberry Pi
@@ -96,8 +96,8 @@ Build and install the Python extension:
 
 ```
 cd src
-sudo python setup.py build install
-sudo python3 setup.py build install
+sudo py -2 setup.py build install
+sudo py -3 setup.py build install
 ```
 
 ## Examples
