@@ -18,7 +18,7 @@ def get_time():
 def read_barcode():
 
     vc = cv2.VideoCapture(
-        "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov")
+        "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_175k.mov")
 
     if vc.isOpened():  # try to get the first frame
         dbr.initLicense(config.license)
