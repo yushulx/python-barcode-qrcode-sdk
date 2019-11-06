@@ -118,7 +118,7 @@ void ToHexString(unsigned char* pSrc, int iLen, char* pDest)
 
 	for(i = 0; i < iLen; ++i)
 	{
-		sprintf_s(ptr, 4, "%c%c ", HEXCHARS[ ( pSrc[i] & 0xF0 ) >> 4 ], HEXCHARS[ ( pSrc[i] & 0x0F ) >> 0 ]);
+		snprintf(ptr, 4, "%c%c ", HEXCHARS[ ( pSrc[i] & 0xF0 ) >> 4 ], HEXCHARS[ ( pSrc[i] & 0x0F ) >> 0 ]);
 		ptr += 3;
 	}
 }
