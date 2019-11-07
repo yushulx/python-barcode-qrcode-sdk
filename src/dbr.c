@@ -188,6 +188,7 @@ static PyObject *createPyResults(TextResultArray *pResults, const char* encoding
                 free(hex);
 
                 PyErr_SetString(PyExc_TypeError, "Incorrect character set! Failed to decode barcode results!");
+                DBR_FreeTextResults(&pResults);
                 return NULL;
             }
             PyList_SetItem(pyObject, 1, result);
