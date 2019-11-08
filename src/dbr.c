@@ -367,11 +367,11 @@ decodeBuffer(PyObject *obj, PyObject *args)
     {
         format = IPF_GRAYSCALED;
     }
-    else if (width == stride * 3)
+    else if (width == stride / 3)
     {
         format = IPF_RGB_888;
     }
-    else if (width == stride * 4)
+    else if (width == stride / 4)
     {
         format = IPF_ARGB_8888;
     }
