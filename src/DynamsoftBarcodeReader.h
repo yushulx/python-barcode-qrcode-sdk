@@ -34,7 +34,7 @@ typedef void* HANDLE;
 * Dynamsoft Barcode Reader - C/C++ APIs Description.
 */
 
-#define DBR_VERSION                  "7.2.0.09242"
+#define DBR_VERSION                  "7.2.1.1022"
 
 #pragma region ErrorCode
 
@@ -222,11 +222,12 @@ typedef void* HANDLE;
  * @{
  */
 
- /**
- * @enum BarcodeFormat
- *
- * Describes the barcode types. All the formats can be combined, such as BF_CODE_39 | BF_CODE_128.
- */
+/**
+* @enum BarcodeFormat
+*
+* Describes the barcode types in BarcodeFormat group 1. All the formats can be combined, such as BF_CODE_39 | BF_CODE_128.
+* Note: The barcode format our library will search for is composed of [BarcodeFormat group 1](@ref BarcodeFormat) and [BarcodeFormat group 2](@ref BarcodeFormat_2), so you need to specify the barcode format in group 1 and group 2 individually.
+*/
 typedef enum
 {
 	/**All supported formats */
@@ -345,24 +346,25 @@ typedef enum
 	BF_GS1_COMPOSITE = -2147483648,
 #endif
 
-	/**No barcode format */
+	/**No barcode format in BarcodeFormat group 1*/
 	BF_NULL = 0x00
 
 }BarcodeFormat;
 
 /**
-* @enum ExtendedBarcodeFormat
+* @enum BarcodeFormat_2
 *
-* Describes the extension barcode types.
+* Describes the barcode types in BarcodeFormat group 2.
+* Note: The barcode format our library will search for is composed of [BarcodeFormat group 1](@ref BarcodeFormat) and [BarcodeFormat group 2](@ref BarcodeFormat_2), so you need to specify the barcode format in group 1 and group 2 individually.
 */
 typedef enum
 {
-	/**No extended barcode format */
-	EBF_NULL = 0x00,
+	/**No barcode format in BarcodeFormat group 2*/
+	BF2_NULL = 0x00,
 
 	/**Nonstandard barcode */
-	EBF_NONSTANDARD_BARCODE = 0x01
-}ExtendedBarcodeFormat;
+	BF2_NONSTANDARD_BARCODE = 0x01
+}BarcodeFormat_2;
 
 /**
 * @enum BarcodeComplementMode
@@ -374,7 +376,7 @@ typedef enum
 	/**Not supported yet. */
 	BCM_AUTO = 0x01,
 
-	/**Complements the barcode using the general algorithm. */
+	/**Complements the barcode using the general algorithm.*/
 	BCM_GENERAL = 0x02,
 
 	/**Skips the barcode complement. */
@@ -1243,7 +1245,7 @@ typedef struct tagPublicRuntimeSettings
 	*/
 	int expectedBarcodesCount;
 
-	/**Sets the formats of the barcode to be read. Barcode formats can be combined.
+	/**Sets the formats of the barcode in BarcodeFormat group 1 to be read. Barcode formats in BarcodeFormat group 1 can be combined.
 	*
 	* @par Value range:
 	* 	    A combined value of BarcodeFormat Enumeration items
@@ -1251,21 +1253,23 @@ typedef struct tagPublicRuntimeSettings
 	* 	    BF_ALL
 	* @par Remarks:
 	*	    If the barcode type(s) are certain, specifying the barcode type(s) to be read will speed up the recognition process.
-	* @sa BarcodeFormat
+	*		The barcode format our library will search for is composed of [BarcodeFormat group 1](@ref BarcodeFormat) and [BarcodeFormat group 2](@ref BarcodeFormat_2), so you need to specify the barcode format in group 1 and group 2 individually.
+	* @sa BarcodeFormat, BarcodeFormat_2
 	*/
 	int barcodeFormatIds;
 
-	/**Sets the formats of the extended barcode to be read. Extended barcode formats can be combined.
+	/**Sets the formats of the barcode in BarcodeFormat group 2 to be read. Barcode formats in BarcodeFormat group 2 can be combined.
 	*
 	* @par Value range:
-	* 	    A combined value of Extended BarcodeFormat Enumeration items
+	* 	    A combined value of BarcodeFormat_2 Enumeration items
 	* @par Default value:
-	* 	    EBF_NULL
+	* 	    BF2_NULL
 	* @par Remarks:
 	*	    If the barcode type(s) are certain, specifying the barcode type(s) to be read will speed up the recognition process.
-	* @sa BarcodeFormat
+	*		The barcode format our library will search for is composed of [BarcodeFormat group 1](@ref BarcodeFormat) and [BarcodeFormat group 2](@ref BarcodeFormat_2), so you need to specify the barcode format in group 1 and group 2 individually.
+	* @sa BarcodeFormat, BarcodeFormat_2
 	*/
-	int extendedBarcodeFormatIds;
+	int barcodeFormatIds_2;
 
 	/**Sets the output image resolution.
 	*
@@ -1371,7 +1375,7 @@ typedef struct tagPublicRuntimeSettings
 	*/
 	TextResultOrderMode textResultOrderModes[8];
 
-	/*Sets whether or not to return the clarity of the barcode zone.
+	/**Sets whether or not to return the clarity of the barcode zone.
 	*
 	* @par Value range:
 	* 	    [0,1]
@@ -1545,17 +1549,17 @@ typedef struct tagExtendedResult
 	/**Extended result type */
 	ResultType resultType;
 
-	/**Barcode type */
+	/**Barcode type in BarcodeFormat group 1 */
 	BarcodeFormat barcodeFormat;
-	
-	/**Barcode type as string */
+
+	/**Barcode type in BarcodeFormat group 1 as string */
 	const char* barcodeFormatString;
 
-	/**Extended barcode format */
-	ExtendedBarcodeFormat extendedBarcodeFormat;
+	/**Barcode type in BarcodeFormat group 2*/
+	BarcodeFormat_2 barcodeFormat_2;
 
-	/**Extended barcode type as string */
-	const char* extendedBarcodeFormatString;
+	/**Barcode type in BarcodeFormat group 2 as string */
+	const char* barcodeFormatString_2;
 
 	/**The confidence of the result */
 	int confidence;
@@ -1605,17 +1609,17 @@ typedef struct tagLocalizationResult
 	/**The terminate phase of localization result. */
 	TerminatePhase terminatePhase;
 	
-	/**Barcode type */
+	/**Barcode type in BarcodeFormat group 1 */
 	BarcodeFormat barcodeFormat;
 	
-	/**Barcode type as string */
+	/**Barcode type in BarcodeFormat group 1 as string */
 	const char* barcodeFormatString;
 
-	/**Extended barcode format */
-	ExtendedBarcodeFormat extendedBarcodeFormat;
+	/**Barcode type in BarcodeFormat group 2*/
+	BarcodeFormat_2 barcodeFormat_2;
 
-	/**Extended barcode type as string */
-	const char* extendedBarcodeFormatString;
+	/**Barcode type in BarcodeFormat group 2 as string */
+	const char* barcodeFormatString_2;
 
 	/**The X coordinate of the left-most point */
 	int x1;
@@ -1687,17 +1691,17 @@ typedef struct tagLocalizationResult
 typedef struct tagTextResult
 {
 
-	/**The barcode format */
+	/**Barcode type in BarcodeFormat group 1 */
 	BarcodeFormat barcodeFormat;
 
-	/**Barcode type as string */
+	/**Barcode type in BarcodeFormat group 1 as string */
 	const char* barcodeFormatString;
 
-	/**Extended barcode format */
-	ExtendedBarcodeFormat extendedBarcodeFormat;
+	/**Barcode type in BarcodeFormat group 2*/
+	BarcodeFormat_2 barcodeFormat_2;
 
-	/**Extended barcode type as string */
-	const char* extendedBarcodeFormatString;
+	/**Barcode type in BarcodeFormat group 2 as string */
+	const char* barcodeFormatString_2;
 	
 	/**The barcode text, ends by '\0' */
 	const char* barcodeText;
@@ -2379,20 +2383,42 @@ extern "C" {
 	 */
 	DBR_API int DBR_InitLicenseFromLicenseContent(void* barcodeReader, const char* pLicenseKey, const char* pLicenseContent);
 
+	/**
+	* Outputs the license content as an encrypted string from the license server to be used for offline license verification.
+	*
+	* @param [in] barcodeReader Handle of the barcode reader instance.
+	* @param [in, out] content The output string which stores the content of license.
+	* @param [in] contentLen The length of output string. The recommended length is 512 per license key.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   DBR_GetErrorString() to get detailed error message.
+	* @par Remarks:
+	*	    DBR_InitLicenseFromServer() has to be successfully called before calling this method.
+	*/
+	DBR_API int DBR_OutputLicenseToString(void* barcodeReader, char content[], int contentLen);
 
 	/**
 	 * Outputs the license content as an encrypted string from the license server to be used for offline license verification.
 	 *
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in, out] content The output string which stores the content of license.
-	 * @param [in] contentLen The length of output string. The recommended length is 512 per license key.
 	 *
 	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
 	 * 		   DBR_GetErrorString() to get detailed error message.
 	 * @par Remarks:
 	 *	    DBR_InitLicenseFromServer() has to be successfully called before calling this method.
 	 */
-	DBR_API int DBR_OutputLicenseToString(void* barcodeReader, char content[], int contentLen);
+	DBR_API int DBR_OutputLicenseToStringPtr(void* barcodeReader, char** content);
+
+	/**
+	 *Frees memory allocated for the license string.
+	 * 
+	 * @param [in] content The output string which stores the content of license.
+     *				   
+	 * @Remarks:
+	 *		DBR_OutputLicenseToStringPtr() has to be successfully called before calling this method.
+	 */
+	DBR_API void DBR_FreeLicenseString(char** content);
 
 	/**
 	 * @}defgroup CInitiation
@@ -2942,7 +2968,7 @@ extern "C" {
 	*
 	* @param [in] barcodeReader Handle of the barcode reader instance.
 	*
-	* @return Returns the count of parameter templates.
+	* @return Returns the count of parameter templates. Returns -1 if DBRERR_NULL_POINTER happens.
 	*
 	* @par Code Snippet:
 	* @code
@@ -2991,11 +3017,37 @@ extern "C" {
 	DBR_API int  DBR_GetParameterTemplateName(void* barcodeReader, const int index, char nameBuffer[], const int nameBufferLen);
 
 	/**
+	* Outputs runtime settings to a string.
+	*
+	* @param [in] barcodeReader Handle of the barcode reader instance.
+	* @param [in,out] content The output string which stores the contents of current settings.
+	* @param [in] contentLen The length of output string.
+	* @param [in] pSettingsName A unique name for declaring current runtime settings.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   DBR_GetErrorString() to get detailed error message.
+	*
+	* @par Code Snippet:
+	* @code
+	void* barcodeReader = DBR_CreateInstance();
+	DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
+	char errorMessageInit[256];
+	char errorMessageAppend[256];
+	DBR_InitRuntimeSettingsWithFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
+	DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+	char pContent[256];
+	DBR_OutputSettingsToString(barcodeReader, pContent, 256, "currentRuntimeSettings");
+	DBR_DestroyInstance(barcodeReader);
+	* @endcode
+	*
+	*/
+	DBR_API int DBR_OutputSettingsToString(void* barcodeReader, char content[], const int contentLen, const char* pSettingsName);
+
+	/**
 	 * Outputs runtime settings to a string.
 	 * 
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in,out] content The output string which stores the contents of current settings.	   
-	 * @param [in] contentLen The length of output string.
 	 * @param [in] pSettingsName A unique name for declaring current runtime settings.	
      *	 
 	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
@@ -3009,17 +3061,40 @@ extern "C" {
 			char errorMessageAppend[256];
 			 DBR_InitRuntimeSettingsWithFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
 			DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
-			char pContent[256];
-			DBR_OutputSettingsToString(barcodeReader, pContent, 256, "currentRuntimeSettings");
+			char* pContent = NULL;
+			DBR_OutputSettingsToStringPtr(barcodeReader, &pContent, "currentRuntimeSettings");
+			DBR_FreeSettingsString(&pContent);
 			DBR_DestroyInstance(barcodeReader);
 	 * @endcode
 	 *
 	 */
-	DBR_API int DBR_OutputSettingsToString(void* barcodeReader, char content[], const int contentLen, const char* pSettingsName);
+	DBR_API int DBR_OutputSettingsToStringPtr(void* barcodeReader, char** content, const char* pSettingsName);
+
+	/**
+	* Free memory allocated for runtime settings string.
+	*
+	* @param [in] content The runtime settings string.
+	*
+	* @par Code Snippet:
+	* @code
+		void* barcodeReader = DBR_CreateInstance();
+		DBR_InitLicense(barcodeReader, "t0260NwAAAHV***************");
+		char errorMessageInit[256];
+		char errorMessageAppend[256];
+		DBR_InitRuntimeSettingsWithFile(barcodeReader, "C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
+		DBR_AppendTplStringToRuntimeSettings(barcodeReader, "{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+		char* pContent = NULL;
+		DBR_OutputSettingsToString(barcodeReader, &pContent, "currentRuntimeSettings");
+		DBR_FreeSettingsString(&pContent);
+		DBR_DestroyInstance(barcodeReader);
+	* @endcode
+	*
+	*/
+	DBR_API void DBR_FreeSettingsString(char** content);
 
 	/**
 	 * Outputs runtime settings and save them into a settings file (JSON file).
-	 * 
+	 * X
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
 	 * @param [in] pFilePath The path of the output file which stores current settings.
 	 * @param [in] pSettingsName A unique name for declaring current runtime settings.
@@ -3407,17 +3482,39 @@ public:
 	int InitLicenseFromLicenseContent(const char* pLicenseKey, const char* pLicenseContent);
 
 	/**
+	* Outputs the license content as an encrypted string from the license server to be used for offline license verification.
+	*
+	* @param [in, out] content The output string which stores the content of license.
+	* @param [in] contentLen The length of output string. The recommended length is 512 per license key.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
+	* @par Remarks:
+	*	    InitLicenseFromServer() has to be successfully called before calling this method.
+	*/
+	int OutputLicenseToString(char content[], const int contentLen);
+
+	/**
 	 * Outputs the license content as an encrypted string from the license server to be used for offline license verification.
 	 *
 	 * @param [in, out] content The output string which stores the content of license.
-	 * @param [in] contentLen The length of output string. The recommended length is 512 per license key.
 	 *
 	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
 	 * 		   GetErrorString() to get detailed error message.
 	 * @par Remarks:
 	 *	    InitLicenseFromServer() has to be successfully called before calling this method.
 	 */
-	int OutputLicenseToString(char content[], const int contentLen);
+	int OutputLicenseToStringPtr(char** content);
+
+	/**
+	 *Frees memory allocated for the license string.
+	 *
+	 * @param [in] content The output string which stores the content of license.
+	 *
+	 * @Remarks:
+	 *		OutputLicenseToStringPtr() has to be successfully called before calling this method.
+	 */
+	void FreeLicenseString(char** content);
 
 	/**
 	 * @}
@@ -4034,6 +4131,31 @@ public:
 	*/
 	int OutputSettingsToFile(const char* pFilePath, const char* pSettingsName);
 
+	/**
+	* Outputs runtime settings to a string.
+	*
+	* @param [in,out] content The output string which stores the contents of current settings.
+	* @param [in] contentLen The length of the output string.
+	* @param [in] pSettingsName A unique name for declaring current runtime settings.
+	*
+	* @return Returns error code. Returns 0 if the function operates successfully. You can call
+	* 		   GetErrorString() to get detailed error message.
+	*
+	* @par Code Snippet:
+	* @code
+	CBarcodeReader* reader = new CBarcodeReader();
+	reader->InitLicense("t0260NwAAAHV***************");
+	char errorMessageInit[256];
+	char errorMessageAppend[256];
+	reader->InitRuntimeSettingsWithFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
+	reader->AppendTplStringToRuntimeSettings("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+	char content[256];
+	reader->OutputSettingsToString(content, 256, "currentRuntimeSettings");
+	delete reader;
+	* @endcode
+	*
+	*/
+	int OutputSettingsToString(char content[], const int contentLen, const char* pSettingsName);
 
 	/**
 	 * Outputs runtime settings to a string.
@@ -4053,14 +4175,37 @@ public:
 			char errorMessageAppend[256];
 			reader->InitRuntimeSettingsWithFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
 			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
-			char content[256];
-			reader->OutputSettingsToString(content, 256, "currentRuntimeSettings");
+			char* content = NULL;
+			reader->OutputSettingsToStringPtr(&content, "currentRuntimeSettings");
+			reader->FreeSettingsString(&content);
 			delete reader;
 	 * @endcode
 	 *
 	 */
-	int OutputSettingsToString(char content[], const int contentLen, const char* pSettingsName);
+	int OutputSettingsToStringPtr(char** content, const char* pSettingsName);
 	
+	/**
+	* Free memory allocated for runtime settings string.
+	*
+	* @param [in] content The runtime settings string.
+	*
+	* @par Code Snippet:
+	* @code
+			CBarcodeReader* reader = new CBarcodeReader();
+			reader->InitLicense("t0260NwAAAHV***************");
+			char errorMessageInit[256];
+			char errorMessageAppend[256];
+			reader->InitRuntimeSettingsWithFile("C:\\Program Files (x86)\\Dynamsoft\\{Version number}\\Templates\\RuntimeSettings.json", CM_OVERWRITE, errorMessageInit, 256);
+			reader->AppendTplStringToRuntimeSettings("{\"Version\":\"3.0\", \"ImageParameter\":{\"Name\":\"IP1\", \"BarcodeFormatIds\":[\"BF_QR_CODE\"], \"ExpectedBarcodesCount\":10}}", CM_IGNORE, errorMessageAppend, 256);
+			char* content = NULL;
+			reader->OutputSettingsToStringPtr(&content, "currentRuntimeSettings");
+			reader->FreeSettingsString(&content);
+			delete reader;
+	* @endcode
+	*
+	*/
+	void FreeSettingsString(char** content);
+
 	/**
 	 * @}
 	 */
@@ -4218,7 +4363,7 @@ public:
 	 * @code
 			void TextResultFunction(int frameId, TextResultArray *pResults, void * pUser)
 			{
-				//TODO add your code for using test results
+				//TODO add your code for using text results
 			}
 			CBarcodeReader* reader = new CBarcodeReader();
 			reader->InitLicense("t0260NwAAAHV***************");
