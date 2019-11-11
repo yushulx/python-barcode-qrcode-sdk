@@ -309,7 +309,7 @@ decodeBuffer(PyObject *obj, PyObject *args)
     int iFormat;
     char *templateName = NULL;
     char *encoding = NULL;
-    if (!PyArg_ParseTuple(args, "Oi|s", &o, &iFormat, &templateName, &encoding))
+    if (!PyArg_ParseTuple(args, "Oi|ss", &o, &iFormat, &templateName, &encoding))
         return NULL;
 
     updateFormat(self, iFormat);
@@ -368,11 +368,11 @@ decodeBuffer(PyObject *obj, PyObject *args)
     {
         format = IPF_GRAYSCALED;
     }
-    else if (width == stride / 3)
+    else if (width * 3 == stride)
     {
         format = IPF_RGB_888;
     }
-    else if (width == stride / 4)
+    else if (width * 4 == stride)
     {
         format = IPF_ARGB_8888;
     }
