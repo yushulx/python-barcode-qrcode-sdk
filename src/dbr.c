@@ -396,6 +396,51 @@ decodeBuffer(PyObject *obj, PyObject *args)
     return list;
 }
 
+/**
+ * Decode file stream. 
+ */
+static PyObject *
+decodeFileStream(PyObject *obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+#if defined(_WIN32)
+    printf("Windows\n");
+#elif defined(__linux__)
+    printf("Linux\n");
+#elif defined(__APPLE__)
+    printf("MacOS\n");
+#else
+    printf("Unknown Operating System.\n");
+#endif
+
+    PyObject *op; 
+    int fileSize;
+    int iFormat;     // Barcode formats
+    char *templateName = NULL;
+    char *encoding = NULL;
+    if (!PyArg_ParseTuple(args, "Oii|ss", &op, &fileSize, &iFormat, &templateName, &encoding))
+    {
+        return NULL;
+    }
+
+    updateFormat(self, iFormat);
+
+    TextResultArray *pResults = NULL;
+    char *filestream = PyByteArray_AsString(op);
+    // Barcode detection
+    int ret = DBR_DecodeFileInMemory(self->hBarcode, filestream, fileSize, templateName ? templateName : "");
+    if (ret)
+    {
+        printf("Detection error: %s\n", DBR_GetErrorString(ret));
+    }
+    DBR_GetAllTextResults(self->hBarcode, &pResults);
+
+    // Wrap results
+    PyObject *list = createPyResults(pResults, encoding);
+    return list;
+}
+
+
 void onResultCallback(int frameId, TextResultArray *pResults, void *pUser)
 {
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)pUser;
@@ -922,6 +967,7 @@ static PyMethodDef dbr_methods[] = {
     {"setFurtherModes", setFurtherModes, METH_VARARGS, NULL},
     {"setParameters", setParameters, METH_VARARGS, NULL},
     {"getParameters", getParameters, METH_VARARGS, NULL},
+    {"decodeFileStream", decodeFileStream, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}};
 
 static PyMethodDef module_methods[] =
