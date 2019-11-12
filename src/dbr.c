@@ -426,6 +426,7 @@ decodeFileStream(PyObject *obj, PyObject *args)
     updateFormat(self, iFormat);
 
     TextResultArray *pResults = NULL;
+    // https://docs.python.org/2/c-api/bytearray.html
     char *filestream = PyByteArray_AsString(op);
     // Barcode detection
     int ret = DBR_DecodeFileInMemory(self->hBarcode, filestream, fileSize, templateName ? templateName : "");

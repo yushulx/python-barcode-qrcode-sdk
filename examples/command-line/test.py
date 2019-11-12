@@ -91,3 +91,10 @@ if __name__ == "__main__":
 
     
     
+# decodeFileStream
+# with open("coda.jpg", "rb") as fread:
+#     total = fread.read()
+#     results = dbr.decodeFileStream(bytearray(total), len(total), dbr.BF_ALL)
+#     for result in results:
+#         print('barcode format: ' + result[0])
+#         print('barcode value: ' + result[1])
