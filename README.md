@@ -45,8 +45,8 @@ Expanded, Expanded Stacked)
 * OpenCV
 
     ```
-    py -2 -m pip install opencv-python
-    py -3 -m pip install opencv-python
+    pip install opencv-python
+    python3 -m pip install opencv-python
     ```
     
     For **Raspberry Pi**
@@ -58,8 +58,8 @@ Expanded, Expanded Stacked)
 * NumPy
 	
     ```
-    py -2 -m pip install numpy
-    py -3 -m pip install numpy
+    pip install numpy
+    python3 -m pip install numpy
     ```
     
 ## HowTo
@@ -81,8 +81,8 @@ Build and install the Python extension:
 
 ```
 cd src
-py -2 setup.py build install
-py -3 setup.py build install
+python setup.py build install
+python3 setup.py build install
 ```
 
 ### Linux, macOS and Raspberry Pi
@@ -96,8 +96,8 @@ Build and install the Python extension:
 
 ```
 cd src
-sudo py -2 setup.py build install
-sudo py -3 setup.py build install
+sudo python setup.py build install
+sudo python3 setup.py build install
 ```
 
 ## Examples
@@ -137,6 +137,7 @@ sudo py -3 setup.py build install
     | Aztec Code    | dbr.BF_AZTEC      |
 
 - decodeBuffer(frame-by-opencv-capture, barcodeTypes)
+- decodeFileInMemory(file-in-memory-list)
 - startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, callback)
 - stopVideoMode()
 - appendVideoFrame(frame-by-opencv-capture)
