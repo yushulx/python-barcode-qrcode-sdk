@@ -137,6 +137,7 @@ sudo py -3 setup.py build install
     | Aztec Code    | dbr.BF_AZTEC      |
 
 - decodeBuffer(frame-by-opencv-capture, barcodeTypes)
+- decodeFileStream(fileStream, fileSzie, barcodeTypes)
 - startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, callback)
 - stopVideoMode()
 - appendVideoFrame(frame-by-opencv-capture)
