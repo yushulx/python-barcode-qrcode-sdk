@@ -1,5 +1,5 @@
 # DBR Python Extension
-Version 7.2
+Version 7.2.1
 
 The repository aims to help developers build **Python barcode** apps with [Dynamsoft Barcode Reader](https://www.dynamsoft.com/Products/Dynamic-Barcode-Reader.aspx) in Windows, Linux, macOS, and Raspberry Pi.
 
