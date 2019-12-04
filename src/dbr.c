@@ -471,9 +471,8 @@ void onResultCallback(int frameId, TextResultArray *pResults, void *pUser)
     }
 
     PyObject *result = PyObject_CallFunction(self->py_callback, "O", list);
-    if (result == NULL)
-        return;
-    Py_DECREF(result);
+    if (result != NULL)
+    	Py_DECREF(result);
 
     PyGILState_Release(gstate);
     /////////////////////////////////////////////
