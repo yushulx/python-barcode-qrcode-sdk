@@ -44,12 +44,12 @@ artifacts:
   name: wheels
 
 deploy:
-  - provider: Environment
-    name: production
-    on:
-      APPVEYOR_REPO_TAG: true
+- provider: Environment
+  name: production
+  on:
+    APPVEYOR_REPO_TAG: true
 
 deploy_script:
 - ps: |
     if (${Env:APPVEYOR_REPO_TAG} -eq "true") {
-      "%PYTHON%/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS}}
+      "%PYTHON%/python.exe" twine upload -u ${Env:USER} -p ${Env:PASS}}
