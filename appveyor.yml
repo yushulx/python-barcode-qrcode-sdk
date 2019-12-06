@@ -5,6 +5,10 @@ environment:
 
   matrix:
 
+    - PYTHON: "C:/Python36-x64"
+      ENABLE_CONTRIB: 0
+      ENABLE_HEADLESS: 0
+
     - PYTHON: "C:/Python37-x64"
       ENABLE_CONTRIB: 0
       ENABLE_HEADLESS: 0

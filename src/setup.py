@@ -59,6 +59,6 @@ setup(name='dbr',
       license='https://www.dynamsoft.com/Products/barcode-reader-license-agreement.aspx',
       ext_modules=[module_dbr],
       long_description='Dynamsoft Barcode Reader is a software development toolkit which enables barcode recognition of Code 39, Code 129, QR Code, DataMatrix, PDF417 and Aztec.',
-    #   platforms=['Windows', 'Linux', 'macOS'],
-    #   cmdclass={'install': CustomInstall}
+      platforms=['Windows', 'Linux', 'macOS'],
+      cmdclass={'install': CustomInstall}
       )
