@@ -1,0 +1,49 @@
+environment:
+
+  matrix:
+
+    - PYTHON: "C:/Python27-x64"
+      ENABLE_CONTRIB: 0
+      ENABLE_HEADLESS: 0
+
+    - PYTHON: "C:/Python34-x64"
+      ENABLE_CONTRIB: 0
+      ENABLE_HEADLESS: 0
+
+    - PYTHON: "C:/Python35-x64"
+      ENABLE_CONTRIB: 0
+      ENABLE_HEADLESS: 0
+
+    - PYTHON: "C:/Python36-x64"
+      ENABLE_CONTRIB: 0
+      ENABLE_HEADLESS: 0
+
+    - PYTHON: "C:/Python37-x64"
+      ENABLE_CONTRIB: 0
+      ENABLE_HEADLESS: 0
+
+    - PYTHON: "C:/Python38-x64"
+      ENABLE_CONTRIB: 0
+      ENABLE_HEADLESS: 0
+
+matrix:
+  fast_finish: true
+
+build_script:
+- cmd: |
+    "%PYTHON%/python.exe" -m pip install --upgrade pip
+    "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel twine
+
+    cd src
+    "%PYTHON%/python.exe" setup.py build
+
+    copy ..\bin\*.* ..\wheel\dbr\
+    cd build\lib.win-*\
+    copy *.* ..\..\..\wheel\dbr\
+    cd ..\..\..\wheel\
+
+    "%PYTHON%/python.exe" setup.py bdist_wheel
+
+artifacts:
+- path: wheel\dist\*.whl
+  name: wheels

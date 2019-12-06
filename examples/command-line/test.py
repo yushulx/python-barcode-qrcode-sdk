@@ -62,7 +62,7 @@ if __name__ == "__main__":
     if not os.path.isfile(barcode_image):
         print("It is not a valid file.")
     else:
-        initLicense(config.license)        
+        initLicense('t0173ZQYAAHPDJZdL0T2ohQW8zkeLOoi+5N9fDOwXO3eQd94eJw1WzX3ezyCBbOurSmTek5p9uQu3rnZrct+5wnTNJyGGIlHum/XeNHpnf5uMvinQCDQGzWVYwLCAYQHDAoYFDAsYFjAsYFjAUMBQwFDAUMBQwFDAUMBQwFDA0MDQwNDA0MDQwNDA0MDQwLDfff3U3hA07puMrtGn6gybpkAj0Ph3MzVy7PN8AU3KRCY=')        
         # Get default barcode params
         params = dbr.getParameters()
         # Convert string to JSON object
