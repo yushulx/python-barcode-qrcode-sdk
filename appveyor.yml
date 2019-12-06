@@ -52,5 +52,5 @@ deploy:
 deploy_script:
 - ps: |
     if (${Env:APPVEYOR_REPO_TAG} -eq "true") {
-      "%PYTHON%/python.exe" -m pip install twine
-      &"%PYTHON%/python.exe" twine upload -u ${Env:USER} -p ${Env:PASS}}
+      &"${Env:PYTHON}/python.exe" -m pip install twine
+      &"${Env:PYTHON}/python.exe" -m upload -u ${Env:USER} -p ${Env:PASS}}
