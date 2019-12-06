@@ -1,25 +1,9 @@
 image:
   - Visual Studio 2015
-  
+
 environment:
 
   matrix:
-
-    - PYTHON: "C:/Python27-x64"
-      ENABLE_CONTRIB: 0
-      ENABLE_HEADLESS: 0
-
-    - PYTHON: "C:/Python34-x64"
-      ENABLE_CONTRIB: 0
-      ENABLE_HEADLESS: 0
-
-    - PYTHON: "C:/Python35-x64"
-      ENABLE_CONTRIB: 0
-      ENABLE_HEADLESS: 0
-
-    - PYTHON: "C:/Python36-x64"
-      ENABLE_CONTRIB: 0
-      ENABLE_HEADLESS: 0
 
     - PYTHON: "C:/Python37-x64"
       ENABLE_CONTRIB: 0
