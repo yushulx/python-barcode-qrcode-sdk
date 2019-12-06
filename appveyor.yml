@@ -1,53 +1,35 @@
 environment:
 
-  global:
-    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
-    # /E:ON and /V:ON options are not enabled in the batch script intepreter
-    # See: http://stackoverflow.com/a/13751649/163740
-    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
-
   matrix:
 
-    - PYTHON: "C:/Python27-x64"
-      PYTHON_VERSION: "2.7.x"
-      PYTHON_ARCH: "64"
-
-    - PYTHON: "C:/Python35-x64"
-      ENABLE_CONTRIB: 0
-      ENABLE_HEADLESS: 0
-
-    - PYTHON: "C:/Python36-x64"
-      ENABLE_CONTRIB: 0
-      ENABLE_HEADLESS: 0
-
-    - PYTHON: "C:/Python37-x64"
-      ENABLE_CONTRIB: 0
-      ENABLE_HEADLESS: 0
-
-    - PYTHON: "C:/Python38-x64"
-      ENABLE_CONTRIB: 0
-      ENABLE_HEADLESS: 0
+    - PYTHON: "C:\Miniconda-x64"
 
 matrix:
   fast_finish: true
 
 install:
-  - SET VS90COMNTOOLS=%VS140COMNTOOLS%
+  - set PATH=%CONDPATH%-x64\bin;%CONDAPATH%-x64\Scripts;%PATH%
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda create -q --name python%PYTHON_VERSION%-%PLATFORM% python=%PYTHON_VERSION% 
+  - activate python%PYTHON_VERSION%-%PLATFORM%
+  - conda install -q setuptools matplotlib nose pandas wheel scipy sphinx lockfile pip libpython
+  - conda install -q -c msys2 m2w64-toolchain
 
 build_script:
 - cmd: |
-    "%PYTHON%/python.exe" -m pip install --upgrade pip
-    "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel twine numpy
+    python -m pip install --upgrade pip
+    python -m pip install --upgrade setuptools wheel twine numpy
 
     cd src
-    "%PYTHON%/python.exe" setup.py build
+    python setup.py build
 
     copy ..\bin\*.* ..\wheel\dbr\
     cd build\lib.win-*\
     copy *.* ..\..\..\wheel\dbr\
     cd ..\..\..\wheel\
 
-    "%PYTHON%/python.exe" setup.py bdist_wheel
+    python setup.py bdist_wheel
 
 artifacts:
 - path: wheel\dist\*.whl
