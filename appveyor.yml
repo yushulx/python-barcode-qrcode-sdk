@@ -8,7 +8,7 @@ matrix:
   fast_finish: true
 
 install:
-  - set PATH=%CONDPATH%-x64\bin;%CONDAPATH%-x64\Scripts;%PATH%
+  - set PATH=%CONDPATH%\bin;%CONDAPATH%\Scripts;%PATH%
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda create -q --name python%PYTHON_VERSION%-%PLATFORM% python=%PYTHON_VERSION% 
