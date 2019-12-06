@@ -15,6 +15,9 @@ environment:
 matrix:
   fast_finish: true
 
+install:
+  - SET VS90COMNTOOLS=%VS140COMNTOOLS%
+
 build_script:
 - cmd: |
     "%PYTHON%/python.exe" -m pip install --upgrade pip
