@@ -8,15 +8,15 @@ environment:
 
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      PYTHON: "C:/Python27-x64"
+      PYTHON: "C:\Python27-x64"
 
-    - PYTHON: "C:/Python35-x64"
+    - PYTHON: "C:\Python35-x64"
 
-    - PYTHON: "C:/Python36-x64"
+    - PYTHON: "C:\Python36-x64"
 
-    - PYTHON: "C:/Python37-x64"
+    - PYTHON: "C:\Python37-x64"
 
-    - PYTHON: "C:/Python38-x64"
+    - PYTHON: "C:\Python38-x64"
 
 matrix:
   fast_finish: true
@@ -53,4 +53,4 @@ deploy_script:
 - ps: |
     if (${Env:APPVEYOR_REPO_TAG} -eq "true") {
       &"${Env:PYTHON}/python.exe" -m pip install twine
-      &"${Env:PYTHON}/python.exe" -m upload -u ${Env:USER} -p ${Env:PASS}}
+      &"${Env:PYTHON}/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS}} --skip-existing wheel\dist\dbr*
