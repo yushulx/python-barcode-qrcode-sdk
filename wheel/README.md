@@ -1,5 +1,7 @@
 # Dynamsoft Barcode Reader
 
+[![Build status](https://ci.appveyor.com/api/projects/status/62oeg7hytq77sict?svg=true)](https://ci.appveyor.com/project/yushulx/python)
+
 [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.com/Products/Dynamic-Barcode-Reader.aspx) enables you to efficiently embed barcode reading functionality in your web, desktop and mobile application using just a few lines of code. This can save you months of added development time and extra costs. With our SDK, you can create high-speed and reliable barcode scanner software to meet your business needs.
 
 ## Environment

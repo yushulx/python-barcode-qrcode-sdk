@@ -1,4 +1,6 @@
 # DBR Python Extension
+[![Build status](https://ci.appveyor.com/api/projects/status/62oeg7hytq77sict?svg=true)](https://ci.appveyor.com/project/yushulx/python)
+
 Version 7.2.1
 
 The repository aims to help developers build **Python barcode** apps with [Dynamsoft Barcode Reader](https://www.dynamsoft.com/Products/Dynamic-Barcode-Reader.aspx) in Windows, Linux, macOS, and Raspberry Pi.
