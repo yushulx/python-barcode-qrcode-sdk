@@ -1,5 +1,11 @@
 environment:
 
+  USER:
+    secure: umfCEgz0QJYwxkXbfMyZuA==
+
+  PASS:
+    secure: OLWswJ7XawrbqTfmjc+E2Q==
+
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       PYTHON: "C:/Python27-x64"
@@ -36,3 +42,14 @@ build_script:
 artifacts:
 - path: wheel\dist\*.whl
   name: wheels
+
+deploy:
+  - provider: Environment
+    name: production
+    on:
+      APPVEYOR_REPO_TAG: true
+
+deploy_script:
+- ps: |
+    if (${Env:APPVEYOR_REPO_TAG} -eq "true") {
+      "%PYTHON%/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS}}
