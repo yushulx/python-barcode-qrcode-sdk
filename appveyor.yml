@@ -31,9 +31,11 @@ environment:
 matrix:
   fast_finish: true
 
+install:
+  - SET VS90COMNTOOLS=%VS140COMNTOOLS%
+
 build_script:
 - cmd: |
-    SET VS90COMNTOOLS=%VS140COMNTOOLS%
     "%PYTHON%/python.exe" -m pip install --upgrade pip
     "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel twine numpy
 
