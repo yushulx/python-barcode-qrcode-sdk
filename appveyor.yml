@@ -32,7 +32,7 @@ matrix:
 build_script:
 - cmd: |
     "%PYTHON%/python.exe" -m pip install --upgrade pip
-    "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel twine
+    "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel twine numpy
 
     cd src
     "%PYTHON%/python.exe" setup.py build
