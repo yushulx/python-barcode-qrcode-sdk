@@ -52,4 +52,4 @@ deploy:
 deploy_script:
 - cmd: |
     "%PYTHON%/python.exe" -m pip install twine
-    "%PYTHON%/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing wheel\dist\*.whl
+    "%PYTHON%/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing wheel/dist/*.whl
