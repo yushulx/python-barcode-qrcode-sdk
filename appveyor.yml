@@ -1,21 +1,15 @@
+---
 environment:
-
   USER:
     secure: umfCEgz0QJYwxkXbfMyZuA==
-
   PASS:
     secure: OLWswJ7XawrbqTfmjc+E2Q==
-
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       PYTHON: "C:/Python27-x64"
-
     - PYTHON: "C:/Python35-x64"
-
     - PYTHON: "C:/Python36-x64"
-
     - PYTHON: "C:/Python37-x64"
-
     - PYTHON: "C:/Python38-x64"
 
 matrix:
@@ -25,26 +19,30 @@ install:
   - SET VS90COMNTOOLS=%VS140COMNTOOLS%
 
 build_script:
-- cmd: |
-    "%PYTHON%/python.exe" -m pip install --upgrade pip
-    "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel numpy twine
+  - cmd: |
+      "%PYTHON%/python.exe" -m pip install --upgrade pip
+      "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel numpy 
 
-    cd src
-    "%PYTHON%/python.exe" setup.py build
+      cd src
+      "%PYTHON%/python.exe" setup.py build
 
-    copy ..\bin\*.* ..\wheel\dbr\
-    cd build\lib.win-*\
-    copy *.* ..\..\..\wheel\dbr\
-    cd ..\..\..\wheel\
+      copy ..\bin\*.* ..\wheel\dbr\
+      cd build\lib.win-*\
+      copy *.* ..\..\..\wheel\dbr\
+      cd ..\..\..\wheel\
 
-    "%PYTHON%/python.exe" setup.py bdist_wheel
+      "%PYTHON%/python.exe" setup.py bdist_wheel
 
 artifacts:
-- path: wheel\dist\*.whl
-  name: wheels
+  - path: wheel\dist\*.whl
+    name: wheels
 
 deploy_script:
-- cmd: |
-    dir dist
-
-    
+  - ps: |
+      if($env:APPVEYOR_REPO_TAG -eq 'true') {
+        Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
+        pip install --upgrade twine
+        twine upload dist/*.whl
+      } else {
+        Write-Output "No tag for deployment"
+      }
