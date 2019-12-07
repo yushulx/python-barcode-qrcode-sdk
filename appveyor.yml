@@ -27,7 +27,7 @@ install:
 build_script:
 - cmd: |
     "%PYTHON%/python.exe" -m pip install --upgrade pip
-    "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel numpy
+    "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel numpy twine
 
     cd src
     "%PYTHON%/python.exe" setup.py build
@@ -45,5 +45,6 @@ artifacts:
 
 deploy_script:
 - cmd: |
-    "%PYTHON%/python.exe" -m pip install twine
-    "%PYTHON%/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing dist/*.whl
+    dir dist
+
+    
