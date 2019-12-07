@@ -43,14 +43,7 @@ artifacts:
 - path: wheel\dist\*.whl
   name: wheels
 
-deploy:
-- provider: Environment
-  name: production
-  on:
-    APPVEYOR_REPO_TAG: true
-
 deploy_script:
 - cmd: |
-    dir .
     "%PYTHON%/python.exe" -m pip install twine
-    "%PYTHON%/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing wheel/dist/*.whl
+    "%PYTHON%/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing dist/*.whl
