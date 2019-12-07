@@ -1,3 +1,7 @@
+branches:
+  only:
+    - wheel
+    
 environment:
   USER:
     secure: umfCEgz0QJYwxkXbfMyZuA==
