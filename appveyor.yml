@@ -21,7 +21,7 @@ install:
 build_script:
   - cmd: |
       "%PYTHON%/python.exe" -m pip install --upgrade pip
-      "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel numpy twine
+      "%PYTHON%/python.exe" -m pip install --upgrade setuptools wheel numpy
 
       cd src
       "%PYTHON%/python.exe" setup.py build
@@ -41,7 +41,8 @@ deploy_script:
   - ps: |
       if($env:APPVEYOR_REPO_TAG -eq 'true') {
         Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
-        twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing dist/*.whl
+        &"${Env:PYTHON}/python.exe" -m pip install twine
+        &"${Env:PYTHON}/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing dist/*.whl
       } else {
         Write-Output "No tag for deployment"
       }
