@@ -41,7 +41,7 @@ deploy_script:
   - ps: |
       if($env:APPVEYOR_REPO_TAG -eq 'true') {
         Write-Output ("Deploying " + $env:APPVEYOR_REPO_TAG_NAME + " to PyPI...")
-        "${Env:PYTHON}/python.exe" -m twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing dist/*.whl
+        twine upload -u ${Env:USER} -p ${Env:PASS} --skip-existing dist/*.whl
       } else {
         Write-Output "No tag for deployment"
       }
