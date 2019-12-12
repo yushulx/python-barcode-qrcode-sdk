@@ -8,7 +8,7 @@ environment:
   PASS:
     secure: OLWswJ7XawrbqTfmjc+E2Q==
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       PYTHON: "C:/Python27-x64"
     - PYTHON: "C:/Python35-x64"
     - PYTHON: "C:/Python36-x64"
