@@ -332,6 +332,7 @@ decodeBuffer(PyObject *obj, PyObject *args)
     int stride = view->strides[0];
     int width = view->strides[0] / view->strides[1];
     int height = len / stride;
+    Py_DECREF(memoryview);
 #else
 
     PyObject *ao = PyObject_GetAttrString(o, "__array_struct__");
@@ -356,6 +357,7 @@ decodeBuffer(PyObject *obj, PyObject *args)
     int width = (int)pai->shape[1];    // image width
     int height = (int)pai->shape[0];   // image height
     int stride = (int)pai->strides[0]; // image stride
+    Py_DECREF(ao);
 #endif
 
     // Initialize Dynamsoft Barcode Reader
@@ -571,6 +573,7 @@ appendVideoFrame(PyObject *obj, PyObject *args)
     int stride = view->strides[0];
     int width = view->strides[0] / view->strides[1];
     int height = len / stride;
+    Py_DECREF(memoryview);
 #else
 
     PyObject *ao = PyObject_GetAttrString(o, "__array_struct__");
@@ -595,6 +598,7 @@ appendVideoFrame(PyObject *obj, PyObject *args)
     int width = (int)pai->shape[1];                     // image width
     int height = (int)pai->shape[0];                    // image height
     int stride = (int)pai->strides[0];                  // image stride
+	Py_DECREF(ao);
 #endif
 
     // Initialize Dynamsoft Barcode Reader
