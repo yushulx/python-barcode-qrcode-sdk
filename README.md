@@ -1,16 +1,12 @@
-# DBR Python Extension
-Version 7.2.1
+# Python Extension: Barcode and QR Code SDK 
+The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It aims to help developers build **Python barcode and QR code scanning** apps on Windows, Linux, macOS, Raspberry Pi and Jetson Nano. You are free to customize the Python API for Dynamsoft Barcode Reader.
 
-The repository aims to help developers build **Python barcode** apps with [Dynamsoft Barcode Reader](https://www.dynamsoft.com/Products/Dynamic-Barcode-Reader.aspx) in Windows, Linux, macOS, and Raspberry Pi.
+## Dynamsoft Barcode Reader Version
+v9.0.0
 
-## License
-Get the trial license [here](https://www.dynamsoft.com/CustomerPortal/Portal/Triallicense.aspx). Then replace the old license with the newly generated one in the **config.py** file.
+## License Key for SDK
+Click [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) to get a 30-day FREE trial license. 
 
-## Contact Us
-<support@dynamsoft.com>
-
-## Environment
-**Python 2/3**
 
 ## Supported Symbologies
 - Linear Barcodes (1D)
@@ -40,65 +36,18 @@ Omnidirectional, Limited,
 Expanded, Expanded Stacked)
 - GS1 Composite Code
 
-## Installation
-* [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.com/Downloads/Dynamic-Barcode-Reader-Download.aspx).
-* OpenCV
 
-    ```
-    py -2 -m pip install opencv-python
-    py -3 -m pip install opencv-python
-    ```
     
-    For **Raspberry Pi**
-    
-    ```
-    sudo apt-get install libopencv-dev python-opencv
-    ```
-    
-* NumPy
-	
-    ```
-    py -2 -m pip install numpy
-    py -3 -m pip install numpy
-    ```
-    
-## HowTo
-### Windows
-Set **Visual Studio** in **cmd.exe**. For example, **Visual Studio 2015**:
+## How to Build
 
-```
-SET VS90COMNTOOLS=%VS140COMNTOOLS%
-```
+### Requirements
+- [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/downloads).
+- OpenCV  
+- NumPy
 
-Edit `setup.py`. Replace the **dbr_lib_dir** and **dbr_dll** with yours:
+## How to Use
 
-```
-dbr_lib_dir = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.2.1\Components\C_C++\Lib'
-dbr_dll = r'e:\Program Files (x86)\Dynamsoft\Barcode Reader 7.2.1\Components\C_C++\Redist\x64'
-```
 
-Build and install the Python extension:
-
-```
-cd src
-py -2 setup.py build install
-py -3 setup.py build install
-```
-
-### Linux, macOS and Raspberry Pi
-Copy **libDynamsoftBarcodeReader.so**/**libDynamsoftBarcodeReader.dylib** to `/usr/lib`. If you don't have access to `/usr/lib`, try to copy the library to `/usr/local/lib` and set the **LD_LIBRARY_PATH** as follows:
-
-```bash
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-```
-
-Build and install the Python extension:
-
-```
-cd src
-sudo py -2 setup.py build install
-sudo py -3 setup.py build install
-```
 
 ## Examples
 - examples/video
@@ -148,12 +97,6 @@ sudo py -3 setup.py build install
 - setParameters(json-string)
 
 ## Online Documentation
-https://www.dynamsoft.com/Products/Barcode-Reader-Resources.aspx#documentation
+To customize Python API based on C/C++, please refer to the
+[online documentation](https://www.dynamsoft.com/Products/Barcode-Reader-Resources.aspx#documentation).
 
-## Related Articles
-* [How to Define Python Object Members in C Code](https://www.codepool.biz/python-object-members.html)
-* [Python Barcode Decoding on Non-Python Created Thread](https://www.codepool.biz/python-decode-barcode-c-thread.html)
-* [Things to Do with DBR 6.0 and Python Barcode Extension](http://www.codepool.biz/dynamsoft-barcode-python-extension-6-0.html)
-* [How to Port C/C++ Barcode Extension to Python 3](http://www.codepool.biz/cc-barcode-extension-python-3.html)
-* [Building Python Barcode Extension with DBR 5.0 on Windows](http://www.codepool.biz/python-barcode-extension-dbr-windows.html)
-* [Building Python Barcode Extension with DBR 5.2 for Linux](http://www.codepool.biz/build-linux-python-barcode-extension.html)
