@@ -1,9 +1,6 @@
 name: Build and upload to PyPI
 
-on: 
-  push:
-    branches: 
-      - 9.0-dev
+on: [push, pull_request]
 
 jobs:
   build_wheels:
