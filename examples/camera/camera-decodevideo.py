@@ -1,12 +1,15 @@
-import cv2
-from dbr import DynamsoftBarcodeReader
-dbr = DynamsoftBarcodeReader()
-import time
 import os
-
+import json
+import cv2
 import sys
-sys.path.append('../')
-import config
+import barcodeQrSDK
+import time
+import numpy as np
+# set license
+barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+
+# initialize barcode reader
+reader = barcodeQrSDK.DynamsoftBarcodeReader()
 
 results = None
 # The callback function for receiving barcode results
@@ -29,7 +32,6 @@ def read_barcode():
     vc.set(4, video_height) #set height
 
     if vc.isOpened():  
-        dbr.initLicense('LICENSE-KEY')
         rval, frame = vc.read()
     else:
         return
@@ -38,31 +40,27 @@ def read_barcode():
 
     max_buffer = 2
     max_results = 10
-    barcodeTypes = config.barcodeTypes
     image_format = 1 # 0: gray; 1: rgb888
 
-    dbr.startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, onBarcodeResult)
+    reader.startVideoMode(max_buffer, max_results, video_width, video_height, image_format, onBarcodeResult)
 
     while True:
         if results != None:
             thickness = 2
             color = (0,255,0)
             for result in results:
-                print("barcode format: " + result[0])
-                print("barcode value: " + result[1])
-                x1 = result[2]
-                y1 = result[3]
-                x2 = result[4]
-                y2 = result[5]
-                x3 = result[6]
-                y3 = result[7]
-                x4 = result[8]
-                y4 = result[9]
+                print("barcode format: " + result.format)
+                print("barcode value: " + result.text)
+                x1 = result.x1
+                y1 = result.y1
+                x2 = result.x2
+                y2 = result.y2
+                x3 = result.x3
+                y3 = result.y3
+                x4 = result.x4
+                y4 = result.y4
 
-                cv2.line(frame, (x1, y1), (x2, y2), color, thickness)
-                cv2.line(frame, (x2, y2), (x3, y3), color, thickness)
-                cv2.line(frame, (x3, y3), (x4, y4), color, thickness)
-                cv2.line(frame, (x4, y4), (x1, y1), color, thickness)
+                cv2.drawContours(frame, [np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
 
             results = None
 
@@ -71,7 +69,7 @@ def read_barcode():
 
         # start = time.time()
         try:
-            ret = dbr.appendVideoFrame(frame)
+            ret = reader.appendVideoFrame(frame)
         except:
             pass
 
@@ -83,7 +81,7 @@ def read_barcode():
         if key == 27:
             break
 
-    dbr.stopVideoMode()
+    reader.stopVideoMode()
     cv2.destroyWindow(windowName)
 
 

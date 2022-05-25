@@ -13,18 +13,11 @@ typedef struct
     void *hBarcode;
     // Callback function for video mode
     PyObject *py_cb_textResult;
-    PyObject *py_cb_intermediateResult;
-    PyObject *py_cb_errorCode;
-    PyObject *py_UserData;
-    IntermediateResultArray * pInnerIntermediateResults;
 } DynamsoftBarcodeReader;
 
 static int DynamsoftBarcodeReader_clear(DynamsoftBarcodeReader *self)
 {
-    if (self->hBarcode) Py_XDECREF(self->py_cb_errorCode);
-    if (self->py_cb_intermediateResult) Py_XDECREF(self->py_cb_intermediateResult);
     if (self->py_cb_textResult) Py_XDECREF(self->py_cb_textResult);
-    if (self->pInnerIntermediateResults) DBR_FreeIntermediateResults(&self->pInnerIntermediateResults);
     if(self->hBarcode) {
 		DBR_DestroyInstance(self->hBarcode);
     	self->hBarcode = NULL;
@@ -46,9 +39,6 @@ static PyObject *DynamsoftBarcodeReader_new(PyTypeObject *type, PyObject *args, 
     if (self != NULL)
     {
        	self->hBarcode = DBR_CreateInstance();
-        self->pInnerIntermediateResults = NULL;
-        self->py_cb_errorCode = NULL;
-        self->py_cb_intermediateResult = NULL;
         self->py_cb_textResult = NULL;
     }
 
@@ -292,8 +282,6 @@ static PyObject *decodeBytes(PyObject * obj, PyObject *args)
     return list;
 }
 
-
-
 void onResultCallback(int frameId, TextResultArray *pResults, void *pUser)
 {
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)pUser;
@@ -427,7 +415,6 @@ appendVideoFrame(PyObject *obj, PyObject *args)
     int frameId = DBR_AppendFrame(self->hBarcode, buffer);
     return 0;
 }
-
 
 static PyMethodDef instance_methods[] = {
   {"decodeFile", decodeFile, METH_VARARGS, NULL},
