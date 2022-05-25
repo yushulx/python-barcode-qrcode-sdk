@@ -1,2 +1,6 @@
 include LICENSE
 include README.md
+recursive-include include *
+recursive-include lib *
+recursive-include src *
+include CMakeLists.txt
