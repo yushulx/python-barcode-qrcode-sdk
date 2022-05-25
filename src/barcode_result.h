@@ -1,5 +1,5 @@
 #include <Python.h>
-#include "structmember.h"
+#include <structmember.h>
 
 // https://docs.python.org/3/c-api/typeobj.html#typedef-examples
 typedef struct 
