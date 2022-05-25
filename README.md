@@ -8,7 +8,7 @@ v9.0.0
 Click [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) to get a 30-day FREE trial license. 
 
 
-## Supported Symbologies
+## Supported Barcode Symbologies
 - Linear Barcodes (1D)
 
     - Code 39 (including Code 39 Extended)
@@ -30,73 +30,60 @@ Click [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
     - MaxiCode (mode 2-5)
 
 - Patch Code
-- GS1 DataBar (Omnidirectional,
-Truncated, Stacked, Stacked
-Omnidirectional, Limited,
-Expanded, Expanded Stacked)
 - GS1 Composite Code
 
 
-    
-## How to Build
+## Supported Python Edition
+* Python 3.x
 
-### Requirements
+## Requirements
 - [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/downloads).
-- OpenCV  
-- NumPy
 
-## How to Use
-
-
-
-## Examples
-- examples/video
-
-    ```
-    python rtsp.py
-    ```
+## How to Build the Python Barcode and QR Code Extension
+- Create a source distribution:
     
-- examples/camera
+    ```bash
+    python setup.py sdist
+    ```
 
-    ```
-    python camera-decodevideo.py
-    ```
+- distutils:
     
-- examples/command-line
-
-    ```
-    python test.py
+    ```bash
+    python .\setup_distutils.py build
     ```
 
-## Functions
-- initLicense(license-key)
-- decodeFile(filename, barcodeTypes) 
-
-    ```
-    barcodeTypes = dbr.BF_ONED | dbr.BF_PDF417 | dbr.BF_QR_CODE | dbr.BF_DATAMATRIX | dbr.BF_AZTEC 
+- scikit-build:
+    
+    ```bash
+    pip wheel . --verbose
     ```
 
-    | Barcode Format| Values            |
-    | ------------- |-------------------|
-    | ALL           | dbr.BF_ALL        |
-    | 1D            | dbr.BF_ONED       |
-    | PDF417        | dbr.BF_PDF417     |
-    | QR Code       | dbr.BF_QR_CODE    |
-    | DataMatrix    | dbr.BF_DATAMATRIX |
-    | Aztec Code    | dbr.BF_AZTEC      |
 
-- decodeBuffer(frame-by-opencv-capture, barcodeTypes)
-- decodeFileStream(fileStream, fileSzie, barcodeTypes)
-- startVideoMode(max_buffer, max_results, video_width, video_height, image_format, barcodeTypes, callback)
-- stopVideoMode()
-- appendVideoFrame(frame-by-opencv-capture)
-- initLicenseFromLicenseContent(license-key, license-content)
-- outputLicenseToString()
-- initLicenseFromServer(license-key, license-server)
-- setFurtherModes(mode, [values])
-- setParameters(json-string)
+## Quick Start
+
+```python
+import barcodeQrSDK
+
+# set license
+barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+
+reader = barcodeQrSDK.DynamsoftBarcodeReader()
+
+results = reader.decodeFile("test.png")
+for result in results:
+    print(result.format)
+    print(result.text)
+    print(result.x1)
+    print(result.y1)
+    print(result.x2)
+    print(result.y2)
+    print(result.x3)
+    print(result.y3)
+    print(result.x4)
+    print(result.y4)
+```
 
 ## Online Documentation
 To customize Python API based on C/C++, please refer to the
-[online documentation](https://www.dynamsoft.com/Products/Barcode-Reader-Resources.aspx#documentation).
+[online documentation](https://www.dynamsoft.com/barcode-reader/programming/c/user-guide.html?ver=latest).
 
