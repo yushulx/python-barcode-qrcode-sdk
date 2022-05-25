@@ -49,12 +49,13 @@ Click [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
 - distutils:
     
     ```bash
-    python .\setup_distutils.py build
+    python setup_distutils.py build
     ```
 
 - scikit-build:
     
     ```bash
+    python setup.py develop
     pip wheel . --verbose
     ```
 
