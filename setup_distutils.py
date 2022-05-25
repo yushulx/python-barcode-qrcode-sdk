@@ -5,8 +5,8 @@ import io
 import numpy
 from distutils.command.install import install
 
-numpy_include = os.path.join(os.path.dirname(
-    numpy.__file__), "core", "include", "numpy")
+# numpy_include = os.path.join(os.path.dirname(
+#     numpy.__file__), "core", "include", "numpy")
 
 dbr_lib_dir = ''
 dbr_dll = ''
@@ -26,11 +26,32 @@ elif sys.platform == "win32":
     dbr_lib_dir = 'lib/win'
     dbr_dll = 'lib/win'
 
+if sys.platform == "linux" or sys.platform == "linux2":
+    ext_args = dict(
+        library_dirs = [dbr_lib_dir],
+        extra_compile_args = ['-std=c99'],
+        extra_link_args = ["-Wl,-rpath=$ORIGIN"],
+        libraries = [dbr_lib_name]
+    )
+elif sys.platform == "darwin":
+    ext_args = dict(
+        library_dirs = [dbr_lib_dir],
+        extra_compile_args = ['-std=c99'],
+        libraries = [dbr_lib_name]
+    )
+
 long_description = io.open("README.md", encoding="utf-8").read()
 module_barcodeQrSDK = Extension('barcodeQrSDK',
                         sources = ['src/barcodeQrSDK.cpp'],
-                        include_dirs=[
-                       numpy_include, 'include'], library_dirs=[dbr_lib_dir], libraries=[dbr_lib_name])
+                        include_dirs=['include'], library_dirs=[dbr_lib_dir], libraries=[dbr_lib_name])
+
+if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
+        module_barcodeQrSDK = Extension('barcodeQrSDK', ['src/barcodeQrSDK.cpp'], **ext_args)
+else:
+	module_barcodeQrSDK = Extension('barcodeQrSDK',
+                        sources = ['src/barcodeQrSDK.cpp'],
+                        include_dirs=['include'], library_dirs=[dbr_lib_dir], libraries=[dbr_lib_name])
+
 
 class CustomInstall(install):
     def run(self):
@@ -50,7 +71,7 @@ class CustomInstall(install):
                 shutil.copy2(src, dst)
 
 setup (name = 'barcode-qr-code-sdk',
-            version = '1.0.0',
+            version = '9.0.0',
             description = 'Barcode and QR code scanning SDK for Python',
             long_description=long_description,
             long_description_content_type="text/markdown",
