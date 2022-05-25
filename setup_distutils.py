@@ -2,11 +2,7 @@ from distutils.core import setup, Extension
 import sys
 import os
 import io
-import numpy
 from distutils.command.install import install
-
-# numpy_include = os.path.join(os.path.dirname(
-#     numpy.__file__), "core", "include", "numpy")
 
 dbr_lib_dir = ''
 dbr_dll = ''
@@ -31,19 +27,18 @@ if sys.platform == "linux" or sys.platform == "linux2":
         library_dirs = [dbr_lib_dir],
         extra_compile_args = ['-std=c99'],
         extra_link_args = ["-Wl,-rpath=$ORIGIN"],
-        libraries = [dbr_lib_name]
+        libraries = [dbr_lib_name],
+        include_dirs=['include']
     )
 elif sys.platform == "darwin":
     ext_args = dict(
         library_dirs = [dbr_lib_dir],
         extra_compile_args = ['-std=c99'],
-        libraries = [dbr_lib_name]
+        libraries = [dbr_lib_name],
+        include_dirs=['include']
     )
 
 long_description = io.open("README.md", encoding="utf-8").read()
-module_barcodeQrSDK = Extension('barcodeQrSDK',
-                        sources = ['src/barcodeQrSDK.cpp'],
-                        include_dirs=['include'], library_dirs=[dbr_lib_dir], libraries=[dbr_lib_name])
 
 if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         module_barcodeQrSDK = Extension('barcodeQrSDK', ['src/barcodeQrSDK.cpp'], **ext_args)
