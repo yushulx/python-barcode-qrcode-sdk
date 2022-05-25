@@ -114,6 +114,14 @@ static PyObject *createPyResults(TextResultArray *pResults)
     return list;
 }
 
+
+/**
+ * Decode barcode and QR code from image files. 
+ * 
+ * @param file name
+ * 
+ * @return BarcodeResult list
+ */
 static PyObject *decodeFile(PyObject *obj, PyObject *args)
 {
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
@@ -141,7 +149,11 @@ static PyObject *decodeFile(PyObject *obj, PyObject *args)
 }
 
 /**
- * Decode barcode from OpenCV Mat. 
+ * Decode barcode and QR code from OpenCV Mat. 
+ * 
+ * @param Mat image
+ * 
+ * @return BarcodeResult list
  */
 static PyObject *decodeMat(PyObject *obj, PyObject *args)
 {
@@ -204,9 +216,56 @@ static PyObject *decodeMat(PyObject *obj, PyObject *args)
     return list;
 }
 
+/**
+ * Get runtime settings.
+ *
+ * @return Return stringified JSON object.
+ */
+static PyObject *getParameters(PyObject *obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+
+    char * pContent = NULL;
+
+    int ret = DBR_OutputSettingsToStringPtr(self->hBarcode, &pContent, "CurrentRuntimeSettings");
+    PyObject * content = Py_BuildValue("s", pContent);
+    DBR_FreeSettingsString(&pContent);
+
+    return content;
+}
+
+/**
+ * Set runtime settings with JSON object.
+ *
+ * @param json string: the stringified JSON object.
+ * 
+ * @return Return 0 if the function operates successfully.
+ */
+static PyObject *setParameters(PyObject *obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+
+    char *json;
+    if (!PyArg_ParseTuple(args, "s", &json))
+    {
+        Py_RETURN_NONE;
+    }
+
+    char errorMessage[512];
+    int ret = DBR_InitRuntimeSettingsWithString(self->hBarcode, json, CM_OVERWRITE, errorMessage, 256);
+    if (ret) 
+    {
+        printf("Returned value: %d, error message: %s\n", ret, errorMessage);
+        PyErr_SetString(PyExc_TypeError, "DBR_InitRuntimeSettingsWithString() failed");
+    }
+    return Py_BuildValue("i", ret);
+}
+
 static PyMethodDef instance_methods[] = {
   {"decodeFile", decodeFile, METH_VARARGS, NULL},
   {"decodeMat", decodeMat, METH_VARARGS, NULL},
+  {"setParameters", setParameters, METH_VARARGS, NULL},
+  {"getParameters", getParameters, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}       
 };
 

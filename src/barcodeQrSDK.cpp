@@ -6,7 +6,6 @@
 
 #include "dynamsoft_barcode_reader.h"
 
-
 struct module_state {
     PyObject *error;
 };
