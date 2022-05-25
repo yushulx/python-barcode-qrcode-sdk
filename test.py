@@ -15,3 +15,19 @@ for result in results:
     print(result.y3)
     print(result.x4)
     print(result.y4)
+
+import cv2
+
+image = cv2.imread("test.png")
+results = reader.decodeMat(image)
+for result in results:
+    print(result.format)
+    print(result.text)
+    print(result.x1)
+    print(result.y1)
+    print(result.x2)
+    print(result.y2)
+    print(result.x3)
+    print(result.y3)
+    print(result.x4)
+    print(result.y4)

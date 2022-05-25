@@ -55,7 +55,7 @@ static PyObject *DynamsoftBarcodeReader_new(PyTypeObject *type, PyObject *args, 
     return (PyObject *)self;
 }
 
-static PyObject *createPyResults(TextResultArray *pResults, const char* encoding)
+static PyObject *createPyResults(TextResultArray *pResults)
 {
     if (!pResults)
     {
@@ -120,7 +120,7 @@ static PyObject *decodeFile(PyObject *obj, PyObject *args)
 
     char *pFileName; // File name
     char *encoding = NULL;
-    if (!PyArg_ParseTuple(args, "s|s", &pFileName, &encoding))
+    if (!PyArg_ParseTuple(args, "s", &pFileName))
     {
         return NULL;
     }
@@ -136,12 +136,77 @@ static PyObject *decodeFile(PyObject *obj, PyObject *args)
     DBR_GetAllTextResults(self->hBarcode, &pResults);
 
     // Wrap results
-    PyObject *list = createPyResults(pResults, encoding);
+    PyObject *list = createPyResults(pResults);
+    return list;
+}
+
+/**
+ * Decode barcode from OpenCV Mat. 
+ */
+static PyObject *decodeMat(PyObject *obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+
+    PyObject *o;
+    int iFormat;
+    char *templateName = NULL;
+    char *encoding = NULL;
+    if (!PyArg_ParseTuple(args, "O", &o))
+        return NULL;
+
+    Py_buffer *view;
+    int nd;
+    PyObject *memoryview = PyMemoryView_FromObject(o);
+    if (memoryview == NULL)
+    {
+        PyErr_Clear();
+        return NULL;
+    }
+
+    view = PyMemoryView_GET_BUFFER(memoryview);
+    char *buffer = (char *)view->buf;
+    nd = view->ndim;
+    int len = view->len;
+    int stride = view->strides[0];
+    int width = view->strides[0] / view->strides[1];
+    int height = len / stride;
+    Py_DECREF(memoryview);
+
+    // Detect barcodes
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (width == stride)
+    {
+        format = IPF_GRAYSCALED;
+    }
+    else if (width * 3 == stride)
+    {
+        format = IPF_RGB_888;
+    }
+    else if (width * 4 == stride)
+    {
+        format = IPF_ARGB_8888;
+    }
+
+    PyObject *list = NULL;
+    int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)buffer, width, height, stride, format, "");
+    if (ret)
+    {
+        printf("Detection error: %s\n", DBR_GetErrorString(ret));
+    }
+    // Wrap results
+    TextResultArray *pResults = NULL;
+    DBR_GetAllTextResults(self->hBarcode, &pResults);
+    list = createPyResults(pResults);
+
+    Py_DECREF(memoryview);
+
     return list;
 }
 
 static PyMethodDef instance_methods[] = {
   {"decodeFile", decodeFile, METH_VARARGS, NULL},
+  {"decodeMat", decodeMat, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}       
 };
 
