@@ -3,6 +3,7 @@ import sys
 import os
 import io
 from distutils.command.install import install
+import platform
 
 dbr_lib_dir = ''
 dbr_dll = ''
@@ -10,8 +11,13 @@ dbr_include = ''
 dbr_lib_name = 'DynamsoftBarcodeReader'
 
 if sys.platform == "linux" or sys.platform == "linux2":
-    # linux
-    dbr_lib_dir = 'lib/linux'
+        # linux
+        if platform.uname()[4] == 'AMD64':
+                dbr_lib_dir = 'lib/linux'
+        elif platform.uname()[4] == 'aarch64':
+                dbr_lib_dir = 'lib/aarch64'
+        else:
+                dbr_lib_dir = 'lib/arm32'
 elif sys.platform == "darwin":
     # OS X
     dbr_lib_dir = 'lib/macos'
@@ -25,7 +31,7 @@ elif sys.platform == "win32":
 if sys.platform == "linux" or sys.platform == "linux2":
     ext_args = dict(
         library_dirs = [dbr_lib_dir],
-        extra_compile_args = ['-std=c99'],
+        extra_compile_args = ['-std=c++11'],
         extra_link_args = ["-Wl,-rpath=$ORIGIN"],
         libraries = [dbr_lib_name],
         include_dirs=['include']
@@ -33,7 +39,8 @@ if sys.platform == "linux" or sys.platform == "linux2":
 elif sys.platform == "darwin":
     ext_args = dict(
         library_dirs = [dbr_lib_dir],
-        extra_compile_args = ['-std=c99'],
+        extra_compile_args = ['-std=c++11'],
+        extra_link_args = ["-Wl,-rpath,./"],
         libraries = [dbr_lib_name],
         include_dirs=['include']
     )
@@ -66,7 +73,7 @@ class CustomInstall(install):
                 shutil.copy2(src, dst)
 
 setup (name = 'barcode-qr-code-sdk',
-            version = '9.0.1',
+            version = '9.0.2',
             description = 'Barcode and QR code scanning SDK for Python',
             long_description=long_description,
             long_description_content_type="text/markdown",
