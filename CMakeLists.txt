@@ -5,8 +5,13 @@ project(barcodeQrSDK)
 find_package(PythonExtensions REQUIRED)
 
 if(CMAKE_HOST_UNIX)
-    SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 -Wl,-rpath,./")
-    SET(CMAKE_INSTALL_RPATH ./)
+    if(CMAKE_HOST_APPLE)
+        SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 -Wl,-rpath,./")
+        SET(CMAKE_INSTALL_RPATH ./)
+    else
+        SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 -Wl,-rpath=$ORIGIN")
+        SET(CMAKE_INSTALL_RPATH "$ORIGIN")
+    endif()
     SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
