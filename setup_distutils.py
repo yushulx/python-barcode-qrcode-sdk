@@ -40,7 +40,7 @@ elif sys.platform == "darwin":
     ext_args = dict(
         library_dirs = [dbr_lib_dir],
         extra_compile_args = ['-std=c++11'],
-        extra_link_args = ["-Wl,-rpath,./"],
+        extra_link_args = ["-Wl,-rpath,@loader_path"],
         libraries = [dbr_lib_name],
         include_dirs=['include']
     )
@@ -73,7 +73,7 @@ class CustomInstall(install):
                 shutil.copy2(src, dst)
 
 setup (name = 'barcode-qr-code-sdk',
-            version = '9.0.2',
+            version = '9.0.3',
             description = 'Barcode and QR code scanning SDK for Python',
             long_description=long_description,
             long_description_content_type="text/markdown",
