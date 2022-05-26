@@ -8,7 +8,7 @@ if(CMAKE_HOST_UNIX)
     if(CMAKE_HOST_APPLE)
         SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 -Wl,-rpath,./")
         SET(CMAKE_INSTALL_RPATH ./)
-    else
+    else()
         SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 -Wl,-rpath=$ORIGIN")
         SET(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
