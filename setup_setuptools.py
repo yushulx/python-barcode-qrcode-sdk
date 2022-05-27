@@ -92,10 +92,6 @@ class CustomBuildExtDev(build_ext.build_ext):
 class CustomInstall(install):
     def run(self):
         install.run(self)
-        # if sys.platform == "win32":
-        #     from distutils.sysconfig import get_python_lib
-        #     print(get_python_lib())
-        #     copylibs(dbr_lib_dir, get_python_lib())
 
 setup (name = 'barcode-qr-code-sdk',
             version = '9.0.4',

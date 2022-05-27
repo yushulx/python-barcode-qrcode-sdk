@@ -46,17 +46,17 @@ Click [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
     python setup.py sdist
     ```
 
-- distutils:
+- setuptools:
     
     ```bash
-    python setup_distutils.py build
-    python setup_distutils.py develop # Copy libraries to barcodeQrSDK folder
+    python setup_setuptools.py build
+    python setup_setuptools.py develop # Copy libraries to barcodeQrSDK folder
     ```
 
 - scikit-build:
     
     ```bash
-    python setup_distutils.py build
+    python setup.py build
     python setup.py develop # Copy libraries to barcodeQrSDK folder
     ```
 - Build wheel:
@@ -64,7 +64,7 @@ Click [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
     ```bash
     pip wheel . --verbose
     # Or
-    python setup_distutils.py bdist_wheel
+    python setup_setuptools.py bdist_wheel
     # Or
     python setup.py bdist_wheel
     ```
