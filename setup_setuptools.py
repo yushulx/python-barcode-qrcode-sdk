@@ -14,7 +14,7 @@ dbr_lib_name = 'DynamsoftBarcodeReader'
 
 if sys.platform == "linux" or sys.platform == "linux2":
         # linux
-        if platform.uname()[4] == 'AMD64':
+        if platform.uname()[4] == 'AMD64' or platform.uname()[4] == 'x86_64':
                 dbr_lib_dir = 'lib/linux'
         elif platform.uname()[4] == 'aarch64':
                 dbr_lib_dir = 'lib/aarch64'
