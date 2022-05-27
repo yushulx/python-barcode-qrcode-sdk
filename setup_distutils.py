@@ -1,12 +1,14 @@
-from distutils.core import setup, Extension
+from setuptools.command import build_ext
+from setuptools import setup, Extension
 import sys
 import os
 import io
-from distutils.command.install import install
+from setuptools.command.install import install
 import platform
+import shutil
+from pathlib import Path
 
 dbr_lib_dir = ''
-dbr_dll = ''
 dbr_include = ''
 dbr_lib_name = 'DynamsoftBarcodeReader'
 
@@ -26,7 +28,6 @@ elif sys.platform == "win32":
     # Windows
     dbr_lib_name = 'DBRx64'
     dbr_lib_dir = 'lib/win'
-    dbr_dll = 'lib/win'
 
 if sys.platform == "linux" or sys.platform == "linux2":
     ext_args = dict(
@@ -55,33 +56,58 @@ else:
                         include_dirs=['include'], library_dirs=[dbr_lib_dir], libraries=[dbr_lib_name])
 
 
+def copylibs(src, dst):
+        if os.path.isdir(src):
+                filelist = os.listdir(src)
+                for file in filelist:
+                        libpath = os.path.join(src, file)
+                        shutil.copy2(libpath, dst)
+        else:
+                shutil.copy2(src, dst)
+
+class CustomBuildExt(build_ext.build_ext):
+        def run(self):
+                build_ext.build_ext.run(self)
+                dst =  os.path.join(self.build_lib, "barcodeQrSDK")
+                copylibs(dbr_lib_dir, dst)
+                filelist = os.listdir(self.build_lib)
+                for file in filelist:
+                    filePath = os.path.join(self.build_lib, file)
+                    if not os.path.isdir(file):
+                        copylibs(filePath, dst)
+                        # delete file for wheel package
+                        os.remove(filePath)
+
+class CustomBuildExtDev(build_ext.build_ext):
+        def run(self):
+                build_ext.build_ext.run(self)
+                dev_folder = os.path.join(Path(__file__).parent, 'barcodeQrSDK')
+                copylibs(dbr_lib_dir, dev_folder)
+                filelist = os.listdir(self.build_lib)
+                for file in filelist:
+                    filePath = os.path.join(self.build_lib, file)
+                    if not os.path.isdir(file):
+                        copylibs(filePath, dev_folder)
+
 class CustomInstall(install):
     def run(self):
         install.run(self)
-        if sys.platform == "win32":
-            import shutil
-            from distutils.sysconfig import get_python_lib
-            src = dbr_dll
-            dst = get_python_lib()
-
-            if os.path.isdir(src):
-                lst = os.listdir(src)
-                for f in lst:
-                    dll = os.path.join(src, f)
-                    shutil.copy2(dll, dst)
-            else:
-                shutil.copy2(src, dst)
+        # if sys.platform == "win32":
+        #     from distutils.sysconfig import get_python_lib
+        #     print(get_python_lib())
+        #     copylibs(dbr_lib_dir, get_python_lib())
 
 setup (name = 'barcode-qr-code-sdk',
-            version = '9.0.3',
+            version = '9.0.4',
             description = 'Barcode and QR code scanning SDK for Python',
             long_description=long_description,
             long_description_content_type="text/markdown",
             author='yushulx',
             url='https://github.com/yushulx/python-barcode-qrcode-sdk',
             license='MIT',
+            packages=['barcodeQrSDK'],
         ext_modules = [module_barcodeQrSDK],
-        options={'build':{'build_lib':'./barcodeQrSDK'}},
+        # options={'build':{'build_lib':'./barcodeQrSDK'}},
         classifiers=[
                 "Development Status :: 5 - Production/Stable",
                 "Environment :: Console",
@@ -91,6 +117,8 @@ setup (name = 'barcode-qr-code-sdk',
                 "Intended Audience :: Science/Research",
                 "License :: OSI Approved :: MIT License",
                 "Operating System :: Microsoft :: Windows",
+                "Operating System :: MacOS",
+                "Operating System :: POSIX :: Linux",
                 "Programming Language :: Python",
                 "Programming Language :: Python :: 3",
                 "Programming Language :: Python :: 3 :: Only",
@@ -105,5 +133,7 @@ setup (name = 'barcode-qr-code-sdk',
                 "Topic :: Software Development",
             ],
             cmdclass={
-                    'install': CustomInstall}
+                    'install': CustomInstall,
+                    'build_ext': CustomBuildExt,
+                    'develop': CustomBuildExtDev},
         )
