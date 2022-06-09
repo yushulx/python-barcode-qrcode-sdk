@@ -24,9 +24,6 @@ jobs:
           CIBW_ARCHS_WINDOWS: AMD64
           CIBW_ARCHS_MACOS: x86_64
           CIBW_ARCHS_LINUX: "x86_64"
-          CIBW_SKIP: "pp* *-win32 *-manylinux_i686"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_ENVIRONMENT_LINUX: 'AUDITWHEEL_PLAT="manylinux2014_$(uname -m)"'
 
       - uses: actions/upload-artifact@v2
         with:
