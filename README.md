@@ -1,36 +1,9 @@
 # Python Extension: Barcode and QR Code SDK 
-The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It aims to help developers build **Python barcode and QR code scanning** apps on Windows, Linux, macOS, Raspberry Pi and Jetson Nano. You are free to customize the Python API for Dynamsoft Barcode Reader.
+The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It aims to help developers build **Python barcode and QR code scanning** apps on Windows, Linux, macOS, Raspberry Pi and Jetson Nano. You are **free** to customize the Python API for Dynamsoft Barcode Reader.
 
-## Dynamsoft Barcode Reader Version
-v9.0.0
-
-## License Key for SDK
-Click [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) to get a 30-day FREE trial license. 
-
-
-## Supported Barcode Symbologies
-- Linear Barcodes (1D)
-
-    - Code 39 (including Code 39 Extended)
-    - Code 93
-    - Code 128
-    - Codabar
-    - Interleaved 2 of 5
-    - EAN-8
-    - EAN-13
-    - UPC-A
-    - UPC-E
-    - Industrial 2 of 5
-
-- 2D Barcodes:
-    - QR Code (including Micro QR Code)
-    - Data Matrix
-    - PDF417 (including Micro PDF417)
-    - Aztec Code
-    - MaxiCode (mode 2-5)
-
-- Patch Code
-- GS1 Composite Code
+## About Dynamsoft Barcode Reader
+- Version: 9.0.0
+- Get a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) to activate the SDK.
 
 
 ## Supported Python Edition
@@ -158,7 +131,121 @@ Click [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
     
     ![Python barcode and QR code scanner](https://user-images.githubusercontent.com/2202306/170233943-a48012e3-1b16-4d10-89ef-3120f6ea2d44.png)
 
-## Online Documentation
+
+
+## Methods
+- `barcodeQrSDK.initLicense('YOUR-LICENSE-KEY')` # set barcode SDK license globally
+    
+    ```python
+    barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+    ```
+
+- `barcodeQrSDK.DynamsoftBarcodeReader()` # create a barcode reader instance
+    
+    ```python
+    reader = barcodeQrSDK.DynamsoftBarcodeReader()
+    ```
+
+- `decodeMat(Mat image)` # decode barcode and QR code from Mat
+    ```python
+    image = cv2.imread("test.png")
+    results = reader.decodeMat(image)
+    for result in results:
+        print(result.format)
+        print(result.text)
+        print(result.x1)
+        print(result.y1)
+        print(result.x2)
+        print(result.y2)
+        print(result.x3)
+        print(result.y3)
+        print(result.x4)
+        print(result.y4)
+    ```
+
+- `getParameters()` # return JSON string
+    
+    ```python
+    params = reader.getParameters()
+    ```
+
+- `setParameters(JSON string)` # set barcode SDK parameters
+    
+    ```python
+    import json
+    json_obj = json.loads(params)
+    json_obj['ImageParameter']['DPMCodeReadingModes'][0]['Mode'] = 'DPMCRM_GENERAL'
+    json_obj['ImageParameter']['LocalizationModes'][0]['Mode'] = 'LM_STATISTICS_MARKS'
+    params = json.dumps(json_obj)
+    ret = reader.setParameters(params)
+    ```
+
+- `startVideoMode(maxListLength, maxResultListLength, width, height, imageformat, callback)` # start a native thread for decoding barcode and QR code in video mode
+    
+    ```python
+    video_width = 640
+    video_height = 480
+
+    vc = cv2.VideoCapture(0)
+    vc.set(3, video_width) #set width
+    vc.set(4, video_height) #set height
+
+    if vc.isOpened():  
+        rval, frame = vc.read()
+    else:
+        return
+
+    max_buffer = 2
+    max_results = 10
+    image_format = 1 # 0: gray; 1: rgb888
+
+    reader.startVideoMode(max_buffer, max_results, video_width, video_height, image_format, onBarcodeResult)
+
+    def onBarcodeResult(data):
+        results = data
+    ```
+
+- `appendVideoFrame()` # append a video frame to the internal buffer queue for decoding
+    
+    ```python
+    _, frame = vc.read()
+
+    try:
+        ret = reader.appendVideoFrame(frame)
+    except:
+        pass
+    ```
+
+- `stopVideoMode()` # stop the native thread
+
+    ```python
+    reader.stopVideoMode()
+    ```
+
+## Online Documentation for Dynamsoft C/C++ Barcode SDK
 To customize Python API based on C/C++, please refer to the
 [online documentation](https://www.dynamsoft.com/barcode-reader/programming/c/user-guide.html?ver=latest).
 
+## Supported Barcode Symbologies
+- Linear Barcodes (1D)
+
+    - Code 39 (including Code 39 Extended)
+    - Code 93
+    - Code 128
+    - Codabar
+    - Interleaved 2 of 5
+    - EAN-8
+    - EAN-13
+    - UPC-A
+    - UPC-E
+    - Industrial 2 of 5
+
+- 2D Barcodes:
+    - QR Code (including Micro QR Code)
+    - Data Matrix
+    - PDF417 (including Micro PDF417)
+    - Aztec Code
+    - MaxiCode (mode 2-5)
+
+- Patch Code
+- GS1 Composite Code

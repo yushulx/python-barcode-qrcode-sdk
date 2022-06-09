@@ -2,6 +2,7 @@ import os
 import json
 import cv2
 import sys
+sys.path.append('../../')
 import barcodeQrSDK
 
 # set license
