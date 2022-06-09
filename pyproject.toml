@@ -23,7 +23,7 @@ musllinux-aarch64-image = ""
 musllinux-ppc64le-image = ""
 musllinux-s390x-image = ""
 
-skip = ["*-win32", "*-manylinux_i686"]
+skip = ["*-win32", "*-manylinux_i686", "*-musllinux_*"]
 
 [tool.cibuildwheel.linux]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --plat manylinux2014_x86_64"
