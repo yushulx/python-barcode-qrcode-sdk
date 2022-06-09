@@ -18,7 +18,7 @@ jobs:
         env:
           CIBW_ARCHS_WINDOWS: AMD64
           CIBW_ARCHS_MACOS: x86_64
-          CIBW_ARCHS_LINUX: "x86_64 aarch64"
+          CIBW_ARCHS_LINUX: "x86_64"
           CIBW_SKIP: "pp* *-win32 *-manylinux_i686"
 
       - uses: actions/upload-artifact@v2
