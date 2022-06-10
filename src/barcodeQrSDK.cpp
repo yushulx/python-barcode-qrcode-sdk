@@ -6,6 +6,8 @@
 
 #include "dynamsoft_barcode_reader.h"
 
+#define INITERROR return NULL
+
 struct module_state {
     PyObject *error;
 };
@@ -33,7 +35,18 @@ error_out(PyObject *m)
 
 #define DEFAULT_MEMORY_SIZE 4096
 
+static PyObject *createInstance(PyObject *obj, PyObject *args)
+{
+    if (PyType_Ready(&DynamsoftBarcodeReaderType) < 0)
+         INITERROR;
 
+
+    DynamsoftBarcodeReader* reader = PyObject_New(DynamsoftBarcodeReader, &DynamsoftBarcodeReaderType);
+    reader->hBarcode = DBR_CreateInstance();
+    reader->py_cb_textResult = NULL;
+
+    return (PyObject *)reader;
+}
 
 static PyObject *initLicense(PyObject *obj, PyObject *args)
 {
@@ -53,6 +66,7 @@ static PyObject *initLicense(PyObject *obj, PyObject *args)
 
 static PyMethodDef barcodeQrSDK_methods[] = {
   {"initLicense", initLicense, METH_VARARGS, "Set license to activate the SDK"},
+  {"createInstance", createInstance, METH_VARARGS, "Create Dynamsoft Barcode Reader object"},
   {NULL, NULL, 0, NULL}       
 };
 
@@ -64,21 +78,24 @@ static struct PyModuleDef barcodeQrSDK_module_def = {
   barcodeQrSDK_methods
 };
 
-#define INITERROR return NULL
+
 
 // https://docs.python.org/3/c-api/module.html
 // https://docs.python.org/3/c-api/dict.html
 PyMODINIT_FUNC PyInit_barcodeQrSDK(void)
 {
-  	if (PyType_Ready(&DynamsoftBarcodeReaderType) < 0)
-        INITERROR;
+  
 
 	PyObject *module = PyModule_Create(&barcodeQrSDK_module_def);
     if (module == NULL)
         INITERROR;
 
-    Py_INCREF(&DynamsoftBarcodeReaderType);
-    PyModule_AddObject(module, "DynamsoftBarcodeReader", (PyObject *)&DynamsoftBarcodeReaderType);
+    
+    //if (PyType_Ready(&DynamsoftBarcodeReaderType) < 0)
+    //    INITERROR;
+
+    // Py_INCREF(&DynamsoftBarcodeReaderType);
+    // PyModule_AddObject(module, "DynamsoftBarcodeReader", (PyObject *)&DynamsoftBarcodeReaderType);
 	PyModule_AddStringConstant(module, "version", DBR_GetVersion());
     return module;
 }

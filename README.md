@@ -51,7 +51,7 @@ The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://ww
     # set license
     barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
 
-    reader = barcodeQrSDK.DynamsoftBarcodeReader()
+    reader = barcodeQrSDK.createInstance()
 
     results = reader.decodeFile("test.png")
     for result in results:
@@ -76,7 +76,7 @@ The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://ww
     barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
 
     # initialize barcode reader
-    reader = barcodeQrSDK.DynamsoftBarcodeReader()
+    reader = barcodeQrSDK.createInstance()
 
     def get_time():
         localtime = time.localtime()
@@ -140,12 +140,16 @@ The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://ww
     barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
     ```
 
-- `barcodeQrSDK.DynamsoftBarcodeReader()` # create a barcode reader instance
+- `barcodeQrSDK.createInstance()` # create a barcode reader instance
     
     ```python
-    reader = barcodeQrSDK.DynamsoftBarcodeReader()
+    reader = barcodeQrSDK.createInstance()
     ```
+- `decodeFile(filename)` # decode barcode and QR code from an image file
 
+    ```python
+    results = reader.decodeFile("test.png")
+    ```
 - `decodeMat(Mat image)` # decode barcode and QR code from Mat
     ```python
     image = cv2.imread("test.png")
