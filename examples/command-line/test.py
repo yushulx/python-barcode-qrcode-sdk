@@ -20,7 +20,6 @@ def decodeFile(fileName):
 
 
 if __name__ == "__main__":
-    print("OpenCV version: " + cv2.__version__)
     import sys
     barcode_image = ""
     if sys.version_info < (3, 0):
