@@ -124,13 +124,10 @@ static PyObject *decodeFile(PyObject *obj, PyObject *args)
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
 
     char *pFileName; // File name
-    char *encoding = NULL;
     if (!PyArg_ParseTuple(args, "s", &pFileName))
     {
         return NULL;
     }
-
-    TextResultArray *pResults = NULL;
 
     // Barcode detection
     int ret = DBR_DecodeFile(self->hBarcode, pFileName, "");
@@ -155,9 +152,6 @@ static PyObject *decodeMat(PyObject *obj, PyObject *args)
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
 
     PyObject *o;
-    int iFormat;
-    char *templateName = NULL;
-    char *encoding = NULL;
     if (!PyArg_ParseTuple(args, "O", &o))
         return NULL;
 
@@ -288,9 +282,6 @@ static PyObject *decodeBytes(PyObject * obj, PyObject *args)
 void onResultCallback(int frameId, TextResultArray *pResults, void *pUser)
 {
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)pUser;
-    // Get barcode results
-    int count = pResults->resultsCount;
-    int i = 0;
 
     // https://docs.python.org/2/c-api/init.html
     PyGILState_STATE gstate;
@@ -379,7 +370,6 @@ appendVideoFrame(PyObject *obj, PyObject *args)
 
     //Refer to numpy/core/src/multiarray/ctors.c
     Py_buffer *view;
-    int nd;
     PyObject *memoryview = PyMemoryView_FromObject(o);
     if (memoryview == NULL)
     {
@@ -389,33 +379,9 @@ appendVideoFrame(PyObject *obj, PyObject *args)
 
     view = PyMemoryView_GET_BUFFER(memoryview);
     unsigned char *buffer = (unsigned char *)view->buf;
-    nd = view->ndim;
-    int len = view->len;
-    int stride = view->strides[0];
-    int width = view->strides[0] / view->strides[1];
-    int height = len / stride;
+    DBR_AppendFrame(self->hBarcode, buffer);
     Py_DECREF(memoryview);
 
-    // Initialize Dynamsoft Barcode Reader
-    TextResultArray *pResults = NULL;
-
-    // Detect barcodes
-    ImagePixelFormat format = IPF_RGB_888;
-
-    if (width == stride)
-    {
-        format = IPF_GRAYSCALED;
-    }
-    else if (width == stride * 3)
-    {
-        format = IPF_RGB_888;
-    }
-    else if (width == stride * 4)
-    {
-        format = IPF_ARGB_8888;
-    }
-
-    int frameId = DBR_AppendFrame(self->hBarcode, buffer);
     return 0;
 }
 

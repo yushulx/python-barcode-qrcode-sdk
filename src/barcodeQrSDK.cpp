@@ -78,8 +78,6 @@ static struct PyModuleDef barcodeQrSDK_module_def = {
   barcodeQrSDK_methods
 };
 
-
-
 // https://docs.python.org/3/c-api/module.html
 // https://docs.python.org/3/c-api/dict.html
 PyMODINIT_FUNC PyInit_barcodeQrSDK(void)
