@@ -19,6 +19,7 @@ jobs:
       - name: Run test.py in develop mode
         run: |
           python setup_setuptools.py develop
+          python -m pip install opencv-python
           python test.py
 
       - uses: actions/upload-artifact@v2
