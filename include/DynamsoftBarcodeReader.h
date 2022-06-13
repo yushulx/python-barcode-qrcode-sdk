@@ -202,6 +202,7 @@ typedef void* HANDLE;
 /**The DotCode license is invalid. */
 #define DBRERR_DOTCODE_LICENSE_INVALID -10061
 
+/**The PharmaCode license is invalid. */
 #define DBRERR_PHARMACODE_LICENSE_INVALID -10062
 
 /**
@@ -3505,6 +3506,9 @@ extern "C" {
 	 */
 	DBR_API	int DBR_SetIntermediateResultCallback(void *barcodeReader, CB_IntermediateResult cbFunction, void * pUser);
 
+
+	DBR_API int DBR_SetDeviceFriendlyName(const char* name);
+
 	/**
 	 * @}defgroup CCallback
 	 */
@@ -4291,6 +4295,8 @@ namespace dynamsoft
 			 */
 			int SetIntermediateResultCallback(CB_IntermediateResult cbFunction, void * pUser);
 
+
+			static int SetDeviceFriendlyName(const char* name);
 			/**
 			 * @}
 			 */

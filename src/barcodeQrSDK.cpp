@@ -102,3 +102,4 @@ PyMODINIT_FUNC PyInit_barcodeQrSDK(void)
 	PyModule_AddStringConstant(module, "version", DBR_GetVersion());
     return module;
 }
+
