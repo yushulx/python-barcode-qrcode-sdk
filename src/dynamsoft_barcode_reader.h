@@ -1,3 +1,6 @@
+#ifndef __BARCODE_READER_H__
+#define __BARCODE_READER_H__
+
 #include <Python.h>
 #include <structmember.h>
 #include "DynamsoftCommon.h"
@@ -467,3 +470,5 @@ static PyTypeObject DynamsoftBarcodeReaderType = {
     0,                                                           /* tp_alloc */
     DynamsoftBarcodeReader_new,                                  /* tp_new */
 };
+
+#endif

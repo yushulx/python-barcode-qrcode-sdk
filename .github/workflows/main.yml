@@ -16,6 +16,11 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.6.1
 
+      - name: Run test.py in develop mode
+        run: |
+          python setup_setuptools.py develop
+          python test.py
+
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl

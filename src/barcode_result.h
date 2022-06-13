@@ -1,3 +1,6 @@
+#ifndef __BARCODE_RESULT_H__
+#define __BARCODE_RESULT_H__
+
 #include <Python.h>
 #include <structmember.h>
 
@@ -93,3 +96,5 @@ static PyTypeObject BarcodeResultType = {
     0,                                                           /* tp_alloc */
     BarcodeResult_new,                                           /* tp_new */
 };
+
+#endif

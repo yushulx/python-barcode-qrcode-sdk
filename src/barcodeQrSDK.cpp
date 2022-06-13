@@ -84,18 +84,24 @@ static struct PyModuleDef barcodeQrSDK_module_def = {
 // https://docs.python.org/3/c-api/dict.html
 PyMODINIT_FUNC PyInit_barcodeQrSDK(void)
 {
-  
-
 	PyObject *module = PyModule_Create(&barcodeQrSDK_module_def);
     if (module == NULL)
         INITERROR;
 
     
-    //if (PyType_Ready(&DynamsoftBarcodeReaderType) < 0)
-    //    INITERROR;
+    if (PyType_Ready(&DynamsoftBarcodeReaderType) < 0)
+       INITERROR;
 
-    // Py_INCREF(&DynamsoftBarcodeReaderType);
-    // PyModule_AddObject(module, "DynamsoftBarcodeReader", (PyObject *)&DynamsoftBarcodeReaderType);
+    Py_INCREF(&DynamsoftBarcodeReaderType);
+    PyModule_AddObject(module, "DynamsoftBarcodeReader", (PyObject *)&DynamsoftBarcodeReaderType);
+    
+    if (PyType_Ready(&BarcodeResultType) < 0)
+       INITERROR;
+
+    Py_INCREF(&BarcodeResultType);
+    PyModule_AddObject(module, "BarcodeResult", (PyObject *)&BarcodeResultType);
+
 	PyModule_AddStringConstant(module, "version", DBR_GetVersion());
     return module;
 }
+
