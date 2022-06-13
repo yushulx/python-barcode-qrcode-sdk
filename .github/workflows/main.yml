@@ -17,11 +17,13 @@ jobs:
         uses: pypa/cibuildwheel@v2.6.1
 
       - name: Run test.py in develop mode
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
         run: |
           python setup_setuptools.py develop
           python -m pip install opencv-python
+          python --version
           python test.py
 
       - uses: actions/upload-artifact@v2
