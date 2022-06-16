@@ -19,7 +19,7 @@ archs = ["AMD64"]
 
 [tool.cibuildwheel.linux]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --plat manylinux2014_$(uname -m)"
-archs = ["x86_64", aarch64]
+archs = ["x86_64", "aarch64"]
 
 
 [tool.cibuildwheel.macos]
