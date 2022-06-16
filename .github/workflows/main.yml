@@ -27,7 +27,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.6.1
         env:
-          CIBW_ARCHS_LINUX: auto
+          CIBW_ARCHS_LINUX: aarch64 
       
       - name: Run test.py in develop mode
         run: |
