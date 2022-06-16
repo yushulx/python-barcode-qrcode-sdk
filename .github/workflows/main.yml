@@ -22,12 +22,12 @@ jobs:
         if: runner.os == 'Linux'
         uses: docker/setup-qemu-action@v2
         with:
-          platforms: linux/arm64, linux/arm/v7
+          platforms: all
       
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.6.1
         env:
-          CIBW_ARCHS_LINUX: aarch64 
+          CIBW_ARCHS_LINUX: auto, aarch64 
       
       - name: Run test.py in develop mode
         run: |
