@@ -22,8 +22,10 @@ if sys.platform == "linux" or sys.platform == "linux2":
                 dbr_lib_dir = 'lib/arm32'
 elif sys.platform == "darwin":
     # OS X
-    dbr_lib_dir = 'lib/macos'
-    pass
+    if platform.uname()[4] == 'arm64':
+        dbr_lib_dir = 'lib/macos_arm64'
+    else:
+        dbr_lib_dir = 'lib/macos'
 elif sys.platform == "win32":
     # Windows
     dbr_lib_name = 'DBRx64'
