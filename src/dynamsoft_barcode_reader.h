@@ -171,7 +171,6 @@ static PyObject *decodeMat(PyObject *obj, PyObject *args)
     int stride = view->strides[0];
     int width = view->strides[0] / view->strides[1];
     int height = len / stride;
-    Py_DECREF(memoryview);
 
     // Detect barcodes
     ImagePixelFormat format = IPF_RGB_888;
