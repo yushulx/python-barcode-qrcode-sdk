@@ -2,15 +2,28 @@
 The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It aims to help developers build **Python barcode and QR code scanning** apps on Windows, Linux, macOS, Raspberry Pi and Jetson Nano. You are **free** to customize the Python API for Dynamsoft Barcode Reader.
 
 ## About Dynamsoft Barcode Reader
-- Version: 9.2.0
+- [Dynamsoft C/C++ Barcode Reader SDK v9.2.0](https://www.dynamsoft.com/barcode-reader/downloads)
 - Get a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) to activate the SDK.
 
 
 ## Supported Python Edition
 * Python 3.x
 
-## Requirements
-- [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/downloads).
+## Install Dependencies
+```bash 
+pip install opencv-python
+```
+
+## Command-line Usage
+```bash 
+$ scanbarcode <file-name> -l <license-key>
+
+# Show the image with OpenCV
+$ scanbarcode <file-name> -u 1 -l <license-key>
+```
+
+![python barcode QR code scanner](https://www.dynamsoft.com/codepool/img/2022/08/python-scan-barcode.png)
+
 
 ## How to Build the Python Barcode and QR Code Extension
 - Create a source distribution:

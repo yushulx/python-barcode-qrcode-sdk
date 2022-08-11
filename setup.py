@@ -5,7 +5,7 @@ long_description = io.open("README.md", encoding="utf-8").read()
 packages = ['barcodeQrSDK']
 
 setup (name = 'barcode-qr-code-sdk',
-            version = '9.0.6',
+            version = '9.0.7',
             description = 'Barcode and QR code scanning SDK for Python',
             long_description=long_description,
             long_description_content_type="text/markdown",
@@ -38,4 +38,8 @@ setup (name = 'barcode-qr-code-sdk',
                 "Topic :: Scientific/Engineering",
                 "Topic :: Software Development",
             ],
+            install_requires=['opencv-python'],
+            entry_points={
+                'console_scripts': ['scanbarcode=barcodeQrSDK.scripts:scanbarcode']
+            },
           )
