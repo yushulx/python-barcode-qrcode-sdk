@@ -96,7 +96,7 @@ class CustomInstall(install):
         install.run(self)
 
 setup (name = 'barcode-qr-code-sdk',
-            version = '9.0.7',
+            version = '9.2.0',
             description = 'Barcode and QR code scanning SDK for Python',
             long_description=long_description,
             long_description_content_type="text/markdown",
