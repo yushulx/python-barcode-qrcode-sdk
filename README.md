@@ -238,7 +238,28 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
     ```python
     reader.stopVideoMode()
     ```
-
+- `addAsyncListener(callback function)` # start a native thread and register a Python function for receiving barcode QR code results
+- `decodeMatAsync(<opencv mat data>)` # decode barcode QR code from OpenCV Mat asynchronously
+    ```python
+    def callback(results):
+        for result in results:
+            print(result.format)
+            print(result.text)
+            print(result.x1)
+            print(result.y1)
+            print(result.x2)
+            print(result.y2)
+            print(result.x3)
+            print(result.y3)
+            print(result.x4)
+            print(result.y4)
+                                                        
+    import cv2
+    image = cv2.imread("test.png")
+    reader.addAsyncListener(callback)
+    reader.decodeMatAsync(image)
+    sleep(1)
+    ```
 ## Online Documentation for Dynamsoft C/C++ Barcode SDK
 To customize Python API based on C/C++, please refer to the
 [online documentation](https://www.dynamsoft.com/barcode-reader/programming/c/user-guide.html?ver=latest).

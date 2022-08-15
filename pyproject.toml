@@ -8,8 +8,8 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
-manylinux-x86_64-image = "manylinux2014"
-manylinux-aarch64-image = "manylinux2014"
+manylinux-x86_64-image = "manylinux_2_24"
+manylinux-aarch64-image = "manylinux_2_24"
 
 skip = ["pp*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
 
@@ -18,7 +18,7 @@ archs = ["AMD64"]
 
 
 [tool.cibuildwheel.linux]
-repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --plat manylinux2014_$(uname -m)"
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --plat manylinux_2_24_$(uname -m)"
 archs = ["x86_64", "aarch64"]
 
 

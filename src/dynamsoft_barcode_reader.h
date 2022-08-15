@@ -6,8 +6,23 @@
 #include "DynamsoftCommon.h"
 #include "DynamsoftBarcodeReader.h"
 #include "barcode_result.h"
+#include <thread>
+#include <condition_variable>
+#include <mutex>
+#include <queue>
+#include <functional>
 
 #define DEBUG 0
+
+class WorkerThread
+{
+public:
+    std::mutex m;
+    std::condition_variable cv;
+    std::queue<std::function<void()>> tasks = {};
+    volatile bool running;
+	std::thread t;
+};
 
 typedef struct
 {
@@ -16,15 +31,34 @@ typedef struct
     void *hBarcode;
     // Callback function for video mode
     PyObject *py_cb_textResult;
+    // Callback function for image mode
+    PyObject *callback;
+    // Worker thread
+    WorkerThread *worker;
 } DynamsoftBarcodeReader;
 
 static int DynamsoftBarcodeReader_clear(DynamsoftBarcodeReader *self)
 {
+    if (self->callback)
+    {
+        Py_XDECREF(self->callback);
+        self->callback = NULL;
+    }
     if (self->py_cb_textResult) Py_XDECREF(self->py_cb_textResult);
     if(self->hBarcode) {
 		DBR_DestroyInstance(self->hBarcode);
     	self->hBarcode = NULL;
 	}
+
+    if (self->worker)
+    {
+        self->worker->running = false;
+        self->worker->cv.notify_one();
+        self->worker->t.join();
+        delete self->worker;
+        self->worker = NULL;
+        printf("Quit native thread.\n");
+    }
     return 0;
 }
 
@@ -43,6 +77,8 @@ static PyObject *DynamsoftBarcodeReader_new(PyTypeObject *type, PyObject *args, 
     {
        	self->hBarcode = DBR_CreateInstance();
         self->py_cb_textResult = NULL;
+        self->callback = NULL;
+        self->worker = NULL;
     }
 
     return (PyObject *)self;
@@ -200,6 +236,157 @@ static PyObject *decodeMat(PyObject *obj, PyObject *args)
     Py_DECREF(memoryview);
 
     return list;
+}
+
+void onResultReady(DynamsoftBarcodeReader *self)
+{
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    PyObject *list = createPyResults(self);
+    PyObject *result = PyObject_CallFunction(self->callback, "O", list);
+    if (result != NULL)
+        Py_DECREF(result);
+
+    PyGILState_Release(gstate);
+}
+
+void scan(DynamsoftBarcodeReader *self, unsigned char *buffer, int width, int height, int stride, ImagePixelFormat format, int len)
+{
+    ImageData data;
+    data.bytes = buffer;
+    data.width = width;
+    data.height = height;
+    data.stride = stride;
+    data.format = format;
+    data.bytesLength = len;
+
+    int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)buffer, width, height, stride, format, "");
+    if (ret)
+    {
+        printf("Detection error: %s\n", DBR_GetErrorString(ret));
+    }
+
+    free(buffer);
+    onResultReady(self);
+}
+
+/**
+ * Decode barcode and QR code from OpenCV Mat asynchronously.
+ *
+ * @param Mat image
+ *
+ */
+static PyObject *decodeMatAsync(PyObject *obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+    PyObject *o;
+    if (!PyArg_ParseTuple(args, "O", &o))
+        return NULL;
+
+    Py_buffer *view;
+    int nd;
+    PyObject *memoryview = PyMemoryView_FromObject(o);
+    if (memoryview == NULL)
+    {
+        PyErr_Clear();
+        return NULL;
+    }
+
+    view = PyMemoryView_GET_BUFFER(memoryview);
+    char *buffer = (char *)view->buf;
+    nd = view->ndim;
+    int len = view->len;
+    int stride = view->strides[0];
+    int width = view->strides[0] / view->strides[1];
+    int height = len / stride;
+
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (width == stride)
+    {
+        format = IPF_GRAYSCALED;
+    }
+    else if (width * 3 == stride)
+    {
+        format = IPF_RGB_888;
+    }
+    else if (width * 4 == stride)
+    {
+        format = IPF_ARGB_8888;
+    }
+
+    unsigned char *data = (unsigned char *)malloc(len);
+    memcpy(data, buffer, len);
+
+    std::unique_lock<std::mutex> lk(self->worker->m);
+    if (self->worker->tasks.size() > 1)
+    {
+        std::queue<std::function<void()>> empty = {};
+        std::swap(self->worker->tasks, empty);
+    }
+    std::function<void()> task_function = std::bind(scan, self, data, width, height, stride, format, len);
+    self->worker->tasks.push(task_function);
+    self->worker->cv.notify_one();
+    lk.unlock();
+    
+    Py_DECREF(memoryview);
+    return Py_BuildValue("i", 0);
+}
+
+void run(DynamsoftBarcodeReader *self)
+{
+    while (self->worker->running)
+    {
+        std::function<void()> task;
+        std::unique_lock<std::mutex> lk(self->worker->m);
+        self->worker->cv.wait(lk, [&]
+                              { return !self->worker->tasks.empty() || !self->worker->running; });
+        if (!self->worker->running)
+		{
+			break;
+		}
+        task = std::move(self->worker->tasks.front());
+        self->worker->tasks.pop();
+        lk.unlock();
+
+        task();
+    }
+}
+
+/**
+ * Register callback function to receive barcode decoding result asynchronously.
+ */
+static PyObject *addAsyncListener(PyObject *obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+
+    PyObject *callback = NULL;
+    if (!PyArg_ParseTuple(args, "O", &callback))
+    {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback))
+    {
+        PyErr_SetString(PyExc_TypeError, "parameter must be callable");
+        return NULL;
+    }
+    else
+    {
+        Py_XINCREF(callback);       /* Add a reference to new callback */
+        Py_XDECREF(self->callback); /* Dispose of previous callback */
+        self->callback = callback;
+    }
+
+    if (self->worker == NULL)
+    {
+        self->worker = new WorkerThread();
+        self->worker->running = true;
+        self->worker->t = std::thread(&run, self);
+    }
+
+    printf("Running native thread...\n");
+    return Py_BuildValue("i", 0);
 }
 
 /**
@@ -393,6 +580,8 @@ static PyMethodDef instance_methods[] = {
   {"stopVideoMode", stopVideoMode, METH_VARARGS, NULL},
   {"appendVideoFrame", appendVideoFrame, METH_VARARGS, NULL},
   {"decodeBytes", decodeBytes, METH_VARARGS, NULL},
+  {"addAsyncListener", addAsyncListener, METH_VARARGS, NULL},
+  {"decodeMatAsync", decodeMatAsync, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}       
 };
 
