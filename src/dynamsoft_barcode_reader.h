@@ -37,28 +37,49 @@ typedef struct
     WorkerThread *worker;
 } DynamsoftBarcodeReader;
 
-static int DynamsoftBarcodeReader_clear(DynamsoftBarcodeReader *self)
+void clearTasks(DynamsoftBarcodeReader *self)
 {
     if (self->callback)
     {
         Py_XDECREF(self->callback);
         self->callback = NULL;
     }
-    if (self->py_cb_textResult) Py_XDECREF(self->py_cb_textResult);
-    if(self->hBarcode) {
-		DBR_DestroyInstance(self->hBarcode);
-    	self->hBarcode = NULL;
-	}
+
+    if (self->py_cb_textResult) 
+    {
+        Py_XDECREF(self->py_cb_textResult);
+        self->py_cb_textResult = NULL;
+    }
 
     if (self->worker)
     {
+        std::unique_lock<std::mutex> lk(self->worker->m);
         self->worker->running = false;
+        
+        if (self->worker->tasks.size() > 1)
+        {
+            std::queue<std::function<void()>> empty = {};
+            std::swap(self->worker->tasks, empty);
+        }
+
         self->worker->cv.notify_one();
+        lk.unlock();
+
         self->worker->t.join();
         delete self->worker;
         self->worker = NULL;
         printf("Quit native thread.\n");
     }
+}
+
+static int DynamsoftBarcodeReader_clear(DynamsoftBarcodeReader *self)
+{
+    clearTasks(self);
+    if(self->hBarcode) {
+		DBR_DestroyInstance(self->hBarcode);
+    	self->hBarcode = NULL;
+	}
+
     return 0;
 }
 
@@ -267,7 +288,11 @@ void scan(DynamsoftBarcodeReader *self, unsigned char *buffer, int width, int he
     }
 
     free(buffer);
-    onResultReady(self);
+
+    if (self->callback != NULL)
+    {
+        onResultReady(self);
+    }
 }
 
 /**
@@ -386,6 +411,16 @@ static PyObject *addAsyncListener(PyObject *obj, PyObject *args)
     }
 
     printf("Running native thread...\n");
+    return Py_BuildValue("i", 0);
+}
+
+/**
+ * Clear native thread and tasks.
+ */
+static PyObject *clearAsyncListener(PyObject *obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+    clearTasks(self);
     return Py_BuildValue("i", 0);
 }
 
@@ -582,6 +617,7 @@ static PyMethodDef instance_methods[] = {
   {"decodeBytes", decodeBytes, METH_VARARGS, NULL},
   {"addAsyncListener", addAsyncListener, METH_VARARGS, NULL},
   {"decodeMatAsync", decodeMatAsync, METH_VARARGS, NULL},
+  {"clearAsyncListener", clearAsyncListener, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}       
 };
 
