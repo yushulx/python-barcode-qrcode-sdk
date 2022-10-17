@@ -358,6 +358,64 @@ static PyObject *decodeMatAsync(PyObject *obj, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
+/**
+ * Decode barcode and QR code from byte array asynchronously.
+ *
+ * @param bytes, width, height, stride, imageformat
+ *
+ */
+static PyObject *decodeBytesAsync(PyObject * obj, PyObject *args)
+{
+    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;  
+
+    PyObject *o;
+    int len, width, height, stride, imageformat;
+    if (!PyArg_ParseTuple(args, "Oiiiii", &o, &len, &width, &height, &stride, &imageformat))
+		Py_RETURN_NONE;
+
+    char * barcodeBuffer = NULL;
+    if(PyByteArray_Check(o))
+    {
+        barcodeBuffer = PyByteArray_AsString(o);
+    }
+    else if(PyBytes_Check(o))
+    {
+        barcodeBuffer = PyBytes_AsString(o);
+    }
+    else
+    {
+        printf("The first parameter should be a byte array or bytes object.");
+		Py_RETURN_NONE;
+    }
+    
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (imageformat == 0)
+    {
+        format = IPF_GRAYSCALED;
+    }
+    else
+    {
+        format = IPF_RGB_888;
+    }
+    
+    unsigned char *data = (unsigned char *)malloc(len);
+    memcpy(data, barcodeBuffer, len);
+
+    std::unique_lock<std::mutex> lk(self->worker->m);
+    if (self->worker->tasks.size() > 1)
+    {
+        std::queue<std::function<void()>> empty = {};
+        std::swap(self->worker->tasks, empty);
+    }
+    std::function<void()> task_function = std::bind(scan, self, data, width, height, stride, format, len);
+    self->worker->tasks.push(task_function);
+    self->worker->cv.notify_one();
+    lk.unlock();
+
+    return Py_BuildValue("i", 0);
+}
+
 void run(DynamsoftBarcodeReader *self)
 {
     while (self->worker->running)
@@ -474,9 +532,8 @@ static PyObject *decodeBytes(PyObject * obj, PyObject *args)
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;  
 
     PyObject *o;
-    int width, height, stride;
-    ImagePixelFormat imagePixelFormat = IPF_RGB_888;
-    if (!PyArg_ParseTuple(args, "Oiiii", &o, &height, &width, &stride, &imagePixelFormat))
+    int width, height, stride, imageformat;
+    if (!PyArg_ParseTuple(args, "Oiiii", &o, &width, &height, &stride, &imageformat))
 		Py_RETURN_NONE;
 
     char * barcodeBuffer = NULL;
@@ -494,7 +551,18 @@ static PyObject *decodeBytes(PyObject * obj, PyObject *args)
 		Py_RETURN_NONE;
     }
     
-    int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)barcodeBuffer, width, height, stride, imagePixelFormat, "");
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (imageformat == 0)
+    {
+        format = IPF_GRAYSCALED;
+    }
+    else
+    {
+        format = IPF_RGB_888;
+    }
+    
+    int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)barcodeBuffer, width, height, stride, format, "");
     PyObject *list = createPyResults(self);
 
     return list;
@@ -618,6 +686,7 @@ static PyMethodDef instance_methods[] = {
   {"addAsyncListener", addAsyncListener, METH_VARARGS, NULL},
   {"decodeMatAsync", decodeMatAsync, METH_VARARGS, NULL},
   {"clearAsyncListener", clearAsyncListener, METH_VARARGS, NULL},
+  {"decodeBytesAsync", decodeBytesAsync, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}       
 };
 

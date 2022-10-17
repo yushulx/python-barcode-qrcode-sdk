@@ -2,7 +2,7 @@
 The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It aims to help developers build **Python barcode and QR code scanning** apps on Windows, Linux, macOS, Raspberry Pi and Jetson Nano. You are **free** to customize the Python API for Dynamsoft Barcode Reader.
 
 ## About Dynamsoft Barcode Reader
-- [Dynamsoft C/C++ Barcode Reader SDK v9.2.0](https://www.dynamsoft.com/barcode-reader/downloads)
+- [Dynamsoft C/C++ Barcode Reader SDK v9.4.0](https://www.dynamsoft.com/barcode-reader/downloads)
 - Get a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) to activate the SDK.
 
 
@@ -242,17 +242,7 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
 - `decodeMatAsync(<opencv mat data>)` # decode barcode QR code from OpenCV Mat asynchronously
     ```python
     def callback(results):
-        for result in results:
-            print(result.format)
-            print(result.text)
-            print(result.x1)
-            print(result.y1)
-            print(result.x2)
-            print(result.y2)
-            print(result.x3)
-            print(result.y3)
-            print(result.x4)
-            print(result.y4)
+        print(results)
                                                         
     import cv2
     image = cv2.imread("test.png")
@@ -260,6 +250,26 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
     reader.decodeMatAsync(image)
     sleep(1)
     ```
+- `clearAsyncListener()` # stop the native thread and clear the registered Python function
+- `decodeBytes(bytes, width, height, stride, imageformat)` # 0: gray; 1: rgb888
+    ```python
+    import cv2
+    image = cv2.imread("test.png")
+    results = scanner.decodeBytes(image.tobytes(), image.shape[1], image.shape[0], image.strides[0], 1)
+    ```
+- `decodeBytesAsync` # decode image byte array asynchronously
+
+    ```python
+    def callback(results):
+        print(results)
+                                                        
+    import cv2
+    image = cv2.imread("test.png")
+    imagebytes = image.tobytes()
+    scanner.decodeBytesAsync(image.tobytes(), len(imagebytes), image.shape[1], image.shape[0], image.strides[0], 1)
+    sleep(1)
+    ```
+
 ## Online Documentation for Dynamsoft C/C++ Barcode SDK
 To customize Python API based on C/C++, please refer to the
 [online documentation](https://www.dynamsoft.com/barcode-reader/programming/c/user-guide.html?ver=latest).
