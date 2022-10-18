@@ -304,9 +304,13 @@ void scan(DynamsoftBarcodeReader *self, unsigned char *buffer, int width, int he
 static PyObject *decodeMatAsync(PyObject *obj, PyObject *args)
 {
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
+    if (self->worker == NULL)
+    {
+        return Py_BuildValue("i", -1);
+    }
     PyObject *o;
     if (!PyArg_ParseTuple(args, "O", &o))
-        return NULL;
+        return Py_BuildValue("i", -1);
 
     Py_buffer *view;
     int nd;
@@ -314,7 +318,7 @@ static PyObject *decodeMatAsync(PyObject *obj, PyObject *args)
     if (memoryview == NULL)
     {
         PyErr_Clear();
-        return NULL;
+        return Py_BuildValue("i", -1);
     }
 
     view = PyMemoryView_GET_BUFFER(memoryview);
@@ -367,11 +371,15 @@ static PyObject *decodeMatAsync(PyObject *obj, PyObject *args)
 static PyObject *decodeBytesAsync(PyObject * obj, PyObject *args)
 {
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;  
+    if (self->worker == NULL)
+    {
+        return Py_BuildValue("i", -1);
+    }
 
     PyObject *o;
     int len, width, height, stride, imageformat;
     if (!PyArg_ParseTuple(args, "Oiiiii", &o, &len, &width, &height, &stride, &imageformat))
-		Py_RETURN_NONE;
+		return Py_BuildValue("i", -1);
 
     char * barcodeBuffer = NULL;
     if(PyByteArray_Check(o))
@@ -385,7 +393,7 @@ static PyObject *decodeBytesAsync(PyObject * obj, PyObject *args)
     else
     {
         printf("The first parameter should be a byte array or bytes object.");
-		Py_RETURN_NONE;
+		return Py_BuildValue("i", -1);
     }
     
     ImagePixelFormat format = IPF_RGB_888;
