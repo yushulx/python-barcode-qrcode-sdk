@@ -14,12 +14,19 @@
 
 #define DEBUG 0
 
+class Task
+{
+public:
+    std::function<void()> func;
+    unsigned char* buffer;
+};
+
 class WorkerThread
 {
 public:
     std::mutex m;
     std::condition_variable cv;
-    std::queue<std::function<void()>> tasks = {};
+    std::queue<Task> tasks = {};
     volatile bool running;
 	std::thread t;
 };
@@ -39,6 +46,18 @@ typedef struct
 
 void clearTasks(DynamsoftBarcodeReader *self)
 {
+    if (self->worker->tasks.size() > 0)
+    {
+        for (int i = 0; i < self->worker->tasks.size(); i++)
+        {
+            free(self->worker->tasks.front().buffer);
+            self->worker->tasks.pop();
+        }
+    }
+}
+
+void clear(DynamsoftBarcodeReader *self)
+{
     if (self->callback)
     {
         Py_XDECREF(self->callback);
@@ -56,11 +75,7 @@ void clearTasks(DynamsoftBarcodeReader *self)
         std::unique_lock<std::mutex> lk(self->worker->m);
         self->worker->running = false;
         
-        if (self->worker->tasks.size() > 1)
-        {
-            std::queue<std::function<void()>> empty = {};
-            std::swap(self->worker->tasks, empty);
-        }
+        clearTasks(self);
 
         self->worker->cv.notify_one();
         lk.unlock();
@@ -74,7 +89,7 @@ void clearTasks(DynamsoftBarcodeReader *self)
 
 static int DynamsoftBarcodeReader_clear(DynamsoftBarcodeReader *self)
 {
-    clearTasks(self);
+    clear(self);
     if(self->hBarcode) {
 		DBR_DestroyInstance(self->hBarcode);
     	self->hBarcode = NULL;
@@ -273,14 +288,6 @@ void onResultReady(DynamsoftBarcodeReader *self)
 
 void scan(DynamsoftBarcodeReader *self, unsigned char *buffer, int width, int height, int stride, ImagePixelFormat format, int len)
 {
-    ImageData data;
-    data.bytes = buffer;
-    data.width = width;
-    data.height = height;
-    data.stride = stride;
-    data.format = format;
-    data.bytesLength = len;
-
     int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)buffer, width, height, stride, format, "");
     if (ret)
     {
@@ -293,6 +300,33 @@ void scan(DynamsoftBarcodeReader *self, unsigned char *buffer, int width, int he
     {
         onResultReady(self);
     }
+}
+
+void queueTask(DynamsoftBarcodeReader *self, unsigned char* barcodeBuffer, int width, int height, int stride, int imageformat, int len)
+{
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (imageformat == 0)
+    {
+        format = IPF_GRAYSCALED;
+    }
+    else
+    {
+        format = IPF_RGB_888;
+    }
+    
+    unsigned char *data = (unsigned char *)malloc(len);
+    memcpy(data, barcodeBuffer, len);
+
+    std::unique_lock<std::mutex> lk(self->worker->m);
+    clearTasks(self);
+    std::function<void()> task_function = std::bind(scan, self, data, width, height, stride, format, len);
+    Task task;
+    task.func = task_function;
+    task.buffer = data;
+    self->worker->tasks.push(task);
+    self->worker->cv.notify_one();
+    lk.unlock();
 }
 
 /**
@@ -329,34 +363,7 @@ static PyObject *decodeMatAsync(PyObject *obj, PyObject *args)
     int width = view->strides[0] / view->strides[1];
     int height = len / stride;
 
-    ImagePixelFormat format = IPF_RGB_888;
-
-    if (width == stride)
-    {
-        format = IPF_GRAYSCALED;
-    }
-    else if (width * 3 == stride)
-    {
-        format = IPF_RGB_888;
-    }
-    else if (width * 4 == stride)
-    {
-        format = IPF_ARGB_8888;
-    }
-
-    unsigned char *data = (unsigned char *)malloc(len);
-    memcpy(data, buffer, len);
-
-    std::unique_lock<std::mutex> lk(self->worker->m);
-    if (self->worker->tasks.size() > 1)
-    {
-        std::queue<std::function<void()>> empty = {};
-        std::swap(self->worker->tasks, empty);
-    }
-    std::function<void()> task_function = std::bind(scan, self, data, width, height, stride, format, len);
-    self->worker->tasks.push(task_function);
-    self->worker->cv.notify_one();
-    lk.unlock();
+    queueTask(self, (unsigned char*)buffer, width, height, stride, nd, len);
     
     Py_DECREF(memoryview);
     return Py_BuildValue("i", 0);
@@ -396,30 +403,7 @@ static PyObject *decodeBytesAsync(PyObject * obj, PyObject *args)
 		return Py_BuildValue("i", -1);
     }
     
-    ImagePixelFormat format = IPF_RGB_888;
-
-    if (imageformat == 0)
-    {
-        format = IPF_GRAYSCALED;
-    }
-    else
-    {
-        format = IPF_RGB_888;
-    }
-    
-    unsigned char *data = (unsigned char *)malloc(len);
-    memcpy(data, barcodeBuffer, len);
-
-    std::unique_lock<std::mutex> lk(self->worker->m);
-    if (self->worker->tasks.size() > 1)
-    {
-        std::queue<std::function<void()>> empty = {};
-        std::swap(self->worker->tasks, empty);
-    }
-    std::function<void()> task_function = std::bind(scan, self, data, width, height, stride, format, len);
-    self->worker->tasks.push(task_function);
-    self->worker->cv.notify_one();
-    lk.unlock();
+    queueTask(self, (unsigned char*)barcodeBuffer, width, height, stride, imageformat, len);
 
     return Py_BuildValue("i", 0);
 }
@@ -436,7 +420,7 @@ void run(DynamsoftBarcodeReader *self)
 		{
 			break;
 		}
-        task = std::move(self->worker->tasks.front());
+        task = std::move(self->worker->tasks.front().func);
         self->worker->tasks.pop();
         lk.unlock();
 
@@ -486,7 +470,7 @@ static PyObject *addAsyncListener(PyObject *obj, PyObject *args)
 static PyObject *clearAsyncListener(PyObject *obj, PyObject *args)
 {
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
-    clearTasks(self);
+    clear(self);
     return Py_BuildValue("i", 0);
 }
 

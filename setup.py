@@ -5,7 +5,7 @@ long_description = io.open("README.md", encoding="utf-8").read()
 packages = ['barcodeQrSDK']
 
 setup (name = 'barcode-qr-code-sdk',
-            version = '9.4.1',
+            version = '9.4.2',
             description = 'Barcode and QR code scanning SDK for Python',
             long_description=long_description,
             long_description_content_type="text/markdown",
