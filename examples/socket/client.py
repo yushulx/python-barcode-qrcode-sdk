@@ -51,7 +51,7 @@ def run():
     
     client = SimpleSocket()
     client.registerEventCb((readCb, writeCb))
-    client.startClient('localhost', 80)
+    client.startClient('192.168.8.72', 8080)
     
     while True:
         client.monitorEvents()

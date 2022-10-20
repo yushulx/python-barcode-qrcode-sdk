@@ -82,7 +82,7 @@ def run():
     
     server = SimpleSocket()
     server.registerEventCb((readCb, writeCb))
-    server.startServer(80, 1)
+    server.startServer(8080, 1)
     
     try:
         while True:

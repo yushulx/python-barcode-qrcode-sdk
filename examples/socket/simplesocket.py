@@ -22,6 +22,7 @@ class SimpleSocket():
     def __init__(self) -> None:
         self.sel = selectors.DefaultSelector()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(5)
         self.callback = None
         
     def registerEventCb(self, callback):
@@ -51,7 +52,7 @@ class SimpleSocket():
     def acceptConn(self, sock, callback):
         connection, addr = sock.accept()
         print('Connected to %s' % addr[0])
-        connection.setblocking(False)
+        connection.setblocking(True)
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
         self.sel.register(connection, events, data=callback)
         
@@ -116,12 +117,9 @@ class SimpleSocket():
                     # connection closed
                     return b''
                 
-                if len(chunk) < 1024:
-                    chunks.append(chunk)
-                    return b''.join(chunks)
-                else:
-                    chunks.append(chunk)
-                    bytes_recd = bytes_recd + len(chunk)
+                chunks.append(chunk)
+                bytes_recd = bytes_recd + len(chunk)
+                    
         except Exception as e:
             print(e)
             return b''
