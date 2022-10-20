@@ -257,15 +257,15 @@ static PyObject *decodeMat(PyObject *obj, PyObject *args)
     // Detect barcodes
     ImagePixelFormat format = IPF_RGB_888;
 
-    if (width == stride)
+    if (nd == 1)
     {
         format = IPF_GRAYSCALED;
     }
-    else if (width * 3 == stride)
+    else if (nd == 3)
     {
         format = IPF_RGB_888;
     }
-    else if (width * 4 == stride)
+    else if (nd == 4)
     {
         format = IPF_ARGB_8888;
     }
@@ -282,9 +282,9 @@ static PyObject *decodeMat(PyObject *obj, PyObject *args)
 
     PyObject *list = createPyResults(self);
 
-    return Py_BuildValue("Oi", list, elapsedTime);
+    Py_DECREF(memoryview);
 
-    return list;
+    return Py_BuildValue("Oi", list, elapsedTime);
 }
 
 void onResultReady(DynamsoftBarcodeReader *self, int elapsedTime)
@@ -403,7 +403,22 @@ static PyObject *decodeMatAsync(PyObject *obj, PyObject *args)
     int width = view->strides[0] / view->strides[1];
     int height = len / stride;
 
-    queueTask(self, (unsigned char*)buffer, width, height, stride, nd, len);
+    ImagePixelFormat format = IPF_RGB_888;
+
+    if (nd == 1)
+    {
+        format = IPF_GRAYSCALED;
+    }
+    else if (nd == 3)
+    {
+        format = IPF_RGB_888;
+    }
+    else if (nd == 4)
+    {
+        format = IPF_ARGB_8888;
+    }
+
+    queueTask(self, (unsigned char*)buffer, width, height, stride, format, len);
     
     Py_DECREF(memoryview);
     return Py_BuildValue("i", 0);

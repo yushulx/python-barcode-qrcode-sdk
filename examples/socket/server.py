@@ -3,17 +3,14 @@ import numpy as np
 from simplesocket import SimpleSocket, DataType
 import json
 import barcodeQrSDK
-import time
     
 g_results = None
-isAvailable = True
 isDisconnected = False
 msgQueue = []
 
 def callback(results, elpased_time):
-    global g_results, isAvailable
+    global g_results
     g_results = (results, elpased_time)
-    isAvailable = True
     
 # Initialize Dynamsoft Barcode Reader
 barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
@@ -39,9 +36,8 @@ def readCb(data_type, data):
 
     if data_type == DataType.WEBP:
         try:
-            frame = cv.imdecode(np.frombuffer(data[4:], np.uint8), cv.IMREAD_COLOR)
-            if frame is not None and isAvailable:
-                isAvailable = False
+            frame = cv.imdecode(np.frombuffer(data, np.uint8), cv.IMREAD_COLOR)
+            if frame is not None:
                 reader.decodeMatAsync(frame)
                 
             if g_results != None:
