@@ -29,12 +29,12 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: auto, aarch64 
       
-      - name: Run test.py in develop mode
-        run: |
-          python setup_setuptools.py develop
-          python -m pip install opencv-python
-          python --version
-          python test.py
+      # - name: Run test.py in develop mode
+      #   run: |
+      #     python setup_setuptools.py develop
+      #     python -m pip install opencv-python
+      #     python --version
+      #     python test.py
 
       - uses: actions/upload-artifact@v2
         with:
