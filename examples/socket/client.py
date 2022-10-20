@@ -8,8 +8,12 @@ g_local_results = None
 g_remote_results = None
 isDisconnected = False
 msgQueue = []
+isReady = True
 
 cap = cv.VideoCapture(0)
+cap.set(cv.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv.CAP_PROP_FRAME_HEIGHT, 480)
+
 if cap.isOpened() == False:
     print("Unable to read camera feed")
     exit()
@@ -26,7 +30,7 @@ print(barcodeQrSDK.__version__)
 reader.addAsyncListener(callback)
     
 def readCb(data_type, data):
-    global isDisconnected, g_remote_results
+    global isDisconnected, g_remote_results, isReady
     if data == b'':
         isDisconnected = True
 
@@ -37,6 +41,7 @@ def readCb(data_type, data):
     if data_type == DataType.JSON:
         obj = json.loads(data)
         g_remote_results = (obj['results'], obj['time'])
+        isReady = True
     
 # Data for sending
 def writeCb():
@@ -47,7 +52,7 @@ def writeCb():
     return None, None
     
 def run():
-    global isDisconnected, g_local_results, g_remote_results
+    global isDisconnected, g_local_results, g_remote_results, isReady
     
     client = SimpleSocket()
     client.registerEventCb((readCb, writeCb))
@@ -66,25 +71,27 @@ def run():
             reader.decodeMatAsync(frame)
                 
         # Send data to server
-        webp = cv.imencode('.webp', frame, [cv.IMWRITE_WEBP_QUALITY, 90])[1]
-        msgQueue.append((DataType.WEBP, webp.tobytes()))
+        if isReady:
+            isReady = False
+            webp = cv.imencode('.webp', frame, [cv.IMWRITE_WEBP_QUALITY, 90])[1]
+            msgQueue.append((DataType.WEBP, webp.tobytes()))
                 
         # Show local and remote results
-        if g_local_results != None:
-            for result in g_local_results[0]:
-                text = result.text
-                x1 = result.x1
-                y1 = result.y1
-                x2 = result.x2
-                y2 = result.y2
-                x3 = result.x3
-                y3 = result.y3
-                x4 = result.x4
-                y4 = result.y4
-                cv.putText(frame, text, (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                cv.drawContours(frame, [np.int0([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
+        # if g_local_results != None:
+        #     for result in g_local_results[0]:
+        #         text = result.text
+        #         x1 = result.x1
+        #         y1 = result.y1
+        #         x2 = result.x2
+        #         y2 = result.y2
+        #         x3 = result.x3
+        #         y3 = result.y3
+        #         x4 = result.x4
+        #         y4 = result.y4
+        #         cv.putText(frame, text, (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        #         cv.drawContours(frame, [np.int0([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
             
-            cv.putText(frame, "Local decoding time: " + str(g_local_results[1]) + " ms", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+        #     cv.putText(frame, "Local decoding time: " + str(g_local_results[1]) + " ms", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
         if g_remote_results != None:
             print("Remote decoding time: " + str(int(g_remote_results[1])) + " ms")

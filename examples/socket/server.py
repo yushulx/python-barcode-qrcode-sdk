@@ -16,11 +16,11 @@ def callback(results, elpased_time):
 barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
 reader = barcodeQrSDK.createInstance()
 print(barcodeQrSDK.__version__)
-reader.addAsyncListener(callback)
+# reader.addAsyncListener(callback)
    
 # Process received data     
 def readCb(data_type, data):
-    global isDisconnected, g_results, isAvailable
+    global isDisconnected, g_results
     
     if data == b'':
         isDisconnected = True
@@ -37,8 +37,11 @@ def readCb(data_type, data):
     if data_type == DataType.WEBP:
         try:
             frame = cv.imdecode(np.frombuffer(data, np.uint8), cv.IMREAD_COLOR)
+            
             if frame is not None:
-                reader.decodeMatAsync(frame)
+                # reader.decodeMatAsync(frame)
+                results, elpased_time = reader.decodeMat(frame)
+                g_results = (results, elpased_time)
                 
             if g_results != None:
                 jsonData = {'results': [], 'time': g_results[1]}
@@ -56,16 +59,16 @@ def readCb(data_type, data):
                     data = {'format': format, 'text': text, 'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2, 'x3': x3, 'y3': y3, 'x4': x4, 'y4': y4}
                     jsonData['results'].append(data)
                     
-                    cv.putText(frame, text, (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                    cv.drawContours(frame, [np.int0([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
+                    # cv.putText(frame, text, (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                    # cv.drawContours(frame, [np.int0([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
                 
                 # print("Elapsed time: " + str(int(g_results[1])) + " ms")
                 msgQueue.append((DataType.JSON, json.dumps(jsonData).encode('utf-8')))
-                cv.putText(frame, "Elapsed time: " + str(g_results[1]) + " ms", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            #     cv.putText(frame, "Elapsed time: " + str(g_results[1]) + " ms", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                     
-            cv.imshow('server', frame)
-            if cv.waitKey(10) == 27:
-                isDisconnected = True
+            # cv.imshow('server', frame)
+            # if cv.waitKey(10) == 27:
+            #     isDisconnected = True
         except Exception as e:
             isDisconnected = True
     
