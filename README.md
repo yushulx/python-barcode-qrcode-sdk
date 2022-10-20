@@ -140,7 +140,7 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
         run()
     ```
     
-    ![Python barcode and QR code scanner](https://www.dynamsoft.com/codepool/img/2022/10/python-desktop-barcode-qr-scanner.png)
+    ![Python barcode and QR code scanner](https://camo.githubusercontent.com/4463fa22e7bb08d196623b2ff181f22c7d92f4399298c37fd5ea43b396ed5b04/68747470733a2f2f7777772e64796e616d736f66742e636f6d2f636f6465706f6f6c2f696d672f323032322f31302f707974686f6e2d6465736b746f702d626172636f64652d71722d7363616e6e65722e706e67)
 
 
 
