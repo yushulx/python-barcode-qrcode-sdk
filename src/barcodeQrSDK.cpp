@@ -40,10 +40,8 @@ static PyObject *createInstance(PyObject *obj, PyObject *args)
     if (PyType_Ready(&DynamsoftBarcodeReaderType) < 0)
          INITERROR;
 
-
     DynamsoftBarcodeReader* reader = PyObject_New(DynamsoftBarcodeReader, &DynamsoftBarcodeReaderType);
     reader->hBarcode = DBR_CreateInstance();
-    reader->py_cb_textResult = NULL;
 
     return (PyObject *)reader;
 }
@@ -102,4 +100,5 @@ PyMODINIT_FUNC PyInit_barcodeQrSDK(void)
 	PyModule_AddStringConstant(module, "version", DBR_GetVersion());
     return module;
 }
+
 

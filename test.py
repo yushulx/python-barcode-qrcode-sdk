@@ -16,7 +16,8 @@ ret = reader.setParameters(settings)
 print(ret)
 
 # decodeFile()
-results = reader.decodeFile("test.png")
+results, elapsed_time = reader.decodeFile("test.png")
+print('Elapsed time: ' + str(elapsed_time) + 'ms')
 for result in results:
     print(result.format)
     print(result.text)
@@ -32,7 +33,8 @@ for result in results:
 # decodeMat()
 import cv2
 image = cv2.imread("test.png")
-results = reader.decodeMat(image)
+results, elapsed_time = reader.decodeMat(image)
+print('Elapsed time: ' + str(elapsed_time) + 'ms')
 for result in results:
     print(result.format)
     print(result.text)
@@ -48,7 +50,8 @@ for result in results:
 # decodeMatAsync()
 print('')
 print('Test decodeMatAsync()')
-def callback(results):
+def callback(results, elapsed_time):
+    print('Elapsed time: ' + str(elapsed_time) + 'ms')
     for result in results:
         print(result.format)
         print(result.text)

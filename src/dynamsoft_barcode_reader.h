@@ -14,6 +14,22 @@
 
 #define DEBUG 0
 
+#if !defined(_WIN32) && !defined(_WIN64)
+#include <sys/time.h>
+
+int gettime()
+{
+	struct timeval time;
+	gettimeofday(&time, NULL);
+	return (int)(time.tv_sec * 1000 * 1000 + time.tv_usec) / 1000;
+}
+#else
+int gettime()
+{
+	return (int)(GetTickCount());
+}
+#endif
+
 class Task
 {
 public:
@@ -36,8 +52,6 @@ typedef struct
     PyObject_HEAD
     // Barcode reader handler
     void *hBarcode;
-    // Callback function for video mode
-    PyObject *py_cb_textResult;
     // Callback function for image mode
     PyObject *callback;
     // Worker thread
@@ -62,12 +76,6 @@ void clear(DynamsoftBarcodeReader *self)
     {
         Py_XDECREF(self->callback);
         self->callback = NULL;
-    }
-
-    if (self->py_cb_textResult) 
-    {
-        Py_XDECREF(self->py_cb_textResult);
-        self->py_cb_textResult = NULL;
     }
 
     if (self->worker)
@@ -112,7 +120,6 @@ static PyObject *DynamsoftBarcodeReader_new(PyTypeObject *type, PyObject *args, 
     if (self != NULL)
     {
        	self->hBarcode = DBR_CreateInstance();
-        self->py_cb_textResult = NULL;
         self->callback = NULL;
         self->worker = NULL;
     }
@@ -202,14 +209,17 @@ static PyObject *decodeFile(PyObject *obj, PyObject *args)
     }
 
     // Barcode detection
+    int starttime = gettime();
     int ret = DBR_DecodeFile(self->hBarcode, pFileName, "");
+    int endtime = gettime();
+	int elapsedTime = endtime - starttime;
     if (ret)
     {
         printf("Detection error: %s\n", DBR_GetErrorString(ret));
     }
 
     PyObject *list = createPyResults(self);
-    return list;
+    return Py_BuildValue("Oi", list, elapsedTime);
 }
 
 /**
@@ -260,7 +270,10 @@ static PyObject *decodeMat(PyObject *obj, PyObject *args)
         format = IPF_ARGB_8888;
     }
 
+    int starttime = gettime();
     int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)buffer, width, height, stride, format, "");
+    int endtime = gettime();
+	int elapsedTime = endtime - starttime;
     if (ret)
     {
         printf("Detection error: %s\n", DBR_GetErrorString(ret));
@@ -269,26 +282,29 @@ static PyObject *decodeMat(PyObject *obj, PyObject *args)
 
     PyObject *list = createPyResults(self);
 
-    Py_DECREF(memoryview);
+    return Py_BuildValue("Oi", list, elapsedTime);
 
     return list;
 }
 
-void onResultReady(DynamsoftBarcodeReader *self)
+void onResultReady(DynamsoftBarcodeReader *self, int elapsedTime)
 {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
     PyObject *list = createPyResults(self);
-    PyObject *result = PyObject_CallFunction(self->callback, "O", list);
+    PyObject *result = PyObject_CallFunction(self->callback, "Oi", list, elapsedTime);
     if (result != NULL)
         Py_DECREF(result);
 
     PyGILState_Release(gstate);
 }
 
-void scan(DynamsoftBarcodeReader *self, unsigned char *buffer, int width, int height, int stride, ImagePixelFormat format, int len)
+void scan(DynamsoftBarcodeReader *self, unsigned char *buffer, int width, int height, int stride, ImagePixelFormat format)
 {
+    int starttime = gettime();
     int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)buffer, width, height, stride, format, "");
+    int endtime = gettime();
+	int elapsedTime = endtime - starttime;
     if (ret)
     {
         printf("Detection error: %s\n", DBR_GetErrorString(ret));
@@ -298,29 +314,53 @@ void scan(DynamsoftBarcodeReader *self, unsigned char *buffer, int width, int he
 
     if (self->callback != NULL)
     {
-        onResultReady(self);
+        onResultReady(self, elapsedTime);
     }
 }
 
-void queueTask(DynamsoftBarcodeReader *self, unsigned char* barcodeBuffer, int width, int height, int stride, int imageformat, int len)
+ImagePixelFormat getFormat(int format)
 {
-    ImagePixelFormat format = IPF_RGB_888;
+    switch (format)
+    {
+    case 0:
+        return IPF_BINARY;
+    case 1:
+        return IPF_BINARYINVERTED;
+    case 2:
+        return IPF_GRAYSCALED;
+    case 3:
+        return IPF_NV21;
+    case 4:
+        return IPF_RGB_565;
+    case 5:
+        return IPF_RGB_555;
+    case 6:
+        return IPF_RGB_888;
+    case 7:
+        return IPF_ARGB_8888;
+    case 8:
+        return IPF_RGB_161616;
+    case 9:
+        return IPF_ARGB_16161616;
+    case 10:    
+        return IPF_ABGR_8888;
+    case 11:
+        return IPF_ABGR_16161616;
+    case 12:
+        return IPF_BGR_888;
+    default:
+        return IPF_RGB_888;
+    }
+}
 
-    if (imageformat == 0)
-    {
-        format = IPF_GRAYSCALED;
-    }
-    else
-    {
-        format = IPF_RGB_888;
-    }
-    
+void queueTask(DynamsoftBarcodeReader *self, unsigned char* barcodeBuffer, int width, int height, int stride, int format, int len)
+{    
     unsigned char *data = (unsigned char *)malloc(len);
     memcpy(data, barcodeBuffer, len);
 
     std::unique_lock<std::mutex> lk(self->worker->m);
     clearTasks(self);
-    std::function<void()> task_function = std::bind(scan, self, data, width, height, stride, format, len);
+    std::function<void()> task_function = std::bind(scan, self, data, width, height, stride, getFormat(format));
     Task task;
     task.func = task_function;
     task.buffer = data;
@@ -372,7 +412,7 @@ static PyObject *decodeMatAsync(PyObject *obj, PyObject *args)
 /**
  * Decode barcode and QR code from byte array asynchronously.
  *
- * @param bytes, width, height, stride, imageformat
+ * @param bytes, width, height, stride, format
  *
  */
 static PyObject *decodeBytesAsync(PyObject * obj, PyObject *args)
@@ -384,8 +424,8 @@ static PyObject *decodeBytesAsync(PyObject * obj, PyObject *args)
     }
 
     PyObject *o;
-    int len, width, height, stride, imageformat;
-    if (!PyArg_ParseTuple(args, "Oiiiii", &o, &len, &width, &height, &stride, &imageformat))
+    int width, height, stride, format;
+    if (!PyArg_ParseTuple(args, "Oiiii", &o, &width, &height, &stride, &format))
 		return Py_BuildValue("i", -1);
 
     char * barcodeBuffer = NULL;
@@ -403,7 +443,7 @@ static PyObject *decodeBytesAsync(PyObject * obj, PyObject *args)
 		return Py_BuildValue("i", -1);
     }
     
-    queueTask(self, (unsigned char*)barcodeBuffer, width, height, stride, imageformat, len);
+    queueTask(self, (unsigned char*)barcodeBuffer, width, height, stride, format, PyByteArray_Size(o));
 
     return Py_BuildValue("i", 0);
 }
@@ -524,8 +564,8 @@ static PyObject *decodeBytes(PyObject * obj, PyObject *args)
     DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;  
 
     PyObject *o;
-    int width, height, stride, imageformat;
-    if (!PyArg_ParseTuple(args, "Oiiii", &o, &width, &height, &stride, &imageformat))
+    int width, height, stride, format;
+    if (!PyArg_ParseTuple(args, "Oiiii", &o, &width, &height, &stride, &format))
 		Py_RETURN_NONE;
 
     char * barcodeBuffer = NULL;
@@ -543,127 +583,14 @@ static PyObject *decodeBytes(PyObject * obj, PyObject *args)
 		Py_RETURN_NONE;
     }
     
-    ImagePixelFormat format = IPF_RGB_888;
+    int starttime = gettime();
+    int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)barcodeBuffer, width, height, stride, getFormat(format), "");
+    int endtime = gettime();
+	int elapsedTime = endtime - starttime;
 
-    if (imageformat == 0)
-    {
-        format = IPF_GRAYSCALED;
-    }
-    else
-    {
-        format = IPF_RGB_888;
-    }
-    
-    int ret = DBR_DecodeBuffer(self->hBarcode, (const unsigned char*)barcodeBuffer, width, height, stride, format, "");
     PyObject *list = createPyResults(self);
 
-    return list;
-}
-
-void onResultCallback(int frameId, TextResultArray *pResults, void *pUser)
-{
-    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)pUser;
-
-    // https://docs.python.org/2/c-api/init.html
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
-    PyObject *list = createPyList(pResults);
-
-    PyObject *result = PyObject_CallFunction(self->py_cb_textResult, "O", list);
-    if (result != NULL)
-    	Py_DECREF(result);
-
-    PyGILState_Release(gstate);
-    /////////////////////////////////////////////
-
-    // Release memory
-    DBR_FreeTextResults(&pResults);
-}
-
-/**
- * Read barcode and QR code from continuous video frames
- */
-static PyObject *startVideoMode(PyObject *obj, PyObject *args)
-{
-    printf("Start the video mode\n");
-    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
-
-    PyObject *callback = NULL;
-    int maxListLength, maxResultListLength, width, height, imageformat, iFormat, stride;
-    if (!PyArg_ParseTuple(args, "iiiiiO", &maxListLength, &maxResultListLength, &width, &height, &imageformat, &callback))
-    {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback))
-    {
-        PyErr_SetString(PyExc_TypeError, "parameter must be callable");
-        return NULL;
-    }
-    else
-    {
-        Py_XINCREF(callback);    /* Add a reference to new callback */
-        Py_XDECREF(self->py_cb_textResult); /* Dispose of previous callback */
-        self->py_cb_textResult = callback;
-    }
-
-    ImagePixelFormat format = IPF_RGB_888;
-
-    if (imageformat == 0)
-    {
-        stride = width;
-        format = IPF_GRAYSCALED;
-    }
-    else
-    {
-        stride = width * 3;
-        format = IPF_RGB_888;
-    }
-
-    DBR_SetTextResultCallback(self->hBarcode, onResultCallback, self);
-
-    int ret = DBR_StartFrameDecoding(self->hBarcode, maxListLength, maxResultListLength, width, height, stride, format, "");
-    return Py_BuildValue("i", ret);
-}
-
-static PyObject *stopVideoMode(PyObject *obj, PyObject *args)
-{
-    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
-    printf("Stop the video mode\n");
-    if (self->hBarcode)
-    {
-        int ret = DBR_StopFrameDecoding(self->hBarcode);
-        return Py_BuildValue("i", ret);
-    }
-
-    return 0;
-}
-
-static PyObject *
-appendVideoFrame(PyObject *obj, PyObject *args)
-{
-    DynamsoftBarcodeReader *self = (DynamsoftBarcodeReader *)obj;
-
-    PyObject *o;
-    if (!PyArg_ParseTuple(args, "O", &o))
-        return NULL;
-
-    //Refer to numpy/core/src/multiarray/ctors.c
-    Py_buffer *view;
-    PyObject *memoryview = PyMemoryView_FromObject(o);
-    if (memoryview == NULL)
-    {
-        PyErr_Clear();
-        return NULL;
-    }
-
-    view = PyMemoryView_GET_BUFFER(memoryview);
-    unsigned char *buffer = (unsigned char *)view->buf;
-    DBR_AppendFrame(self->hBarcode, buffer);
-    Py_DECREF(memoryview);
-
-    return 0;
+    return Py_BuildValue("Oi", list, elapsedTime);
 }
 
 static PyMethodDef instance_methods[] = {
@@ -671,9 +598,6 @@ static PyMethodDef instance_methods[] = {
   {"decodeMat", decodeMat, METH_VARARGS, NULL},
   {"setParameters", setParameters, METH_VARARGS, NULL},
   {"getParameters", getParameters, METH_VARARGS, NULL},
-  {"startVideoMode", startVideoMode, METH_VARARGS, NULL},
-  {"stopVideoMode", stopVideoMode, METH_VARARGS, NULL},
-  {"appendVideoFrame", appendVideoFrame, METH_VARARGS, NULL},
   {"decodeBytes", decodeBytes, METH_VARARGS, NULL},
   {"addAsyncListener", addAsyncListener, METH_VARARGS, NULL},
   {"decodeMatAsync", decodeMatAsync, METH_VARARGS, NULL},

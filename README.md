@@ -1,5 +1,5 @@
 # Python Extension: Barcode and QR Code SDK 
-The project uses CPython to bind [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It aims to help developers build **Python barcode and QR code scanning** apps on Windows, Linux, macOS, Raspberry Pi and Jetson Nano. You are **free** to customize the Python API for Dynamsoft Barcode Reader.
+The project is a CPython binding to [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It aims to help developers build **Python barcode and QR code scanning** apps on `Windows`, `Linux` and `macOS`. Besides desktop PCs, it can work well on embedded and IoT devices such as `Raspberry Pi` and `Jetson Nano`. You are **free** to customize the Python API for Dynamsoft Barcode Reader.
 
 ## About Dynamsoft Barcode Reader
 - [Dynamsoft C/C++ Barcode Reader SDK v9.4.0](https://www.dynamsoft.com/barcode-reader/downloads)
@@ -66,7 +66,7 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
 
     reader = barcodeQrSDK.createInstance()
 
-    results = reader.decodeFile("test.png")
+    results, elapsed_time = reader.decodeFile("test.png")
     for result in results:
         print(result.format)
         print(result.text)
@@ -81,43 +81,42 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
     ```
 - Video App
     ```python
-    import cv2
     import barcodeQrSDK
-    import time
     import numpy as np
-    # set license
-    barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+    import cv2
+    import json
 
-    # initialize barcode reader
-    reader = barcodeQrSDK.createInstance()
+    g_results = None
 
-    def get_time():
-        localtime = time.localtime()
-        capturetime = time.strftime("%Y%m%d%H%M%S", localtime)
-        return capturetime
+    def callback(results, elapsed_time):
+        global g_results
+        g_results = (results, elapsed_time)
 
+    def run():
+        # set license
+        barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
 
-    def read_barcode():
+        # initialize barcode scanner
+        scanner = barcodeQrSDK.createInstance()
+        params = scanner.getParameters()
+        # Convert string to JSON object
+        json_obj = json.loads(params)
+        # json_obj['ImageParameter']['ExpectedBarcodesCount'] = 999
+        params = json.dumps(json_obj)
+        ret = scanner.setParameters(params)
+        
+        scanner.addAsyncListener(callback)
 
-        vc = cv2.VideoCapture(0)
-
-        if vc.isOpened():  # try to get the first frame
-            rval, frame = vc.read()
-        else:
-            return
-
-        windowName = "Barcode Reader"
-
+        cap = cv2.VideoCapture(0)
         while True:
-            cv2.imshow(windowName, frame)
-            rval, frame = vc.read()
-            results = reader.decodeMat(frame)
-            if (len(results) > 0):
-                print(get_time())
-                print("Total count: " + str(len(results)))
-                for result in results:
-                    print("Type: " + result.format)
-                    print("Value: " + result.text + "\n")
+            ret, image = cap.read()
+            if image is not None:
+                scanner.decodeMatAsync(image)
+                
+            if g_results != None:
+                print('Elapsed time: ' + str(g_results[1]) + 'ms')
+                cv2.putText(image, 'Elapsed time: ' + str(g_results[1]) + 'ms', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                for result in g_results[0]:
                     x1 = result.x1
                     y1 = result.y1
                     x2 = result.x2
@@ -126,23 +125,22 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
                     y3 = result.y3
                     x4 = result.x4
                     y4 = result.y4
+                    
+                    cv2.drawContours(image, [np.int0([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
+                    cv2.putText(image, result.text, (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-                    cv2.drawContours(frame, [np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
-
-            # 'ESC' for quit
-            key = cv2.waitKey(20)
-            if key == 27:
+            cv2.imshow('Barcode QR Code Scanner', image)
+            ch = cv2.waitKey(1)
+            if ch == 27:
                 break
+        
+        scanner.clearAsyncListener()
 
-        cv2.destroyWindow(windowName)
-
-
-    if __name__ == "__main__":
-        print("OpenCV version: " + cv2.__version__)
-        read_barcode()
+    if __name__ == '__main__':
+        run()
     ```
     
-    ![Python barcode and QR code scanner](https://user-images.githubusercontent.com/2202306/170233943-a48012e3-1b16-4d10-89ef-3120f6ea2d44.png)
+    ![Python barcode and QR code scanner](https://www.dynamsoft.com/codepool/img/2022/10/python-desktop-barcode-qr-scanner.png)
 
 
 
@@ -161,7 +159,7 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
 - `decodeFile(filename)` # decode barcode and QR code from an image file
 
     ```python
-    results = reader.decodeFile("test.png")
+    results, elapsed_time = reader.decodeFile("test.png")
     ```
 - `decodeMat(Mat image)` # decode barcode and QR code from Mat
     ```python
@@ -197,51 +195,10 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
     ret = reader.setParameters(params)
     ```
 
-- `startVideoMode(maxListLength, maxResultListLength, width, height, imageformat, callback)` # start a native thread for decoding barcode and QR code in video mode
-    
-    ```python
-    video_width = 640
-    video_height = 480
-
-    vc = cv2.VideoCapture(0)
-    vc.set(3, video_width) #set width
-    vc.set(4, video_height) #set height
-
-    if vc.isOpened():  
-        rval, frame = vc.read()
-    else:
-        return
-
-    max_buffer = 2
-    max_results = 10
-    image_format = 1 # 0: gray; 1: rgb888
-
-    reader.startVideoMode(max_buffer, max_results, video_width, video_height, image_format, onBarcodeResult)
-
-    def onBarcodeResult(data):
-        results = data
-    ```
-
-- `appendVideoFrame()` # append a video frame to the internal buffer queue for decoding
-    
-    ```python
-    _, frame = vc.read()
-
-    try:
-        ret = reader.appendVideoFrame(frame)
-    except:
-        pass
-    ```
-
-- `stopVideoMode()` # stop the native thread
-
-    ```python
-    reader.stopVideoMode()
-    ```
 - `addAsyncListener(callback function)` # start a native thread and register a Python function for receiving barcode QR code results
 - `decodeMatAsync(<opencv mat data>)` # decode barcode QR code from OpenCV Mat asynchronously
     ```python
-    def callback(results):
+    def callback(results, elapsed_time):
         print(results)
                                                         
     import cv2
@@ -255,18 +212,18 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
     ```python
     import cv2
     image = cv2.imread("test.png")
-    results = scanner.decodeBytes(image.tobytes(), image.shape[1], image.shape[0], image.strides[0], 1)
+    results, elapsed_time = scanner.decodeBytes(image.tobytes(), image.shape[1], image.shape[0], image.strides[0], barcodeQrSDK.ImagePixelFormat.IPF_BGR_888)
     ```
 - `decodeBytesAsync` # decode image byte array asynchronously
 
     ```python
-    def callback(results):
+    def callback(results, elapsed_time):
         print(results)
                                                         
     import cv2
     image = cv2.imread("test.png")
     imagebytes = image.tobytes()
-    scanner.decodeBytesAsync(image.tobytes(), len(imagebytes), image.shape[1], image.shape[0], image.strides[0], 1)
+    scanner.decodeBytesAsync(image.tobytes(), image.shape[1], image.shape[0], image.strides[0], barcodeQrSDK.ImagePixelFormat.IPF_BGR_888)
     sleep(1)
     ```
 

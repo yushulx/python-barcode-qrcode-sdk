@@ -30,7 +30,7 @@ def scanbarcode():
         if ui:
             import cv2
             image = cv2.imread(filename)
-            results = reader.decodeMat(image)
+            results, elapsed_time = reader.decodeMat(image)
             for result in results:
                 print("Format: " + result.format)
                 print("Text: " + result.text)
@@ -50,7 +50,7 @@ def scanbarcode():
             cv2.imshow("Scan Barcode & QR Code", image)
             cv2.waitKey(0)
         else:
-            results = reader.decodeFile(filename)
+            results, elapsed_time = reader.decodeFile(filename)
             for result in results:
                 print("Format:" + result.format)
                 print("Text: " + result.text)
