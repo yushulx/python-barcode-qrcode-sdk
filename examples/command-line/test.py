@@ -11,7 +11,7 @@ reader = barcodeQrSDK.createInstance()
 
 def decodeFile(fileName):
     try:
-        results = reader.decodeFile(fileName)
+        results, elapsed_time = reader.decodeFile(fileName)
         for result in results:
             print("barcode format: " + result.format)
             print("barcode value: " + result.text)

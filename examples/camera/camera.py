@@ -12,13 +12,13 @@ barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2Mz
 reader = barcodeQrSDK.createInstance()
 
 def process_frame(frame):
-    results = None
     try:
-        results = reader.decodeMat(frame)
+        results, elapsed_time = reader.decodeMat(frame)
     except Exception as e:
         print(e)
+        return (None, 0)
     
-    return results
+    return results, elapsed_time
 
 def get_time():
     localtime = time.localtime()
@@ -42,8 +42,9 @@ def read_barcode():
     while True:
         rval, frame = vc.read()
         while len(barcodeTasks) > 0 and barcodeTasks[0].ready():
-            results = barcodeTasks.popleft().get()
+            results, elapsed_time = barcodeTasks.popleft().get()
             if results != None:
+                cv2.putText(frame, 'Elapsed time: ' + str(elapsed_time) + 'ms', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 for result in results:
                     print("Type: " + result.format)
                     print("Value: " + result.text + "\n")

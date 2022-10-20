@@ -57,7 +57,7 @@ def showResults(results, barcode_image):
 
 def decodeFile(fileName):
     try:
-        results = reader.decodeFile(fileName)
+        results, elapsed_time = reader.decodeFile(fileName)
         return results
     except Exception as err:
         print(err)
@@ -65,29 +65,21 @@ def decodeFile(fileName):
 
 if __name__ == "__main__":
     import sys
-    barcode_image = ""
-    if sys.version_info < (3, 0):
-        barcode_image = raw_input("Enter the barcode file: ")
-    else:
-        barcode_image = input("Enter the barcode file: ")
-
-    if not os.path.isfile(barcode_image):
-        print("It is not a valid file.")
-    else:
-        # Get default barcode params
-        params = reader.getParameters()
-        # Convert string to JSON object
-        json_obj = json.loads(params)
-        # Update JSON object
-        # DPM
-        json_obj['ImageParameter']['DPMCodeReadingModes'][0]['Mode'] = 'DPMCRM_GENERAL'
-        json_obj['ImageParameter']['LocalizationModes'][0]['Mode'] = 'LM_STATISTICS_MARKS'
-        # Convert JSON object to string
-        params = json.dumps(json_obj)
-        # Set parameters
-        ret = reader.setParameters(params)
-        results = decodeFile(barcode_image)
-        if results is not None:
-            showResults(results, barcode_image)
+    barcode_image = "test.png"
+    params = reader.getParameters()
+    # Convert string to JSON object
+    json_obj = json.loads(params)
+    # Update JSON object
+    # DPM
+    json_obj['ImageParameter']['DPMCodeReadingModes'][0]['Mode'] = 'DPMCRM_GENERAL'
+    json_obj['ImageParameter']['LocalizationModes'][0]['Mode'] = 'LM_STATISTICS_MARKS'
+    # Convert JSON object to string
+    params = json.dumps(json_obj)
+    # Set parameters
+    ret = reader.setParameters(params)
+    results = decodeFile(barcode_image)
+    if results is not None:
+        showResults(results, barcode_image)
+        
 
 
