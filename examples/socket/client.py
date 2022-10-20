@@ -114,7 +114,7 @@ def run():
         if cv.waitKey(10) == 27:
             break
         
-    # client.shutdown()
+    client.shutdown()
        
 if __name__ == '__main__':
     run()
