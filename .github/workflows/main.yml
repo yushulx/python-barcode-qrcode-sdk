@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
+        python-version: ['3.11', '3.12']
 
     steps:
       - uses: actions/checkout@v2
@@ -16,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: ${{ matrix.python-version }}
           
       - name: Set up QEMU
         if: runner.os == 'Linux'
@@ -29,12 +30,12 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: auto, aarch64 
       
-      # - name: Run test.py in develop mode
-      #   run: |
-      #     python setup_setuptools.py develop
-      #     python -m pip install opencv-python
-      #     python --version
-      #     python test.py
+      - name: Run test.py in develop mode
+        run: |
+          python setup_setuptools.py develop
+          python -m pip install opencv-python
+          python --version
+          python test.py
 
       - uses: actions/upload-artifact@v2
         with:

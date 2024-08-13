@@ -7,6 +7,7 @@ import time
 import os
 import data
 import cv2
+import numpy as np
 
 
 def zxing_decode(filename):
@@ -14,31 +15,16 @@ def zxing_decode(filename):
     img = cv2.imread(filename)
     zxing_results = zxingcpp.read_barcodes(img)
     elapsed_time = time.time() - start
-    if zxing_results != None:
-        for result in zxing_results:
-            print('ZXing: {}. Elapsed time: {}ms'.format(
-                result.text, int(elapsed_time * 1000)))
-        return zxing_results
-    else:
-        print('ZXing failed to decode {}'.format(filename))
-
-    return None
+    print('ZXing: Elapsed time: {}ms'.format(int(elapsed_time * 1000)))
+    return zxing_results
 
 
-def zbar_decode(zbar_reader, filename):
+def zbar_decode(filename):
     start = time.time()
     zbar_results = zbar.decode(Image.open(filename))
     elapsed_time = time.time() - start
-    if len(zbar_results) > 0:
-        for zbar_result in zbar_results:
-            print('ZBar: {}. Elapsed time: {}ms'.format(
-                zbar_result.data.decode("utf-8"), int(elapsed_time * 1000)))
-
-        return zbar_results
-    else:
-        print('ZBar failed to decode {}'.format(filename))
-
-    return None
+    print('ZBar: Elapsed time: {}ms'.format(int(elapsed_time * 1000)))
+    return zbar_results
 
 
 def dbr_decode(dbr_reader, filename):
@@ -46,23 +32,18 @@ def dbr_decode(dbr_reader, filename):
         start = time.time()
         dbr_results = dbr_reader.decode_file(filename)
         elapsed_time = time.time() - start
+        print('Dynamsoft Barcode Reader: Elapsed time: {}ms'.format(
+            int(elapsed_time * 1000)))
 
-        if dbr_results != None:
-            for text_result in dbr_results:
-                # print(textResult["BarcodeFormatString"])
-                print('Dynamsoft Barcode Reader: {}. Elapsed time: {}ms'.format(
-                    text_result.barcode_text, int(elapsed_time * 1000)))
+        return dbr_results
 
-            return dbr_results
-        else:
-            print("DBR failed to decode {}".format(filename))
     except Exception as err:
         print("DBR failed to decode {}".format(filename))
 
     return None
 
 
-def dataset(directory=None, zbar_reader=None, dbr_reader=None):
+def dataset(directory=None, dbr_reader=None):
     if directory != None:
         print(directory)
         files = os.listdir(directory)
@@ -91,17 +72,16 @@ def dataset(directory=None, zbar_reader=None, dbr_reader=None):
             r3 = ''
 
             # ZBar
-            if zbar_reader != None:
-                zbar_results = zbar_decode(zbar_reader, file_path)
-                if zbar_results != None:
-                    for zbar_result in zbar_results:
-                        zbar_text = zbar_result.data.decode("utf-8")
-                        r1 = zbar_text
-                        if r1 == expected_result:
-                            zbar_count += 1
-                            break
-                else:
-                    print('Fail to decode {}'.format(filename))
+            zbar_results = zbar_decode(file_path)
+            if zbar_results != None:
+                for zbar_result in zbar_results:
+                    zbar_text = zbar_result.data.decode("utf-8")
+                    r1 = zbar_text
+                    if r1 == expected_result:
+                        zbar_count += 1
+                        break
+            else:
+                print('Fail to decode {}'.format(filename))
 
             # DBR
             if dbr_reader != None:
@@ -137,10 +117,10 @@ def dataset(directory=None, zbar_reader=None, dbr_reader=None):
         r1 = 0
         r2 = 0
         r3 = 0
-        if zbar_reader != None:
-            zbar_rate = zbar_count * 100 / total_count
-            r1 = '{0:.2f}%'.format(zbar_rate)
-            print('ZBar recognition rate: {0:.2f}%'.format(zbar_rate))
+
+        zbar_rate = zbar_count * 100 / total_count
+        r1 = '{0:.2f}%'.format(zbar_rate)
+        print('ZBar recognition rate: {0:.2f}%'.format(zbar_rate))
 
         if dbr_reader != None:
             dbr_rate = dbr_count * 100 / total_count
@@ -180,18 +160,54 @@ def main():
     dbr_reader = BarcodeReader()
 
     if image != None:
+        img = cv2.imread(image)
+        copy = img.copy()
         # ZXing
-        zxing_decode(image)
+        zxing_results = zxing_decode(image)
+        if zxing_results != None:
+            for result in zxing_results:
+                print('ZXing: {}. '.format(
+                    result.text))
+
+                cv2.drawContours(
+                    img, [np.intp([(result.position.top_left.x, result.position.top_left.y), (result.position.top_right.x, result.position.top_right.y), (result.position.bottom_right.x, result.position.bottom_right.y), (result.position.bottom_left.x, result.position.bottom_left.y)
+                                   ])], 0, (0, 255, 0), 2)
+
+            cv2.imshow('ZXing', img)
 
         # ZBar
-        zbar_decode(zbar, image)
+        img = copy.copy()
+        zbar_results = zbar_decode(image)
+
+        if len(zbar_results) > 0:
+            for zbar_result in zbar_results:
+                print('ZBar: {}. '.format(
+                    zbar_result.data.decode("utf-8")))
+
+                cv2.drawContours(
+                    img, [np.intp([zbar_result.polygon[0], zbar_result.polygon[1], zbar_result.polygon[2], zbar_result.polygon[3]
+                                   ])], 0, (0, 255, 0), 2)
+
+            cv2.imshow('zbar', img)
 
         # Dynamsoft Barcode Reader
-        dbr_decode(dbr_reader, image)
+        img = copy.copy()
+        dbr_results = dbr_decode(dbr_reader, image)
+        if dbr_results != None:
+            for text_result in dbr_results:
+                print('Dynamsoft Barcode Reader: {}'.format(
+                    text_result.barcode_text))
+
+                points = text_result.localization_result.localization_points
+                cv2.drawContours(
+                    img, [np.intp([points[0], points[1], points[2], points[3]])], 0, (0, 255, 0), 2)
+
+            cv2.imshow('DBR', img)
+
+        cv2.waitKey(0)
 
     if directory != None:
-        dataset(directory,
-                zbar_reader=zbar, dbr_reader=dbr_reader)
+        dataset(directory, dbr_reader=dbr_reader)
 
 
 if __name__ == "__main__":

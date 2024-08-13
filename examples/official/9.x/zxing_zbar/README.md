@@ -30,10 +30,22 @@ pip install -r requirements.txt
             python app.py -d <folder_directory>
     ```
     
+    **ZXing**
+    
+    ![python zxing barcode detection](https://www.dynamsoft.com/codepool/img/2024/08/python-zxing-barcode-detection.png)
+
+    **ZBar**
+
+    ![python zxing barcode detection](https://www.dynamsoft.com/codepool/img/2024/08/python-zbar-barcode-detection.png)
+
+    **Dynamsoft Barcode Reader**
+    
+    ![python zxing barcode detection](https://www.dynamsoft.com/codepool/img/2024/08/python-dbr-barcode-detection.png)
+    
 ## Benchmark Results
 Below is a visual comparison of the barcode recognition rates among ZXing, ZBar, and Dynamsoft Barcode Reader based on the dataset.
 
-![barcode sdk benchmark](https://www.dynamsoft.com/codepool/img/2020/02/benchmark-barcode-sdk.png)
+![barcode sdk benchmark](https://www.dynamsoft.com/codepool/img/2024/08/python-barcode-sdk-benchmark.png)
 
 ## Blog
-[How to Use Python ZXing and Python ZBar on Windows 10](https://www.dynamsoft.com/codepool/python-zxing-zbar-barcode.html)
+[Comparing Barcode Scanning in Python: ZXing vs. ZBar vs. Dynamsoft Barcode Reader](https://www.dynamsoft.com/codepool/python-zxing-zbar-barcode.html)
