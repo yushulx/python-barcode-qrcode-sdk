@@ -103,16 +103,13 @@ def dataset(directory=None, dbr_reader=None):
                     r3 = result.text
                     if r3 == expected_result:
                         zxing_count += 1
+                        break
             else:
                 print('ZXing failed to decode {}'.format(filename))
 
             # Add results to .xlsx file
             data.update_row(wb, index, filename, expected_result, r1, r2, r3)
             index += 1
-
-            # Test
-            # if index == 9:
-            #     break
 
         r1 = 0
         r2 = 0

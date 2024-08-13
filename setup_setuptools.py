@@ -131,7 +131,7 @@ setup(name='barcode-qr-code-sdk',
           "Topic :: Scientific/Engineering",
           "Topic :: Software Development",
       ],
-      install_requires=['opencv-python'],
+      install_requires=['opencv-python', 'setuptools'],
       entry_points={
           'console_scripts': ['scanbarcode=barcodeQrSDK.scripts:scanbarcode']
       },
