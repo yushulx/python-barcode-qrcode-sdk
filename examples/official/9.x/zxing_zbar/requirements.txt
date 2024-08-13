@@ -1,0 +1,4 @@
+dbr
+pyzbar
+zxing-cpp
+openpyxl
