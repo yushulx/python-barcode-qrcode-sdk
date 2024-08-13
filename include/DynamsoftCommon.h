@@ -31,7 +31,7 @@
 /**Instance count is over limit.*/
 #define DMERR_INSTANCE_COUNT_OVER_LIMIT -20008
 
-/**Interface InitLicenseFromDLS has to be called before creating any SDK objects.*/
+/**Interface InitLicense has to be called before creating any SDK objects.*/
 #define DMERR_LICENSE_INIT_SEQUENCE_FAILED -20009
 
 /**Trial License*/
@@ -43,7 +43,8 @@
 /**Failed to reach License Server.*/
 #define DMERR_FAILED_TO_REACH_DLS -20200
 
-
+/**Online license validation failed due to network issues.Using cached license information for validation.*/
+#define DMERR_LICENSE_CACHE_USED -20012
 /**
 * @enum DM_DeploymentType
 *

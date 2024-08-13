@@ -1,3 +1,5 @@
+//9.6.0
+
 #ifndef __DYNAMSOFT_BARCODE_READER_H__
 #define __DYNAMSOFT_BARCODE_READER_H__
 
@@ -205,6 +207,8 @@ typedef void* HANDLE;
 /**The PharmaCode license is invalid. */
 #define DBRERR_PHARMACODE_LICENSE_INVALID -10062
 
+/**The image's orientation is invalid. */
+#define DBRERR_IMAGE_ORIENTATION_INVALID  -10063
 /**
  * @}defgroup ErrorCode
  */
@@ -534,7 +538,15 @@ typedef enum BarcodeFormat_2
 	BF2_PHARMACODE_TWO_TRACK = 0x08,
 
 	/**PHARMACODE.*/
-	BF2_PHARMACODE = 0x0C
+	BF2_PHARMACODE = 0x0C,
+
+	/**ALL.*/
+#if defined(_WIN32) || defined(_WIN64)
+	BF2_ALL = 0xFFFFFFFF
+#else
+	BF2_ALL = -1
+#endif
+
 }BarcodeFormat_2;
 
 
@@ -634,6 +646,7 @@ typedef enum PDFReadingMode
 #endif
 }PDFReadingMode;
 
+
 #pragma pack(push)
 #pragma pack(1)
 
@@ -686,6 +699,9 @@ typedef struct tagImageData
 
 	/**The image pixel format used in the image byte array */
 	ImagePixelFormat format;
+
+	/**The orientation of the image */
+	int orientation;
 }ImageData;
 
 /**
@@ -1003,9 +1019,8 @@ typedef enum QRCodeErrorCorrectionLevel
 */
 typedef enum DeformationResistingMode
 {
-	/**Not supported yet. */
+	/**Resists deformation using the auto algorithm. Check @ref DRM for available argument settings.*/
 	DRM_AUTO = 0x01,
-
 	/**Resists deformation using the general algorithm. Check @ref DRM for available argument settings.*/
 	DRM_GENERAL = 0x02,
 	/**Resists deformation when the barcode is warped gently.*/
@@ -2023,11 +2038,27 @@ typedef struct tagFrameDecodingParameters
 	*/
 	ClarityFilterMode clarityFilterMode;
 
+	/**Set the time period used to ignore duplicate results found in frames.Measured in ms.
+	*
+	* @par Value range:	
+	*	[0, 600000]
+	* @par Default value:
+	*	3000
+	*/
+	int duplicateForgetTime;
 
+	/**Set the orientation of the frame image data.The value is the angle that the image needs to be rotated clockwise so it shows correctly on the display in its natural orientation.
+	*
+	* @par Value range:
+	*	0, 90, 180, or 270
+	* @par Default value:
+	*	0
+	*/
+	int orientation;
 	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct.
 	*
 	*/
-	char reserved[20];
+	char reserved[12];
 }FrameDecodingParameters;
 
 /**
@@ -2169,6 +2200,9 @@ typedef struct tagLocalizationResult
 
 	/**The confidence of the localization result*/
 	int confidence;
+
+	/**The transformation matrix.With this matrix, you can transform the localization coordinates to image's natural orientation. */
+	double transformationMatrix[9];
 
 	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
 	char reserved[52];
@@ -2385,8 +2419,14 @@ typedef struct tagPDF417Details
 	/**The error correction level of the barcode */
 	int errorCorrectionLevel;
 
+	/**Whether the left row indicator of the PDF417 code exists */
+	int hasLeftRowIndicator;
+
+	/**Whether the right row indicator of the PDF417 code exists */
+	int hasRightRowIndicator;
+
 	/**Reserved memory for the struct. The length of this array indicates the size of the memory reserved for this struct. */
-	char reserved[32];
+	char reserved[24];
 }PDF417Details;
 
 /**
@@ -2677,8 +2717,38 @@ typedef struct tagDM_DLSConnectionParameters DM_DLSConnectionParameters;
 typedef struct tagDM_DLSConnectionParameters DM_LTSConnectionParameters;
 
 /**
+
+ * @brief Struct to represent the status of an instance pool.
+
+ *
+
+ * This struct contains information about the current status of an instance pool,
+
+ * including the number of authorized instances, remaining available instances,
+
+ * instances waiting to be acquired, and the total occurrences of waiting events.
+
+ */
+
+typedef struct tagInstancePoolStatus
+{
+	/** The number of authorized instances, which represents the maximum available instances. */
+	int authorizedInstancesCount; 
+	/** The count of available instances that are currently not in use. */
+	int remainingInstancesCount;
+	/** The number of 'GetInstance' requests that are currently waiting because there are no available instances in the pool. */
+	int waitingCreationInstances;
+	/** The total count of times that any operation has encountered a wait state. */
+	int totalWaitOccurrences;
+}InstancePoolStatus;
+
+
+
+
+/**
  * @}defgroup Struct Struct
  */
+
 
 
 
@@ -3013,6 +3083,18 @@ extern "C" {
 	 */
 	DBR_API int  DBR_DecodeBuffer(void* barcodeReader, const unsigned char* pBufferBytes, const int width, const int height, const int stride, const ImagePixelFormat format, const char* pTemplateName);
 
+	/**
+	 * Decode barcodes from source image defined as ImageData.
+	 *
+	 * @param [in] barcodeReader Handle of the barcode reader instance.
+	 * @param [in] imageData The source image defined as ImageData.
+	 * @param [in] pTemplateName The template name.
+	 *
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message.
+	 *
+	 */
+	DBR_API int DBR_DecodeImageData(void* barcodeReader, const ImageData* imageData, const char* pTemplateName);
 	/**
 	 * Decodes barcodes from an image file encoded as a base64 string.
 	 *
@@ -3491,6 +3573,21 @@ extern "C" {
 	DBR_API	int DBR_SetTextResultCallback(void *barcodeReader, CB_TextResult cbFunction, void * pUser);
 
 	/**
+	 * Sets callback function to process text results which is triggered when the library finishes decoding a frame and finds unique barcodes.
+	 *
+	 * @param [in] barcodeReader Handle of the barcode reader instance.
+	 * @param [in] cbFunction Callback function.
+	 * @param [in] pUser Customized arguments passed to your function.
+	 *
+	 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+	 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
+	 * 		   DBR_OK;
+	 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
+	 *
+	 *
+	*/
+	DBR_API	int DBR_SetUniqueBarcodeCallback(void *barcodeReader, CB_TextResult cbFunction, void * pUser);
+	/**
 	 * Sets callback function to process intermediate results generated during frame decoding.
 	 *
 	 * @param [in] barcodeReader Handle of the barcode reader instance.
@@ -3506,9 +3603,80 @@ extern "C" {
 	 */
 	DBR_API	int DBR_SetIntermediateResultCallback(void *barcodeReader, CB_IntermediateResult cbFunction, void * pUser);
 
-
+	/**
+	 * Sets a human-readable name that identifies the device.
+	 *
+	 * @param [in] name The device alias.
+	 *
+	 * @return error code (returns 0 if the function operates successfully).
+	 *
+	 */
 	DBR_API int DBR_SetDeviceFriendlyName(const char* name);
 
+	/**
+	 * Transform the coordinates of a point based on the given transformation matrix.
+	 *
+	 * @param [in] The original point that needs to be transformed.
+	 * @param [in] The 3x3 matrix used for coordinate transformation.
+	 *
+	 * @return Returns The point after transformation.
+	 *
+	 */
+	DBR_API DBRPoint DBR_TransformCoordinates(DBRPoint originalPoint, double transformationMatrix[9]);
+
+	/**
+	 * Sets the max concurrent instance count used for current device and process.
+	 *
+	 * @param [in] countForThisDevice The maximum number of concurrent instances that the current device can run.
+	 * @param [in] countForThisProcess Optional The maximum number of concurrent instances that the current process can run.
+	 * @param [in] timeOut The maximum time(in millseconds) to wait for an available authorization or instance when calling Initlicense,GetInstance,or Deocode functions.
+	 *
+	 */
+	DBR_API int DBR_SetMaxConcurrentInstanceCount(int countForThisDevice, int countForThisProcess,int timeOut);
+
+	/**
+	 * Creates an instance of Dynamsoft Barcode Reader.
+	 *
+	 */
+	DBR_API void* DBR_GetInstance();
+
+	/**
+	 *Destroys an instance of Dynamsoft Barcode Reader.
+	 *
+	 */
+	DBR_API void DBR_RecycleInstance(void* barcodeReader);
+
+	/**
+	 * Gets whether the instance is valid for running on concurrent instance mode.
+	 *
+	 * @param [in] barcodeReader Handle of the barcode reader instance.
+	 *
+	 * @return Returns an int value indicating whether the instance is valid for running on concurrent instance mode.
+	 *
+	 */
+	DBR_API int DBR_IsInstanceValid(void* barcodeReader);
+
+	/**
+	* Sets a directory path for saving the license data.
+	* @param [in] The directory path for saving the license data.
+	*/
+	DBR_API int DBR_SetLicenseCachePath(const char* directoryPath);
+
+	/**
+	* Gets the device uuid used for license activating.
+	* @param [in] the uuid GenerationMethod ,0:random 1:hardware 
+	* @param [in,out] returns the uuid
+	*/
+	DBR_API int DBR_GetDeviceUUID(int uuidGenerationMethod, char** uuid);
+
+	/**
+	*Frees memory allocated for the  string.
+	*/
+	DBR_API void DBR_FreeString(char** content);
+
+
+
+	DBR_API InstancePoolStatus DBR_GetInstancePoolStatus();
 	/**
 	 * @}defgroup CCallback
 	 */
@@ -3530,6 +3698,7 @@ namespace dynamsoft
 {
 	namespace dbr
 	{
+
 		/**
 		*
 		* @defgroup CBarcodeReaderClass CBarcodeReader Class
@@ -3823,6 +3992,26 @@ namespace dynamsoft
 			 */
 			int  DecodeBuffer(const unsigned char* pBufferBytes, const int iWidth, const int iHeight, const int iStride, const ImagePixelFormat format, const char* pszTemplateName = "");
 
+			/**
+			 * Decodes barcodes from the memory buffer containing image pixels in defined format.
+			 *
+			 * @param [in] pBufferBytes The array of bytes which contain the image data.
+			 * @param [in] iWidth The width of the image in pixels.
+			 * @param [in] iHeight The height of the image in pixels.
+			 * @param [in] iStride The stride (or scan width) of the image.
+			 * @param [in] format The image pixel format used in the image byte array.
+			 * @param [in] iOrientation The orientation of the image.
+			 * @param [in] pszTemplateName (Optional) The template name.
+			 *
+			 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+			 * 		   GetErrorString() to get detailed error message.
+			 *
+			 *
+			 * @par Remarks:
+			 * If no template name is specified, current runtime settings will be used.
+			 */
+			int  DecodeBuffer(const unsigned char* pBufferBytes, const int iWidth, const int iHeight, const int iStride, const ImagePixelFormat format,const int iOrientation, const char* pszTemplateName = "");
+		
 			/**
 			 * Decodes barcode from an image file encoded as a base64 string.
 			 *
@@ -4295,26 +4484,104 @@ namespace dynamsoft
 			 */
 			int SetIntermediateResultCallback(CB_IntermediateResult cbFunction, void * pUser);
 
-
-			static int SetDeviceFriendlyName(const char* name);
 			/**
-			 * @}
+			 * Sets callback function to process text results which is triggered when the library finishes decoding a frame and finds unique barcodes.
+			 *
+			 * @param [in] cbFunction Callback function.
+			 * @param [in] pUser Customized arguments passed to your function.
+			 *
+			 * @return Returns error code. Returns 0 if the function operates successfully. You can call
+			 * 		   DBR_GetErrorString() to get detailed error message. Possible returns are:
+			 * 		   DBR_OK;
+			 * 		   DBRERR_FRAME_DECODING_THREAD_EXISTS;
+			 *
+			 *
+			*/
+			int SetUniqueBarcodeCallback(CB_TextResult cbFunction, void * pUser);
+			/**
+			 * Gets whether the instance is valid for running on concurrent instance mode.
+			 *
+			 * @return Returns an int value indicating whether the instance is valid for running on concurrent instance mode.
+			 *
 			 */
+			int IsInstanceValid();
+
+			/**
+			 * Sets a human-readable name that identifies the device.
+			 *
+			 * @param [in] name The device alias.
+			 *
+			 * @return error code (returns 0 if the function operates successfully).
+			 *
+			 */
+			static int SetDeviceFriendlyName(const char* name);
+
+			/**
+			 * Transform the coordinates of a point based on the given transformation matrix.
+			 *
+			 * @param [in] The original point that needs to be transformed.
+			 * @param [in] The 3x3 matrix used for coordinate transformation.
+			 *
+			 * @return Returns The point after transformation.
+			 *
+			 */
+			static DBRPoint TransformCoordinates(DBRPoint originalPoint, double transformationMatrix[9]);
+
+			/**
+			 * Sets the max concurrent instance count used for current device and process.
+			 *
+			 * @param [in] countForThisDevice The maximum number of concurrent instances that the current device can run.
+			 * @param [in] countForThisProcess Optional The maximum number of concurrent instances that the current process can run.
+			 * @param [in] timeOut The maximum time(in millseconds) to wait for an available authorization or instance when calling Initlicense,GetInstance,or Deocode functions.
+			 *
+			 */
+			static int SetMaxConcurrentInstanceCount(int countForThisDevice, int countForThisProcess = 0,int timeout = 0);
+
+			/**
+			 * Gets an idle Dynamsoft Barcode Reader instance running on concurrent instance mode.
+			 *
+			 */
+			static CBarcodeReader* GetInstance();
+
+			/**	
+			 *Recycles a Dynamsoft Barcode Reader instance running on concurrent instance mode.
+			 *
+			 */
+			void Recycle();
+
+			/**
+			* Sets a directory path for saving the license data.
+			* @param [in] The directory path for saving the license data.
+			*/
+			static int SetLicenseCachePath(const char* directoryPath);
+
+			/**
+			* Gets the device uuid used for license activating.
+			* @param [in] the uuid GenerationMethod.
+			* @param [in,out] returns the uuid
+			*/
+			static int GetDeviceUUID(int uuidGenerationMethod, char** uuid);
+
+			/**
+			*Frees memory allocated for the string.
+			*/
+			static void FreeString(char** content);
+
+
+			static InstancePoolStatus GetInstancePoolStatus();
 		private:
-
-
 			CBarcodeReader(const CBarcodeReader& r);
 
 			CBarcodeReader& operator = (const CBarcodeReader& r);
 
 		};
 
+
 		/**
 		* @}defgroup CBarcodeReaderClass
 		* @}defgroup CandCPlus
 		 *
 		 */
-
 	}
 }
 #endif // endif of __cplusplus.

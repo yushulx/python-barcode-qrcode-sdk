@@ -1,15 +1,26 @@
 # Python Extension: Barcode and QR Code SDK 
-The project is a CPython binding to [Dynamsoft C/C++ Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It aims to help developers build **Python barcode and QR code scanning** apps on `Windows`, `Linux` and `macOS`. Besides desktop PCs, it can work well on embedded and IoT devices such as `Raspberry Pi` and `Jetson Nano`. You are **free** to customize the Python API for Dynamsoft Barcode Reader.
+This project provides a CPython binding to the [Dynamsoft C/C++ Barcode Reader SDK v9.x](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It demonstrates how to build a **Python 1D/2D barcode SDK** package for `Windows`, `Linux` and `macOS` from scratch. Beyond desktop PCs, it's also compatible with embedded and IoT devices such as `Raspberry Pi` and `Jetson Nano`. You are **free** to customize the Python API for Dynamsoft Barcode Reader to suit your specific needs.
 
-## About Dynamsoft Barcode Reader
-- [Dynamsoft C/C++ Barcode Reader SDK v9.4.0](https://www.dynamsoft.com/barcode-reader/downloads)
+> Note: This project is an unofficial, community-maintained Python wrapper for the Dynamsoft Barcode SDK. For those seeking the most reliable and fully-supported solution, Dynamsoft offers an official Python package. Visit the [Dynamsoft Barcode Reader](https://pypi.org/project/dbr/) page on PyPI for more details.
+
+## About Dynamsoft Python Barcode SDK
 - Get a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) to activate the SDK.
+- Install the official Python barcode SDK via `pip install dbr`.
 
+### Comparison Table
+| Feature | Unofficial Wrapper (Community) | Official Dynamsoft Python Barcode SDK |
+| --- | --- | --- |
+| Support | Community-driven, best effort | Official support from Dynamsoft |
+| Documentation | README only | [Comprehensive Online Documentation](https://www.dynamsoft.com/barcode-reader/programming/python/index.html) |
+| API Coverage | Limited | Full API coverage |
+|Feature Updates| May lag behind the official SDK | First to receive new features |
+| Compatibility | Limited testing across environments| Thoroughly tested across all supported environments|
 
 ## Supported Python Edition
 * Python 3.x
 
-## Install Dependencies
+## Installation of Dependencies
+To show UI, you need to install the OpenCV package:
 ```bash 
 pip install opencv-python
 ```
@@ -62,11 +73,11 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
     import barcodeQrSDK
 
     # set license
-    barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+    barcodeQrSDK.initLicense("LICENSE-KEY")
 
     reader = barcodeQrSDK.createInstance()
 
-    results, elapsed_time = reader.decodeFile("test.png")
+    results, elapsed_time = reader.decodeFile("IMAGE-FILE")
     for result in results:
         print(result.format)
         print(result.text)
@@ -94,7 +105,7 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
 
     def run():
         # set license
-        barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+        barcodeQrSDK.initLicense("LICENSE-KEY")
 
         # initialize barcode scanner
         scanner = barcodeQrSDK.createInstance()
@@ -140,30 +151,30 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
         run()
     ```
     
-    ![Python barcode and QR code scanner](https://camo.githubusercontent.com/4463fa22e7bb08d196623b2ff181f22c7d92f4399298c37fd5ea43b396ed5b04/68747470733a2f2f7777772e64796e616d736f66742e636f6d2f636f6465706f6f6c2f696d672f323032322f31302f707974686f6e2d6465736b746f702d626172636f64652d71722d7363616e6e65722e706e67)
+    ![Python barcode and QR code scanner](https://www.dynamsoft.com/codepool/img/2024/08/python-barcode-scanner.png)
 
 
 
 ## Methods
-- `barcodeQrSDK.initLicense('YOUR-LICENSE-KEY')` # set barcode SDK license globally
+- `barcodeQrSDK.initLicense('YOUR-LICENSE-KEY')`: Set the global license key for the barcode SDK.
     
     ```python
-    barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+    barcodeQrSDK.initLicense("LICENSE-KEY")
     ```
 
-- `barcodeQrSDK.createInstance()` # create a barcode reader instance
+- `barcodeQrSDK.createInstance()`: Create a new barcode reader instance.
     
     ```python
     reader = barcodeQrSDK.createInstance()
     ```
-- `decodeFile(filename)` # decode barcode and QR code from an image file
+- `decodeFile(filename)`: Decode barcodes and QR codes from an image file.
 
     ```python
-    results, elapsed_time = reader.decodeFile("test.png")
+    results, elapsed_time = reader.decodeFile("IMAGE-FILE")
     ```
-- `decodeMat(Mat image)` # decode barcode and QR code from Mat
+- `decodeMat(Mat image)`: Decode barcodes and QR codes from an OpenCV Mat.
     ```python
-    image = cv2.imread("test.png")
+    image = cv2.imread("IMAGE-FILE")
     results = reader.decodeMat(image)
     for result in results:
         print(result.format)
@@ -178,13 +189,13 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
         print(result.y4)
     ```
 
-- `getParameters()` # return JSON string
+- `getParameters()`: Retrieve the current SDK parameters as a JSON string.
     
     ```python
     params = reader.getParameters()
     ```
 
-- `setParameters(JSON string)` # set barcode SDK parameters
+- `setParameters(JSON string)`: Set barcode SDK parameters using a JSON string.
     
     ```python
     import json
@@ -195,41 +206,38 @@ $ scanbarcode <file-name> -u 1 -l <license-key>
     ret = reader.setParameters(params)
     ```
 
-- `addAsyncListener(callback function)` # start a native thread and register a Python function for receiving barcode QR code results
-- `decodeMatAsync(<opencv mat data>)` # decode barcode QR code from OpenCV Mat asynchronously
+- `addAsyncListener(callback function)`: Register a Python function to receive barcode results asynchronously.
+- `decodeMatAsync(<opencv mat data>)`: Asynchronously decode barcodes and QR codes from an OpenCV Mat.
     ```python
     def callback(results, elapsed_time):
         print(results)
                                                         
     import cv2
-    image = cv2.imread("test.png")
+    image = cv2.imread("IMAGE-FILE")
     reader.addAsyncListener(callback)
     reader.decodeMatAsync(image)
     sleep(1)
     ```
-- `clearAsyncListener()` # stop the native thread and clear the registered Python function
-- `decodeBytes(bytes, width, height, stride, imageformat)` # 0: gray; 1: rgb888
+- `clearAsyncListener()`: Stop the asynchronous listener and clear the registered callback.
+- `decodeBytes(bytes, width, height, stride, imageformat)`: Decode barcodes from a raw image byte array.
+
     ```python
     import cv2
-    image = cv2.imread("test.png")
+    image = cv2.imread("IMAGE-FILE")
     results, elapsed_time = scanner.decodeBytes(image.tobytes(), image.shape[1], image.shape[0], image.strides[0], barcodeQrSDK.ImagePixelFormat.IPF_BGR_888)
     ```
-- `decodeBytesAsync` # decode image byte array asynchronously
+- `decodeBytesAsync`: Asynchronously decode image byte arrays.
 
     ```python
     def callback(results, elapsed_time):
         print(results)
                                                         
     import cv2
-    image = cv2.imread("test.png")
+    image = cv2.imread("IMAGE-FILE")
     imagebytes = image.tobytes()
     scanner.decodeBytesAsync(image.tobytes(), image.shape[1], image.shape[0], image.strides[0], barcodeQrSDK.ImagePixelFormat.IPF_BGR_888)
     sleep(1)
     ```
-
-## Online Documentation for Dynamsoft C/C++ Barcode SDK
-To customize Python API based on C/C++, please refer to the
-[online documentation](https://www.dynamsoft.com/barcode-reader/programming/c/user-guide.html?ver=latest).
 
 ## Supported Barcode Symbologies
 - Linear Barcodes (1D)
