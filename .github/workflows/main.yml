@@ -37,7 +37,11 @@ jobs:
         env:
           CIBW_BUILD: "cp39-*"
           CIBW_ARCHS_LINUX: auto, aarch64 
-
+      
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+          
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
@@ -59,10 +63,6 @@ jobs:
     # alternatively, to publish when a GitHub Release is created, use the following rule:
     # if: github.event_name == 'release' && github.event.action == 'published'
     steps:
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
-
       - uses: actions/download-artifact@v2
         with:
           name: artifact
