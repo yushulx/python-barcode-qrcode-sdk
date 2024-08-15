@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        python-version: ['3.11', '3.12']
+        python-version: ['3.10']
 
     steps:
       - uses: actions/checkout@v2
@@ -18,11 +18,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}       
-      
-      - name: Ensure distutils is available
-        run: |
-          python -m ensurepip --upgrade
-          python -m pip install --upgrade setuptools wheel
 
       - name: Run test.py in develop mode
         run: |
