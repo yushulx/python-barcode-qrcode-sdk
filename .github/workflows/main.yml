@@ -19,6 +19,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}       
       
+      - name: Ensure distutils is available
+        run: |
+          python -m ensurepip --upgrade
+          python -m pip install --upgrade setuptools wheel
+
       - name: Run test.py in develop mode
         run: |
           python -m pip install opencv-python setuptools
