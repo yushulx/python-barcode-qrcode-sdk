@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
         python-version: ['3.11', '3.12']
 
     steps:
@@ -17,19 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
-          
-      - name: Set up QEMU
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.6.1
-        env:
-          CIBW_BUILD: "cp39-*"
-          CIBW_ARCHS_LINUX: auto, aarch64 
+          python-version: ${{ matrix.python-version }}       
       
       - name: Run test.py in develop mode
         run: |
@@ -37,10 +25,6 @@ jobs:
           python setup_setuptools.py develop
           python --version
           python test.py
-
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
 
   build_sdist:
     name: Build source distribution
@@ -63,6 +47,23 @@ jobs:
     # alternatively, to publish when a GitHub Release is created, use the following rule:
     # if: github.event_name == 'release' && github.event.action == 'published'
     steps:
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.6.1
+        env:
+          CIBW_BUILD: "cp39-*"
+          CIBW_ARCHS_LINUX: auto, aarch64 
+      
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
       - uses: actions/download-artifact@v2
         with:
           name: artifact

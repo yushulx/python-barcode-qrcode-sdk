@@ -2,3 +2,4 @@ dbr
 pyzbar
 zxing-cpp
 openpyxl
+opencv-python

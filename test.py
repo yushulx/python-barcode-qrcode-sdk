@@ -2,6 +2,7 @@ import cv2
 import barcodeQrSDK
 from time import sleep
 
+file_path = "images/test.png"
 # set license
 ret = barcodeQrSDK.initLicense(
     "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
@@ -19,7 +20,7 @@ ret = reader.setParameters(settings)
 print(ret)
 
 # decodeFile()
-results, elapsed_time = reader.decodeFile("test.png")
+results, elapsed_time = reader.decodeFile(file_path)
 print('Elapsed time: ' + str(elapsed_time) + 'ms')
 for result in results:
     print(result.format)
@@ -34,7 +35,7 @@ for result in results:
     print(result.y4)
 
 # decodeMat()
-image = cv2.imread("test.png")
+image = cv2.imread(file_path)
 results, elapsed_time = reader.decodeMat(image)
 print('Elapsed time: ' + str(elapsed_time) + 'ms')
 for result in results:
@@ -69,7 +70,7 @@ def callback(results, elapsed_time):
         print(result.y4)
 
 
-image = cv2.imread("test.png")
+image = cv2.imread(file_path)
 reader.addAsyncListener(callback)
 reader.decodeMatAsync(image)
 sleep(1)

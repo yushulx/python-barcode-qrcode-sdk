@@ -1,0 +1,170 @@
+{
+    "ImageParameter": {
+      "BarcodeColourModes": [
+        {
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "LightReflection": 1,
+          "Mode": "BICM_DARK_ON_LIGHT"
+        }
+      ],
+      "BarcodeComplementModes": [
+        {
+          "Mode": "BCM_SKIP"
+        }
+      ],
+      "BarcodeFormatIds": [
+        "BF_QR_CODE",
+        "BF_MICRO_QR"
+      ],
+      "BarcodeFormatIds_2": null,
+      "BinarizationModes": [
+        {
+          "BinarizationThreshold": -1,
+          "ImagePreprocessingModesIndex": -1,
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "Mode": "BM_THRESHOLD"
+        }
+      ],
+      "ColourClusteringModes": [
+        {
+          "Mode": "CCM_SKIP"
+        }
+      ],
+      "ColourConversionModes": [
+        {
+          "BlueChannelWeight": -1,
+          "GreenChannelWeight": -1,
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "Mode": "CICM_GENERAL",
+          "RedChannelWeight": -1
+        }
+      ],
+      "DPMCodeReadingModes": [
+        {
+          "Mode": "DPMCRM_SKIP"
+        }
+      ],
+      "DeblurLevel": 0,
+      "DeblurModes": null,
+      "DeformationResistingModes": [
+        {
+          "Mode": "DRM_SKIP"
+        }
+      ],
+      "Description": "",
+      "ExpectedBarcodesCount": 0,
+      "FormatSpecificationNameArray": null,
+      "GrayscaleTransformationModes": [
+        {
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "Mode": "GTM_INVERTED"
+        }
+      ],
+      "ImagePreprocessingModes": [
+        {
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "Mode": "IPM_GENERAL"
+        }
+      ],
+      "IntermediateResultSavingMode": {
+        "Mode": "IRSM_MEMORY"
+      },
+      "IntermediateResultTypes": [
+        "IRT_NO_RESULT"
+      ],
+      "LocalizationModes": [
+        {
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "Mode": "LM_SCAN_DIRECTLY",
+          "ScanDirection": 0,
+          "ScanStride": 0
+        }
+      ],
+      "MaxAlgorithmThreadCount": 4,
+      "Name": "Settings",
+      "PDFRasterDPI": 300,
+      "PDFReadingMode": {
+        "Mode": "PDFRM_AUTO"
+      },
+      "Pages": "",
+      "RegionDefinitionNameArray": [
+        "Settings"
+      ],
+      "RegionPredetectionModes": [
+        {
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "Mode": "RPM_GENERAL"
+        }
+      ],
+      "ResultCoordinateType": "RCT_PIXEL",
+      "ReturnBarcodeZoneClarity": 0,
+      "ScaleDownThreshold": 2300,
+      "ScaleUpModes": [
+        {
+          "Mode": "SUM_AUTO"
+        }
+      ],
+      "TerminatePhase": "TP_BARCODE_RECOGNIZED",
+      "TextAssistedCorrectionMode": {
+        "BottomTextPercentageSize": 0,
+        "LeftTextPercentageSize": 0,
+        "LibraryFileName": "",
+        "LibraryParameters": "",
+        "Mode": "TACM_VERIFYING",
+        "RightTextPercentageSize": 0,
+        "TopTextPercentageSize": 0
+      },
+      "TextFilterModes": [
+        {
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "MinImageDimension": 65536,
+          "Mode": "TFM_GENERAL_CONTOUR",
+          "Sensitivity": 0
+        }
+      ],
+      "TextResultOrderModes": [
+        {
+          "Mode": "TROM_CONFIDENCE"
+        },
+        {
+          "Mode": "TROM_POSITION"
+        },
+        {
+          "Mode": "TROM_FORMAT"
+        }
+      ],
+      "TextureDetectionModes": [
+        {
+          "LibraryFileName": "",
+          "LibraryParameters": "",
+          "Mode": "TDM_GENERAL_WIDTH_CONCENTRATION",
+          "Sensitivity": 5
+        }
+      ],
+      "Timeout": 10000
+    },
+    "RegionDefinition": {
+      "BarcodeFormatIds": [
+        "BF_QR_CODE",
+        "BF_MICRO_QR"
+      ],
+      "BarcodeFormatIds_2": null,
+      "Bottom": 100,
+      "ExpectedBarcodesCount": 0,
+      "FormatSpecificationNameArray": null,
+      "Left": 0,
+      "MeasuredByPercentage": 1,
+      "Name": "Settings",
+      "Right": 100,
+      "Top": 0
+    },
+    "Version": "3.0"
+  }

@@ -7,18 +7,19 @@ import os
 
 # Define cell color
 red = PatternFill(start_color='FFFF0000',
-                   end_color='FFFF0000',
-                   fill_type='solid')
+                  end_color='FFFF0000',
+                  fill_type='solid')
 
 green = PatternFill(start_color='FF00FF00',
-                   end_color='FF00FF00',
-                   fill_type='solid')
+                    end_color='FF00FF00',
+                    fill_type='solid')
 
 yellow = PatternFill(start_color='00FFFF00',
-                   end_color='00FFFF00',
-                   fill_type='solid')
+                     end_color='00FFFF00',
+                     fill_type='solid')
 
 passed = 'Passed'
+
 
 def get_workbook(wb_name):
     if os.path.isfile(wb_name):
@@ -40,13 +41,17 @@ def get_workbook(wb_name):
         ws.column_dimensions[utils.get_column_letter(5)].width = 20
     return wb
 
+
 def save_workbook(wb, wb_name):
     if wb != None:
         wb.save(wb_name)
 
+
 def append_row(wb, filename=None, expected_results=None, zbar_results=None, dbr_results=None, ZXing_results=None):
     ws = wb.active
-    ws.append([filename, expected_results, zbar_results, dbr_results, ZXing_results])
+    ws.append([filename, expected_results,
+              zbar_results, dbr_results, ZXing_results])
+
 
 def update_row(wb, row_index, filename=None, expected_results=None, zbar_results=None, dbr_results=None, ZXing_results=None):
     ws = wb.active
@@ -74,24 +79,10 @@ def update_row(wb, row_index, filename=None, expected_results=None, zbar_results
         else:
             row[4].fill = red
 
+
 def set_recognition_rate(wb, row_index, r1=None, r2=None, r3=None):
     ws = wb.active
     row = ws[row_index]
     row[2].value = r1
     row[3].value = r2
     row[4].value = r3
-        
-
-# Test
-# name = 'data.xlsx'
-# wb = get_workbook(name)
-# ws = wb.active
-# index = 2
-# update_row(wb, index, r'D:\python-zxing-zbar-dbr\dataset\20499525_2.jpg', '20499525', '20499525', '20499525', '20499521')
-# index += 1
-# set_recognition_rate(wb, index, '59.46%', '75.68%', '13.51%')
-# save_workbook(wb, name)
-
-
-
-
