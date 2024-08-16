@@ -36,3 +36,6 @@ Use [dockerpi](https://github.com/lukechilds/dockerpi) to test the performance o
 docker run -it lukechilds/dockerpi pi2
 docker run -it lukechilds/dockerpi pi3
 ```
+
+## Blog
+[A Guide to Running ARM32 and ARM64 Python Barcode Readers in Docker Containers](https://www.dynamsoft.com/codepool/docker-arm64-arm32-python-barcode-qr-recognition.html)
