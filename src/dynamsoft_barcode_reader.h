@@ -16,6 +16,7 @@
 
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/time.h>
+#include <atomic>
 
 int gettime()
 {
