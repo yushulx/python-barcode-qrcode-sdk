@@ -34,4 +34,4 @@ pip install -r requirements.txt
 To fine-tune the parameters for your specific image set, use the [online tool](https://demo.dynamsoft.com/barcode-reader/)。
 
 ## Blog
-[How to Optimize QR Recognition Performance by Image Preprocessing and Parameter Tuning](https://www.dynamsoft.com/codepool/optimize-qr-recognition-performance.html)
+[Advanced QR Code Recognition: Handling Inverted Colors, Perspective Distortion, and Grayscale Images](https://www.dynamsoft.com/codepool/optimize-qr-recognition-performance.html)
