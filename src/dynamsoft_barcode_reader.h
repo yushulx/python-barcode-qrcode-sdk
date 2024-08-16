@@ -43,7 +43,7 @@ public:
     std::mutex m;
     std::condition_variable cv;
     std::queue<Task> tasks = {};
-    volatile bool running;
+    std::atomic<bool> running;
     std::thread t;
 };
 
@@ -60,13 +60,10 @@ typedef struct
 
 void clearTasks(DynamsoftBarcodeReader *self)
 {
-    if (self->worker->tasks.size() > 0)
+    while (!self->worker->tasks.empty())
     {
-        for (int i = 0; i < self->worker->tasks.size(); i++)
-        {
-            free(self->worker->tasks.front().buffer);
-            self->worker->tasks.pop();
-        }
+        free(self->worker->tasks.front().buffer);
+        self->worker->tasks.pop();
     }
 }
 
@@ -120,7 +117,7 @@ static PyObject *DynamsoftBarcodeReader_new(PyTypeObject *type, PyObject *args, 
     self = (DynamsoftBarcodeReader *)type->tp_alloc(type, 0);
     if (self != NULL)
     {
-       	self->hBarcode = DBR_CreateInstance();
+        self->hBarcode = DBR_CreateInstance();
         self->callback = NULL;
         self->worker = NULL;
     }
@@ -515,7 +512,6 @@ static PyObject *addAsyncListener(PyObject *obj, PyObject *args)
         self->worker->t = std::thread(&run, self);
     }
 
-    
     return Py_BuildValue("i", 0);
 }
 
