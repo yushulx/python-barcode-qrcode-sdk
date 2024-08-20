@@ -1,0 +1,35 @@
+{
+  "ImageParameter": {
+    "BarcodeFormatIds_2": [ "BF2_NONSTANDARD_BARCODE" ],
+    "FormatSpecificationNameArray": [ "FormatSpecification1" ],
+    "DeblurLevel": 9,
+    "Description": "",
+    "ExpectedBarcodesCount": 0,
+    "LocalizationModes": [
+      {
+        "Mode": "LM_CONNECTED_BLOCKS"
+      },
+      {
+        "Mode": "LM_SCAN_DIRECTLY",
+        "ScanStride": 0
+      },
+      {
+        "Mode": "LM_STATISTICS"
+      },
+      {
+        "Mode": "LM_LINES"
+      }
+    ],
+    "Name": "Test",
+    "Timeout": 1000000
+  },
+  "FormatSpecification": {
+    "Name": "FormatSpecification1",
+    "BarcodeFormatIds_2": [ "BF2_NONSTANDARD_BARCODE" ],
+    "StandardFormat": "BF_CODE_39",
+    "HeadModuleRatio": "131113131",
+    "TailModuleRatio": "131113131"
+  },
+  "Version": "3.0"
+}
+
