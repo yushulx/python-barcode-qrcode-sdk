@@ -39,7 +39,7 @@ This is a cross-platform GUI barcode reader application built with `Python 3`, `
     The advanced demo supports reading barcodes from image files, webcam, and desktop screenshots:
 
     ```
-    pyside2-uic design.ui -o design.py
+    pyside6-uic design.ui -o design.py
     python3 app_advanced.py license.txt
     ```
 
