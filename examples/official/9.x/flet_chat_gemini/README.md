@@ -35,3 +35,6 @@ pip install -r requirements.txt
     ```
 
    ![gemini-chat-app](https://github.com/yushulx/flet-chat-app-gemini-barcode/assets/2202306/9b4da08d-ca94-4a64-95b4-c6e5f1dfd985)
+
+## Blog
+[How to Build Flet Chat App with Barcode and Gemini APIs](https://www.dynamsoft.com/codepool/python-flet-chat-app-barcode-gemini.html)
