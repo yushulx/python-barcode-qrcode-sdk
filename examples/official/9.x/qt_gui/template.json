@@ -1,0 +1,1 @@
+{"ImageParameter" : { "BarcodeFormatIds" : [ "BF_ALL" ], "DeblurLevel" : 9, "Description" : "", "ExpectedBarcodesCount" : 0, "MaxAlgorithmThreadCount" : 4, "Name" : "IP_1", "Timeout" : 10000}, "Version" : "3.0"}
