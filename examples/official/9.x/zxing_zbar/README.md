@@ -14,7 +14,7 @@ pip install -r requirements.txt
 
 
 ## Usage
-1. Obtain a [Dynamsoft Barcode Reader trial license](ttps://www.dynamsoft.com/customer/license/trialLicense) and update the code with the license key in `app.py`.
+1. Obtain a [Dynamsoft Barcode Reader trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dbr) and update the code with the license key in `app.py`.
     
     ```python
     BarcodeReader.init_license('LICENSE-KEY')

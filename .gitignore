@@ -2,3 +2,4 @@ _skbuild
 /build
 dist
 /examples/official/9.x/zxing_zbar/__pycache__/*.pyc
+/examples/official/9.x/jupyter_notebook/.ipynb_checkpoints
