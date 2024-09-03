@@ -1,7 +1,7 @@
 # Flet Chat App with Google AI and Dynamsoft Barcode Reader
 The project demonstrates how to integrate [Dynamsoft Barcode Reader](https://pypi.org/project/dbr/) and [Gemini APIs](https://ai.google.dev/tutorials/python_quickstart) into a Flet chat app.
 
-https://github.com/yushulx/flet-chat-app-gemini-barcode/assets/2202306/ef159de0-cdf9-48e2-91d9-3da3ce9f85a0
+https://github.com/user-attachments/assets/b0f8efd2-ec66-4b02-95c8-e9df437410a7
 
 ## Installation
 
@@ -17,7 +17,7 @@ pip install -r requirements.txt
     genai.configure(api_key='API_KEY')
     ```
 
-    ![Gemini API key](https://github.com/yushulx/flet-chat-app-gemini-barcode/assets/2202306/a556a3dc-622f-4de0-b3d5-9067de44a5e5)
+    ![Gemini API key](https://www.dynamsoft.com/codepool/img/2024/09/gemini-api-key.png)
 
     
 2. Request a [free trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) for Dynamsoft Barcode Reader and replace the value of `LICENSE-KEY` in `chatbot.py`.
@@ -26,7 +26,7 @@ pip install -r requirements.txt
     license_key = "LICENSE-KEY"
     ```
 
-    ![Dynamsoft Barcode Reader license key](https://github.com/yushulx/flet-chat-app-gemini-barcode/assets/2202306/59535e1a-3f8e-4711-adb0-2610476848fd)
+    ![Dynamsoft Barcode Reader license key](https://www.dynamsoft.com/codepool/img/2024/09/dynamsoft-barcode-reader-license.png)
 
 3. Run the app:
 
@@ -34,7 +34,7 @@ pip install -r requirements.txt
     flet run chatbot.py
     ```
 
-   ![gemini-chat-app](https://github.com/yushulx/flet-chat-app-gemini-barcode/assets/2202306/9b4da08d-ca94-4a64-95b4-c6e5f1dfd985)
+   ![gemini-chat-app](https://www.dynamsoft.com/codepool/img/2024/01/flet-chat-app-gemini-barcode-api.png)
 
 ## Blog
 [How to Build Flet Chat App with Barcode and Gemini APIs](https://www.dynamsoft.com/codepool/python-flet-chat-app-barcode-gemini.html)
