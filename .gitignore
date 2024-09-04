@@ -3,3 +3,4 @@ _skbuild
 dist
 /examples/official/9.x/zxing_zbar/__pycache__/*.pyc
 /examples/official/9.x/jupyter_notebook/.ipynb_checkpoints
+/examples/official/9.x/qt_gui/__pycache__/*.pyc
