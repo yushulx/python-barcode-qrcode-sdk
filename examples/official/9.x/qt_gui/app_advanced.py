@@ -17,8 +17,37 @@ import os
 import cv2
 from dbr import EnumBarcodeFormat, EnumBarcodeFormat_2
 
+from PySide6.QtCore import QObject, QThread, Signal, Qt
+import SnippingTool
+
+class Worker(QObject):
+    finished = Signal()
+    progress = Signal(object)
+
+    def __init__(self, manager, capture):
+        super(Worker, self).__init__()
+        self._barcodeManager = manager
+        self._cap = capture
+        self.isRunning = True
+
+    def run(self):
+        print('Running worker thread...')
+        while self.isRunning:
+            try:
+                results = self._barcodeManager.decodeLatestFrame()
+
+                if  results != None:
+                    self.progress.emit(results)
+            except Exception as e:
+                print(e)
+                break
+
+        print('Quit worker thread...')
+        self.finished.emit()
+
 
 class MainWindow(QMainWindow):
+    useQThread = True
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
@@ -45,6 +74,12 @@ class MainWindow(QMainWindow):
         # The current path.
         self._path = os.path.dirname(os.path.realpath(__file__))
 
+        # Screenshot button
+        self.snippingWidget = SnippingTool.SnippingWidget(app=QApplication.instance())
+        self.snippingWidget.onSnippingCompleted = self.onSnippingCompleted
+        self.ui.pushButton_area.clicked.connect(self.snipArea)
+        self.ui.pushButton_full.clicked.connect(self.snipFull)
+        
         # Camera button
         self.ui.pushButton_open.clicked.connect(self.openCamera)
         self.ui.pushButton_stop.clicked.connect(self.stopCamera)
@@ -82,6 +117,54 @@ class MainWindow(QMainWindow):
         self.endx = 0
         self.endy = 0
         self.clicked = False
+
+        self.worker = None
+
+    def onSnippingCompleted(self, frame):
+        self.setWindowState(Qt.WindowMaximized)
+        if frame is None:
+            return 
+
+        frame, self._results = self._barcodeManager.decode_frame(frame)
+        self.showResults(frame, self._results)
+
+    def snipArea(self):
+        self.setWindowState(Qt.WindowMinimized)
+        self.snippingWidget.start()    
+
+    def snipFull(self):
+        self.setWindowState(Qt.WindowMinimized)
+        self.snippingWidget.fullscreen()    
+
+    def dragEnterEvent(self, event):
+        event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        urls = event.mimeData().urls()
+        filename = urls[0].toLocalFile()
+        self.loadFile(filename)
+        self.decodeFile(filename)
+        event.acceptProposedAction()
+            
+    def reportProgress(self, results):
+        self._results = results
+
+    # https://realpython.com/python-pyqt-qthread/
+    def runLongTask(self):
+        # Step 2: Create a QThread object
+        self.thread = QThread()
+        # Step 3: Create a worker object
+        self.worker = Worker(self._barcodeManager, self._cap)
+        # Step 4: Move worker to the thread
+        self.worker.moveToThread(self.thread)
+        # Step 5: Connect signals and slots
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.worker.progress.connect(self.reportProgress)
+        # Step 6: Start the thread
+        self.thread.start()
 
     def paintEvent(self, event):
         if self._pixmap is not None:
@@ -142,7 +225,11 @@ class MainWindow(QMainWindow):
             return
 
         if not self.ui.checkBox_syncdisplay.isChecked():
-            self._barcodeManager.create_barcode_process()
+            if not self.useQThread:
+                self._barcodeManager.create_barcode_process()
+            else:
+                self._barcodeManager.initQueue()
+                self.runLongTask()
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.nextFrameUpdate)
@@ -160,6 +247,8 @@ class MainWindow(QMainWindow):
                 self.timer = None
 
             self._barcodeManager.destroy_barcode_process()
+            if self.worker is not None:
+                self.worker.isRunning = False
         else:
             if self.timer is not None:
                 self.timer.stop()
@@ -176,7 +265,8 @@ class MainWindow(QMainWindow):
 
         if not self.ui.checkBox_syncdisplay.isChecked():
             self._barcodeManager.append_frame(frame)
-            self._results = self._barcodeManager.peek_results()
+            if not self.useQThread:
+                self._results = self._barcodeManager.peek_results()
         else:
             frame, self._results = self._barcodeManager.decode_frame(frame)
 
@@ -196,13 +286,16 @@ class MainWindow(QMainWindow):
             template = f.read()
             self.ui.textEdit_template.setText(template)
 
-    def appendFile(self, filename):
+    def loadFile(self, filename):
+        item = QListWidgetItem()
+        item.setText(filename)
+        self.ui.listWidget.addItem(item)
+        self._all_data[filename] = None
 
+    def appendFile(self, filename):
+       
         if filename not in self._all_data:
-            item = QListWidgetItem()
-            item.setText(filename)
-            self.ui.listWidget.addItem(item)
-            self._all_data[filename] = None
+            self.loadFile(filename)
 
     def currentItemChanged(self, current, previous):
         filename = current.text()
@@ -373,9 +466,10 @@ class MainWindow(QMainWindow):
                 cv2.line(frame, points[1], points[2], color, thickness)
                 cv2.line(frame, points[2], points[3], color, thickness)
                 cv2.line(frame, points[3], points[0], color, thickness)
-                cv2.putText(frame, result.barcode_text,
-                            points[0], cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
-
+                cv2.putText(frame, result.barcode_text, points[0], cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255))
+        else:
+            out = 'No barcode found'
+            
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image = QImage(
             frame, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)

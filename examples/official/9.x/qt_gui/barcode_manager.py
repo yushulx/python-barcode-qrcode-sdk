@@ -175,7 +175,8 @@ class BarcodeManager():
     def create_barcode_process(self):
         self.destroy_barcode_process()
         self.initQueue()
-        self.barcodeScanning = Process(target=process_barcode_frame, args=(self.frameQueue, self.resultQueue, self._template, self._types, self._types2))
+        self.barcodeScanning = Process(target=process_barcode_frame, args=(
+            self.frameQueue, self.resultQueue, self._template, self._types, self._types2))
         self.barcodeScanning.start()
 
     def destroy_barcode_process(self):
@@ -217,7 +218,8 @@ class BarcodeManager():
         return self._reader.output_settings_to_json_string()
 
     def set_license(self, key):
-        BarcodeReader.init_license(key)
+        return BarcodeReader.init_license(key)
+
     def decodeLatestFrame(self):
         try:
             frame = self.frameQueue.get(False, 10)
