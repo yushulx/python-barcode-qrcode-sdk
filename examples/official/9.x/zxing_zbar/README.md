@@ -1,5 +1,5 @@
-# ZXing vs. ZBar vs. Dynamsoft Barcode Reader in Python
-This repository provides a comparison of barcode recognition performance between three popular barcode scanning libraries: **ZXing**, **ZBar**, and [Dynamsoft Barcode Reader](https://pypi.org/project/dbr/).
+# ZXing-cpp vs. ZBar vs. Dynamsoft Barcode Reader in Python
+This repository provides a comparison of barcode recognition performance between three popular barcode scanning libraries: **ZXing-cpp**, **ZBar**, and [Dynamsoft Barcode Reader](https://pypi.org/project/dbr/).
 
 ## Dataset Download
 Download the full dataset from the following link: https://drive.google.com/uc?id=1uThXXH8HiHAw6KlpdgcimBSbrvi0Mksf&export=download
