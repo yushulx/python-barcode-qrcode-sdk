@@ -4,7 +4,7 @@ This project provides a CPython binding to the [Dynamsoft C/C++ Barcode Reader S
 > Note: This project is an unofficial, community-maintained Python wrapper for the Dynamsoft Barcode SDK. For those seeking the most reliable and fully-supported solution, Dynamsoft offers an official Python package. Visit the [Dynamsoft Barcode Reader](https://pypi.org/project/dbr/) page on PyPI for more details.
 
 ## About Dynamsoft Python Barcode SDK
-- Get a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) to activate the SDK.
+- Get a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) to activate the SDK.
 - Install the official Python barcode SDK via `pip install dbr`.
 
 ### Comparison Table
