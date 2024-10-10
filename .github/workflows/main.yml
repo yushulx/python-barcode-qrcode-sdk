@@ -38,7 +38,7 @@ jobs:
           CIBW_BUILD: "cp39-*"
           CIBW_ARCHS_LINUX: auto, aarch64 
       
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
           
@@ -51,7 +51,7 @@ jobs:
       - name: Build sdist
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: dist/*.tar.gz
           
