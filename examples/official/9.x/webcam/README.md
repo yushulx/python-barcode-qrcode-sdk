@@ -2,7 +2,7 @@
 This repository provides samples demonstrating how to create a simple barcode and QR code reader using a webcam in Python. The OpenCV Stitcher API is utilized to stitch multiple barcode and QR code results together.
 
 ## License Activation
-To activate the [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/), obtain a desktop license key from [here](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr):
+To activate the [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/), obtain a desktop license key from [here](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform):
 
 ```python
 BarcodeReader.init_license("LICENSE-KEY")

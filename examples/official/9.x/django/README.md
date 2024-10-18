@@ -20,7 +20,7 @@ This sample demonstrates how to create an online Barcode and QR Code Reader usin
 
 - **SDK License**
 
-    To use the Dynamsoft Barcode Reader SDK, request a [30-day free trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dbr). 
+    To use the Dynamsoft Barcode Reader SDK, request a [30-day free trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform). 
 
 ## Usage
 1. Set the license key in `scanbarcode/views.py`:

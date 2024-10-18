@@ -5,7 +5,7 @@ This sample demonstrates how to use the [Dynamsoft Barcode Reader SDK](https://w
 Python 3.x
 
 ## Prerequisites
-- Obtain a [Dynamsoft Barcode Reader trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dbr)
+- Obtain a [Dynamsoft Barcode Reader trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform)
 - Install the Dynamsoft Barcode Reader SDK for Python:
     
     ```bash

@@ -1,20 +1,21 @@
 # Python Extension: Barcode and QR Code SDK 
 This project provides a CPython binding to the [Dynamsoft C/C++ Barcode Reader SDK v9.x](https://www.dynamsoft.com/barcode-reader/sdk-desktop-server/). It demonstrates how to build a **Python 1D/2D barcode SDK** package for `Windows`, `Linux` and `macOS` from scratch. Beyond desktop PCs, it's also compatible with embedded and IoT devices such as `Raspberry Pi` and `Jetson Nano`. You are **free** to customize the Python API for Dynamsoft Barcode Reader to suit your specific needs.
 
-> Note: This project is an unofficial, community-maintained Python wrapper for the Dynamsoft Barcode SDK. For those seeking the most reliable and fully-supported solution, Dynamsoft offers an official Python package. Visit the [Dynamsoft Barcode Reader](https://pypi.org/project/dbr/) page on PyPI for more details.
+> Note: This project is an unofficial, community-maintained Python wrapper for the Dynamsoft Barcode SDK. For those seeking the most reliable and fully-supported solution, Dynamsoft offers an official Python package. Visit the [Dynamsoft Capture Vision Bundle](https://pypi.org/project/dynamsoft-capture-vision-bundle/) page on PyPI for more details.
 
-## About Dynamsoft Python Barcode SDK
+## About Dynamsoft Capture Vision Bundle
 - Get a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) to activate the SDK.
-- Install the official Python barcode SDK via `pip install dbr`.
+- Install the SDK via `pip install dynamsoft-capture-vision-bundle`.
 
 ### Comparison Table
 | Feature | Unofficial Wrapper (Community) | Official Dynamsoft Python Barcode SDK |
 | --- | --- | --- |
 | Support | Community-driven, best effort | Official support from Dynamsoft |
-| Documentation | README only | [Comprehensive Online Documentation](https://www.dynamsoft.com/barcode-reader/programming/python/index.html) |
+| Documentation | README only | [Comprehensive Online Documentation](https://www.dynamsoft.com/capture-vision/docs/server/programming/python/?lang=python) |
 | API Coverage | Limited | Full API coverage |
 |Feature Updates| May lag behind the official SDK | First to receive new features |
 | Compatibility | Limited testing across environments| Thoroughly tested across all supported environments|
+| OS Support | Windows, Linux, macOS | Windows, Linux, macOS |
 
 ## Supported Python Edition
 * Python 3.x

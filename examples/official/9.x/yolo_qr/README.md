@@ -13,7 +13,7 @@ This repository provides samples demonstrating how to detect QR codes using **YO
     ```
     pip install dbr
     ```
-- Obtain a [Dynamsoft Barcode Reader trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) and update your code with the provided license key:
+- Obtain a [Dynamsoft Barcode Reader trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) and update your code with the provided license key:
     
     ```python
     from dbr import *

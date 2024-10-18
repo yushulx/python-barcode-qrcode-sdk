@@ -109,7 +109,7 @@ DBR_InitLicense.restype = c_int
 license_key = b"DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
 error_msg_buffer = create_string_buffer(256)
 error_msg_buffer_len = len(error_msg_buffer)
-# https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
+# https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform
 ret = DBR_InitLicense(license_key, error_msg_buffer, error_msg_buffer_len)
 print('initLicense: {}'.format(ret))
 

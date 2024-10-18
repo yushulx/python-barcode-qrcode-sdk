@@ -20,7 +20,7 @@ pip install -r requirements.txt
     ![Gemini API key](https://www.dynamsoft.com/codepool/img/2024/09/gemini-api-key.png)
 
     
-2. Request a [free trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) for Dynamsoft Barcode Reader and replace the value of `LICENSE-KEY` in `chatbot.py`.
+2. Request a [free trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) for Dynamsoft Barcode Reader and replace the value of `LICENSE-KEY` in `chatbot.py`.
 
     ```python
     license_key = "LICENSE-KEY"

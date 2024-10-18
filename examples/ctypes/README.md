@@ -29,7 +29,7 @@ This project explores an alternative approach to invoking C APIs from shared lib
     cmake --build .
     ```    
 
-2. Get a valid license key from [Dynamsoft](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr). Then, update the license key in the `success.py` file.
+2. Get a valid license key from [Dynamsoft](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform). Then, update the license key in the `success.py` file.
 
     ```python
     license_key = b"LICENSE-KEY"

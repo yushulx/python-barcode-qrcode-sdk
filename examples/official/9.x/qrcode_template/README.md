@@ -9,7 +9,7 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-1. Obtain a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr) for the Dynamsoft Barcode Reader SDK and save the license key in a `license.txt` file.
+1. Obtain a [30-day FREE trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) for the Dynamsoft Barcode Reader SDK and save the license key in a `license.txt` file.
 
 2. Run the sample scripts:
 
