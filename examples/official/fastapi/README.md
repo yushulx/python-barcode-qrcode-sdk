@@ -1,6 +1,8 @@
 # Barcode Reader Web Application 
 A web application that leverages [FastAPI](https://pypi.org/project/fastapi/) for the backend along with a lightweight **HTML/JavaScript** frontend. The application allows users to upload images for **barcode reading**, decodes the barcodes using the [Dynamsoft Capture Vision Bundle](https://pypi.org/project/dynamsoft-capture-vision-bundle/), and presents the decoded data in a user-friendly interface.
 
+https://github.com/user-attachments/assets/10ed16ba-b22f-4857-8bd2-942cc2bbfaab
+
 ## Features
 
 - Upload images containing barcodes.
