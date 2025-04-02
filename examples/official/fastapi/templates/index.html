@@ -1,0 +1,26 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Barcode Scanner</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Upload Barcode Image</h1>
+        <input type="file" id="fileInput" accept="image/*" capture="camera">
+        <div id="imageview">
+            <img id="preview">
+            <canvas id="overlay"></canvas>
+        </div>
+        <div class="progress" id="progress">Processing...</div>
+        <div id="result"></div>
+    </div>
+
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
