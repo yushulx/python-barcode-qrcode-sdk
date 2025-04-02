@@ -44,7 +44,7 @@ async def scan_barcode(file: UploadFile = File(...)):
         for item in items:
             location = item.get_location()
             return_items.append({
-                "format": item.get_format(),
+                "format": item.get_format_string(),
                 "text": item.get_text(),
                 "location": {
                     "x1": location.points[0].x, "y1": location.points[0].y,

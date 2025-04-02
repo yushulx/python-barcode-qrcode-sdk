@@ -34,3 +34,5 @@ A web application that leverages [FastAPI](https://pypi.org/project/fastapi/) fo
     ```
 
 5. Open your web browser and navigate to `http://localhost:8000` to access the application.
+    
+    ![Python FastAPI web barcode reader](https://www.dynamsoft.com/codepool/img/2025/04/python-fastapi-web-barcode-reader.png)
