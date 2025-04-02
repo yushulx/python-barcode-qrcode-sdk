@@ -38,3 +38,6 @@ https://github.com/user-attachments/assets/10ed16ba-b22f-4857-8bd2-942cc2bbfaab
 5. Open your web browser and navigate to `http://localhost:8000` to access the application.
     
     ![Python FastAPI web barcode reader](https://www.dynamsoft.com/codepool/img/2025/04/python-fastapi-web-barcode-reader.png)
+
+## Blog
+[How to Build a Web Barcode Reader with Python, FastAPI and HTML5](https://www.dynamsoft.com/codepool/python-fastapi-uvicorn-web-barcode-reader.html)
