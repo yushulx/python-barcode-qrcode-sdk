@@ -1,0 +1,143 @@
+{
+    "BarcodeReaderTaskSettingOptions": [
+        {
+            "Name": "task_gs1_ai_barcode",
+            "ExpectedBarcodesCount": 1,
+            "BarcodeFormatIds": [
+                "BF_DEFAULT"
+            ],
+            "SectionArray": [
+                {
+                    "Section": "ST_REGION_PREDETECTION",
+                    "ImageParameterName": "ip_localize_barcode",
+                    "StageArray": [
+                        {
+                            "Stage": "SST_PREDETECT_REGIONS"
+                        }
+                    ]
+                },
+                {
+                    "Section": "ST_BARCODE_LOCALIZATION",
+                    "ImageParameterName": "ip_localize_barcode",
+                    "StageArray": [
+                        {
+                            "Stage": "SST_LOCALIZE_CANDIDATE_BARCODES"
+                        },
+                        {
+                            "Stage": "SST_LOCALIZE_BARCODES"
+                        }
+                    ]
+                },
+                {
+                    "Section": "ST_BARCODE_DECODING",
+                    "ImageParameterName": "ip_decode_barcode",
+                    "StageArray": [
+                        {
+                            "Stage": "SST_RESIST_DEFORMATION"
+                        },
+                        {
+                            "Stage": "SST_COMPLEMENT_BARCODE"
+                        },
+                        {
+                            "Stage": "SST_SCALE_BARCODE_IMAGE"
+                        },
+                        {
+                            "Stage": "SST_DECODE_BARCODES"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "CaptureVisionTemplates": [
+        {
+            "Name": "ReadGS1AIBarcode",
+            "ImageROIProcessingNameArray": [
+                "roi_gs1_ai_barcode"
+            ],
+            "SemanticProcessingNameArray": [
+                "sp_gs1_ai"
+            ]
+        }
+    ],
+    "ImageParameterOptions": [
+        {
+            "Name": "ip_localize_barcode",
+            "ApplicableStages": [
+                {
+                    "Stage": "SST_BINARIZE_IMAGE",
+                    "BinarizationModes": [
+                        {
+                            "Mode": "BM_LOCAL_BLOCK"
+                           
+                        }
+                    ]
+                },
+                {
+                    "Stage": "SST_BINARIZE_TEXTURE_REMOVED_GRAYSCALE"
+                },
+                {
+                    "Stage": "SST_TRANSFORM_GRAYSCALE",
+                    "GrayscaleTransformationModes": [
+                        {
+                            "Mode": "GTM_ORIGINAL"
+                        },
+                        {
+                            "Mode": "GTM_INVERTED"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "ip_decode_barcode",
+            "ApplicableStages": [
+                {
+                    "Stage": "SST_TRANSFORM_GRAYSCALE",
+                    "GrayscaleTransformationModes": [
+                        {
+                            "Mode": "GTM_ORIGINAL"
+                        }
+                    ]
+                },
+                {
+                    "Stage": "SST_SCALE_IMAGE",
+                    "ImageScaleSetting": {
+                        "ScaleType": "ST_SCALE_DOWN",
+                        "ReferenceEdge": "RE_SHORTER_EDGE",
+                        "EdgeLengthThreshold": 99999
+                    }
+                }
+            ]
+        }
+    ],
+    "TargetROIDefOptions": [
+        {
+            "Name": "roi_gs1_ai_barcode",
+            "TaskSettingNameArray": [
+                "task_gs1_ai_barcode"
+            ]
+        }
+    ],
+    "SemanticProcessingOptions": [
+        {
+            "Name": "sp_gs1_ai",
+            "ReferenceObjectFilter": {
+                "ReferenceTargetROIDefNameArray": [
+                    "roi_gs1_ai_barcode"
+                ]
+            },
+            "TaskSettingNameArray": [
+                "dcp_gs1_ai"
+            ]
+        }
+    ],
+    "CodeParserTaskSettingOptions": [
+        {
+            "Name": "dcp_gs1_ai",
+            "CodeSpecifications": [
+                "GS1_AI"
+            ]
+        }
+    ]
+}
