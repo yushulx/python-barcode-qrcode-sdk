@@ -1,1 +1,2 @@
 dynamsoft-capture-vision-bundle
+opencv-python

@@ -2,6 +2,8 @@ import sys
 from dynamsoft_capture_vision_bundle import *
 import os
 import json
+import cv2
+import numpy as np
 
 if __name__ == '__main__':
 
@@ -29,9 +31,10 @@ if __name__ == '__main__':
             if not os.path.exists(image_path):
                 print("The image path does not exist.")
                 continue
- 
+                
+            cv_image = cv2.imread(image_path)
             result = cvr_instance.capture(
-                image_path, "ReadGS1AIBarcode")
+                cv_image, "ReadGS1AIBarcode")
             if result.get_error_code() != EnumErrorCode.EC_OK:
                 print("Error:", result.get_error_code(),
                       result.get_error_string())
@@ -39,10 +42,11 @@ if __name__ == '__main__':
                 items = result.get_items()
                 for item in items:
                     if item.get_type() == EnumCapturedResultItemType.CRIT_BARCODE:
-                        format_type = item.get_format()
+                        format_type = item.get_format_string()
                         text_bytes = item.get_bytes()
                         text = text_bytes.decode('utf-8')
                         print('Barcode text: {} '.format(text))
+                        print('Barcode format: {} '.format(format_type))
 
                         location = item.get_location()
                         x1 = location.points[0].x
@@ -54,6 +58,12 @@ if __name__ == '__main__':
                         x4 = location.points[3].x
                         y4 = location.points[3].y
 
+                        cv2.drawContours(
+                        cv_image, [np.intp([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
+
+                        cv2.putText(cv_image, text, (x1, y1 - 10),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                    
                     elif item.get_type() == EnumCapturedResultItemType.CRIT_PARSED_RESULT:
                         try:
                             json_string = item.get_json_string()
@@ -64,11 +74,9 @@ if __name__ == '__main__':
                                 description = ""
                                 value = ""
 
-                                # Get ChildFields
                                 child_fields = item.get("ChildFields", [[]])[0]
                                 for field in child_fields:
                                     if field["FieldName"].endswith("AI"):
-                                        # For dynamic AIs like 310n or 392n, use RawValue instead of FieldName
                                         ai = field.get("RawValue", ai)
                                         description = field.get("Value", "")
                                     elif field["FieldName"].endswith("Data"):
@@ -85,5 +93,9 @@ if __name__ == '__main__':
                         except json.JSONDecodeError as e:
                             print("JSON Decode Error:", e)
                             continue
+            cv2.imshow(
+                "Original Image with Detected Barcodes", cv_image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
     input("Press Enter to quit...")
