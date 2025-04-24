@@ -1,6 +1,7 @@
 # GS1 Application Identifier (AI) Parser
 This sample code demonstrates how to decode barcodes and parse **GS1 Application Identifiers (AIs)** using **Python** and **Dynamsoft Capture Vision**.
 
+https://github.com/user-attachments/assets/5d6414a6-e354-4b64-a8d3-84edd3e3484e
 
 ## Prerequisites
 - Install required packages using pip:
