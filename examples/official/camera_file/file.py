@@ -58,7 +58,12 @@ if __name__ == '__main__':
                     y3 = location.points[2].y
                     x4 = location.points[3].x
                     y4 = location.points[3].y
-                    del location
+                    print("Location Points:")
+                    print("({}, {})".format(x1, y1))
+                    print("({}, {})".format(x2, y2))
+                    print("({}, {})".format(x3, y3))
+                    print("({}, {})".format(x4, y4))
+                    print("-------------------------------------------------")
 
                     cv2.drawContours(
                         cv_image, [np.intp([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
