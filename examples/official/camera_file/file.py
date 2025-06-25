@@ -44,7 +44,7 @@ if __name__ == '__main__':
                 items = result.get_items()
                 print('Found {} barcodes.'.format(len(items)))
                 for item in items:
-                    format_type = item.get_format()
+                    format_type = item.get_format_string()
                     text = item.get_text()
                     print("Barcode Format:", format_type)
                     print("Barcode Text:", text)
