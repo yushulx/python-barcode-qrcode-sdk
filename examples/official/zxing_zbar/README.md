@@ -10,7 +10,7 @@ This repository compares the barcode recognition performance of three popular li
 
 - Dataset
     
-    The dataset is sourced from this [GitHub issue](https://github.com/openfoodfacts/openfoodfacts-ai/issues/15). You can download it directly from: https://drive.google.com/uc?id=1uThXXH8HiHAw6KlpdgcimBSbrvi0Mksf&export=download
+    The dataset is sourced from this [GitHub issue](https://github.com/openfoodfacts/openfoodfacts-ai/issues/15). You can download it directly from: https://drive.google.com/uc?id=1uThXXH8HiHAw6KlpdgcimBSbrvi0Mksf&export=download. We have cleaned the images to ensure each image file name matches the barcode content.
 
 ## Usage
 1. Obtain a [30-day trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) and update the code with the license key in `app.py`.

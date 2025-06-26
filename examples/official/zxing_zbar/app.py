@@ -72,6 +72,7 @@ def dataset(directory=None, cvr_instance=None):
                 for zbar_result in zbar_results:
                     zbar_text = zbar_result.data.decode("utf-8")
                     r1 = zbar_text
+                    print('r1: {}'.format(zbar_text))
                     if r1 == expected_result:
                         zbar_count += 1
                         break
@@ -92,6 +93,7 @@ def dataset(directory=None, cvr_instance=None):
                 if len(items) > 0:
                     for item in items:
                         r2 = item.get_text()
+                        print('r2: {}'.format(r2))
                         if r2 == expected_result:
                             dbr_count += 1
                             break
@@ -111,6 +113,7 @@ def dataset(directory=None, cvr_instance=None):
                     r3 = result.text
                     if r3 == expected_result:
                         zxing_count += 1
+                        print('r3: {}'.format(r3))
                         break
                     elif 'upca' in str(result.format).lower():
                         if '0' + r3 == expected_result:
