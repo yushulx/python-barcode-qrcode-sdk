@@ -1,0 +1,5 @@
+dynamsoft-capture-vision-bundle
+pyzbar
+zxing-cpp
+openpyxl
+opencv-python
