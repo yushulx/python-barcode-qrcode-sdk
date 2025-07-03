@@ -68,20 +68,12 @@ if __name__ == '__main__':
                                 print(f"{RED}{item.get_text()}{RESET}")
 
                                 location = item.get_location()
-                                x1 = location.points[0].x
-                                y1 = location.points[0].y
-                                x2 = location.points[1].x
-                                y2 = location.points[1].y
-                                x3 = location.points[2].x
-                                y3 = location.points[2].y
-                                x4 = location.points[3].x
-                                y4 = location.points[3].y
+                                points = [(p.x, p.y) for p in location.points]
+                                cv2.drawContours(cv_image, [np.intp(points)], 0, (0, 255, 0), 2)
 
-                                cv2.drawContours(
-                                    cv_image, [np.intp([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
-
-                                cv2.putText(cv_image, item.get_text(), (x1 + 10, y1 + 20),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+                                cv2.putText(cv_image, item.get_text(), (points[0][0] + 10, points[0][1] + 20),
+                        
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
                     
                         cv2.imshow(
                             os.path.basename(image_path), cv_image)
