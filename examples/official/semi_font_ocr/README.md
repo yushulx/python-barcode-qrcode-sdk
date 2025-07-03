@@ -27,6 +27,8 @@ This example demonstrates how to use Dynamsoft Capture Vision SDK to recognize *
     python read_semi_ocr.py
     ```
 
+    ![SEMI font OCR recognition](https://www.dynamsoft.com/codepool/img/2025/07/semi-font-ocr-recognition.png)
+
 ## Support
 
 For model-related issues, please contact [Dynamsoft Support](https://www.dynamsoft.com/company/customer-service/).
