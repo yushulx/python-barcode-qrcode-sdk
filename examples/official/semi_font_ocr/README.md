@@ -2,6 +2,8 @@
 
 This example demonstrates how to use Dynamsoft Capture Vision SDK to recognize **SEMI (Semiconductor Equipment and Materials International)** font markings on silicon wafers. The custom model provided by Dynamsoft is trained for **single-density dot matrix fonts** and supports only **26 uppercase letters and 10 digits**.
 
+https://github.com/user-attachments/assets/703b35dd-9bee-4652-a687-3b5e1d7d64c9
+
 ## Prerequisites
 
 - Python 3.8 or later
