@@ -2,6 +2,8 @@
 
 A modern, feature-rich GUI application for barcode detection and reading using the Dynamsoft Capture Vision SDK. This application provides a comprehensive graphical interface for processing images and PDF files with professional barcode detection capabilities.
 
+https://github.com/user-attachments/assets/49eb03d4-b84c-4d0f-84a7-0751b0599387
+
 ## 🚀 Features
 
 ### Core Functionality
