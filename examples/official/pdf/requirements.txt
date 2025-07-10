@@ -1,0 +1,5 @@
+dynamsoft-capture-vision-bundle
+opencv-python
+Pillow
+tkinterdnd2
+psutil
