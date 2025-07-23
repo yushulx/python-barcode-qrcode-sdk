@@ -118,6 +118,9 @@ class ProcessingWorker(QThread):
 class ImageDisplayWidget(QLabel):
     """Custom widget for displaying and zooming images with barcode annotations."""
     
+    # Define signal for file drop
+    file_dropped = Signal(str)
+    
     def __init__(self):
         super().__init__()
         self.setMinimumSize(400, 300)
@@ -261,18 +264,39 @@ class ImageDisplayWidget(QLabel):
     def dragEnterEvent(self, event: QDragEnterEvent):
         """Handle drag enter events."""
         if event.mimeData().hasUrls():
-            event.acceptProposedAction()
+            # Check if any of the URLs are valid file types
+            urls = event.mimeData().urls()
+            for url in urls:
+                file_path = url.toLocalFile()
+                if file_path:
+                    ext = os.path.splitext(file_path)[1].lower()
+                    if ext in ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.webp', '.pdf']:
+                        event.acceptProposedAction()
+                        # Change border to indicate drop zone is active
+                        self.setStyleSheet("border: 2px dashed #007acc; background-color: #e6f3ff; color: #666; font-size: 14px;")
+                        return
+        event.ignore()
+    
+    def dragLeaveEvent(self, event):
+        """Handle drag leave events."""
+        # Restore normal styling when drag leaves
+        if self.original_image is None:
+            self.setStyleSheet("border: 2px dashed #ccc; background-color: #f9f9f9; color: #666; font-size: 14px;")
+        else:
+            self.setStyleSheet("border: 2px solid #ccc; background-color: white;")
     
     def dropEvent(self, event: QDropEvent):
         """Handle file drop events."""
+        # Restore normal styling
+        if self.original_image is None:
+            self.setStyleSheet("border: 2px dashed #ccc; background-color: #f9f9f9; color: #666; font-size: 14px;")
+        else:
+            self.setStyleSheet("border: 2px solid #ccc; background-color: white;")
+        
         files = [url.toLocalFile() for url in event.mimeData().urls()]
-        if files and hasattr(self.parent(), 'load_file_path'):
-            # Get the main window and call load_file_path
-            main_window = self.parent()
-            while main_window and not hasattr(main_window, 'load_file_path'):
-                main_window = main_window.parent()
-            if main_window:
-                main_window.load_file_path(files[0])
+        if files:
+            # Emit signal with the first dropped file
+            self.file_dropped.emit(files[0])
         event.acceptProposedAction()
 
 class ExportFormatDialog(QDialog):
@@ -329,6 +353,7 @@ class BarcodeReaderMainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Dynamsoft Barcode Reader - PySide6 GUI")
         self.setGeometry(100, 100, 1400, 900)
+        self.setAcceptDrops(True)  # Enable drag-and-drop for main window
         
         # Initialize variables
         self.cvr_instance = None
@@ -550,6 +575,8 @@ class BarcodeReaderMainWindow(QMainWindow):
         
         self.image_widget = ImageDisplayWidget()
         self.image_widget.setMinimumSize(400, 300)
+        # Connect drag-and-drop signal
+        self.image_widget.file_dropped.connect(self.load_file_path)
         scroll_area.setWidget(self.image_widget)
         
         layout.addWidget(scroll_area)
