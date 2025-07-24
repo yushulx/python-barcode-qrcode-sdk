@@ -6,17 +6,10 @@ import threading
 import datetime
 import queue
 import time
-import os
-import queue
-import datetime
-import json
 import cv2
 import numpy as np
 from pathlib import Path
 from typing import Optional, Tuple, Dict, List
-
-import cv2
-import numpy as np
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QPushButton, QLabel, QTextEdit, QScrollArea, QFrame, QSplitter, QGroupBox,
@@ -59,11 +52,11 @@ DETECTION_MODES = {
         "description": "Detect barcodes and QR codes"
     },
     "Document": {
-        "template": EnumPresetTemplate.PT_DETECT_AND_NORMALIZE_DOCUMENT.value,
+        "template": EnumPresetTemplate.PT_DETECT_AND_NORMALIZE_DOCUMENT.value,  # For picture mode
         "description": "Detect and normalize documents"
     },
     "MRZ": {
-        "template": "ReadPassportAndId",
+        "template": "ReadPassportAndId",  # For both picture and camera mode
         "description": "Read passport and ID cards (MRZ)"
     }
 }
@@ -94,7 +87,7 @@ CONTOUR_COLORS = [
     (0, 0, 255),    # Red
     (255, 255, 0),  # Cyan
     (255, 0, 255),  # Magenta
-    (0, 255, 255)   # Yellow
+    (0, 165, 255)   # Orange (more readable than yellow)
 ]
 TEXT_COLOR = (0, 0, 255)     # Red
 CONTOUR_THICKNESS = 2
@@ -523,32 +516,52 @@ class CameraWidget(QWidget):
             try:
                 captured_result = self.result_queue.get_nowait()
                 
-                # Handle different detection modes
-                if self.current_detection_mode == "Barcode":
-                    items = captured_result.get_items()
-                    for item in items:
-                        if item.get_type() == EnumCapturedResultItemType.CRIT_BARCODE:
+                # Get all items from the captured result (like reference files)
+                items = captured_result.get_items()
+                
+                for item in items:
+                    item_type = item.get_type()
+                    
+                    if self.current_detection_mode == "Barcode":
+                        if item_type == EnumCapturedResultItemType.CRIT_BARCODE:
                             detected_items.append(item)
-                
-                elif self.current_detection_mode == "Document":
-                    # Handle document detection results
-                    processed_doc_result = captured_result.get_processed_document_result()
-                    if processed_doc_result:
-                        items = processed_doc_result.get_deskewed_image_result_items()
-                        detected_items.extend(items)
-                
-                elif self.current_detection_mode == "MRZ":
-                    # Handle MRZ detection results
-                    parsed_result = captured_result.get_parsed_result()
-                    if parsed_result:
-                        items = parsed_result.get_items()
-                        detected_items.extend(items)
+                    
+                    elif self.current_detection_mode == "Document":
+                        # Document detection looks for deskewed images (like document_camera.py)
+                        if item_type == EnumCapturedResultItemType.CRIT_DESKEWED_IMAGE:
+                            detected_items.append(item)
+                    
+                    elif self.current_detection_mode == "MRZ":
+                        # MRZ detection looks for text lines and parsed results (like mrz_camera.py)
+                        if item_type in [EnumCapturedResultItemType.CRIT_TEXT_LINE, 
+                                       EnumCapturedResultItemType.CRIT_PARSED_RESULT]:
+                            detected_items.append(item)
                         
             except queue.Empty:
                 break
             except Exception as e:
                 continue
         
+        # Finalize detection results
+        self._finalize_detection_results(detected_items, current_time)
+    
+    def _is_mrz_like_text(self, text):
+        """Check if text looks like MRZ data."""
+        if not text or len(text) < 30:
+            return False
+        
+        # MRZ lines are typically 30, 36, or 44 characters long
+        # and contain mostly uppercase letters, numbers, and '<' symbols
+        text = text.strip()
+        if len(text) not in [30, 36, 44]:
+            return False
+        
+        # Check for MRZ-like patterns
+        uppercase_and_symbols = sum(1 for c in text if c.isupper() or c.isdigit() or c == '<')
+        return uppercase_and_symbols / len(text) > 0.8
+    
+    def _finalize_detection_results(self, detected_items, current_time):
+        """Finalize detection results and update display."""
         # ALWAYS clear previous annotations first to prevent ghosting
         self._current_barcode_items = []
         
@@ -627,63 +640,156 @@ class CameraWidget(QWidget):
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
     
     def _draw_document_item(self, frame, item, index):
-        """Draw document detection annotation."""
+        """Draw document detection annotation (for CRIT_DESKEWED_IMAGE)."""
         try:
-            # For DeskewedImageResultItem, get the source deskew quad
+            # Handle deskewed image items (like document_camera.py)
             if hasattr(item, 'get_source_deskew_quad'):
                 location = item.get_source_deskew_quad()
                 points = [(int(point.x), int(point.y)) for point in location.points]
-            elif hasattr(item, 'get_location'):
-                location = item.get_location()
-                points = [(int(point.x), int(point.y)) for point in location.points]
+                
+                # Use blue color for documents (BGR format)
+                color = (255, 0, 0)  # Blue
+                
+                # Draw document boundary
+                cv2.drawContours(frame, [np.array(points)], 0, color, 2)
+                
+                # Add label
+                if points:
+                    x1, y1 = points[0]
+                    cv2.putText(frame, "Edge Detection", (x1, y1 - 10),
+                               cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
             else:
-                return  # Can't draw without location data
-            
-            # Use blue color for documents
-            color = (255, 0, 0)  # Blue in BGR
-            
-            # Draw document boundary
-            cv2.drawContours(frame, [np.array(points)], 0, color, 3)
-            
-            # Add label
-            if points:
-                x1, y1 = points[0]
-                cv2.putText(frame, f"Document #{index+1}", (x1, y1 - 10),
+                # Fallback: if no specific location, draw a general document indicator
+                h, w = frame.shape[:2]
+                points = [(50, 50), (w-50, 50), (w-50, h-50), (50, h-50)]
+                color = (255, 0, 0)  # Blue
+                cv2.drawContours(frame, [np.array(points)], 0, color, 3)
+                cv2.putText(frame, f"Document #{index+1}", (60, 40),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
         except Exception as e:
             print(f"Debug: Camera document annotation error: {e}")
             pass
     
     def _draw_mrz_item(self, frame, item, index):
-        """Draw MRZ detection annotation."""
-        # MRZ items contain parsed text data
+        """Draw MRZ detection annotation (for CRIT_TEXT_LINE and CRIT_PARSED_RESULT)."""
         try:
-            # Draw a simple rectangle for MRZ detection
             h, w = frame.shape[:2]
+            color = (0, 255, 0)  # Green in BGR
             
-            # MRZ is typically in the bottom portion of documents
-            rect_y = int(h * 0.7)
-            rect_height = int(h * 0.2)
+            # Handle text line items (like mrz_camera.py)
+            if item.get_type() == EnumCapturedResultItemType.CRIT_TEXT_LINE:
+                text = item.get_text()
+                if hasattr(item, 'get_location'):
+                    location = item.get_location()
+                    x1 = int(location.points[0].x)
+                    y1 = int(location.points[0].y)
+                    x2 = int(location.points[1].x)
+                    y2 = int(location.points[1].y)
+                    x3 = int(location.points[2].x)
+                    y3 = int(location.points[2].y)
+                    x4 = int(location.points[3].x)
+                    y4 = int(location.points[3].y)
+                    
+                    # Draw contour around the text
+                    cv2.drawContours(frame, [np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, color, 2)
+                    
+                    # Display text lines
+                    line_results = text.split('\n')
+                    delta = y3 - y1
+                    current_y = y1
+                    for line_result in line_results:
+                        cv2.putText(frame, line_result, (x1, current_y), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+                        current_y += delta
+                else:
+                    # Fallback: display in bottom region
+                    rect_y = int(h * 0.7)
+                    cv2.putText(frame, f"MRZ Text: {text[:50]}...", (20, rect_y),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
             
-            color = (0, 255, 255)  # Yellow in BGR
+            elif item.get_type() == EnumCapturedResultItemType.CRIT_PARSED_RESULT:
+                # Handle parsed MRZ results - just show indicator
+                rect_y = int(h * 0.8)
+                cv2.putText(frame, f"MRZ Parsed #{index+1}", (20, rect_y),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
             
-            # Draw MRZ region rectangle
-            cv2.rectangle(frame, (10, rect_y), (w-10, rect_y + rect_height), color, 3)
-            
-            # Add label
-            cv2.putText(frame, f"MRZ #{index+1}", (20, rect_y - 10),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-        except:
+        except Exception as e:
+            print(f"Debug: Camera MRZ annotation error: {e}")
             pass
     
-    def capture_frame(self):
-        """Capture current frame."""
+    def capture_frame(self, save_to_file=True):
+        """Capture current frame and optionally save it to file.
+        
+        Args:
+            save_to_file (bool): If True, prompts user to save frame to file. 
+                               If False, only emits signal with frame data.
+        """
         if self.current_frame is not None:
             with QMutexLocker(self.frame_mutex):
                 captured_frame = self.current_frame.copy()
             
-            # Emit signal with captured frame
-            self.frame_processed.emit(captured_frame)
+            try:
+                if save_to_file:
+                    # Create filename with timestamp
+                    import datetime
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"camera_capture_{timestamp}.jpg"
+                    
+                    # Let user choose save location
+                    from PySide6.QtWidgets import QFileDialog
+                    file_path, _ = QFileDialog.getSaveFileName(
+                        self,
+                        "Save Captured Frame",
+                        filename,
+                        "JPEG files (*.jpg);;PNG files (*.png);;BMP files (*.bmp);;All files (*.*)"
+                    )
+                    
+                    if file_path:
+                        # Save the frame to file
+                        import cv2
+                        success = cv2.imwrite(file_path, captured_frame)
+                        
+                        if success:
+                            print(f"✅ Frame saved successfully to: {file_path}")
+                            
+                            # Show success message with file info
+                            import os
+                            file_size = os.path.getsize(file_path)
+                            size_text = f"{file_size / 1024:.1f} KB" if file_size < 1024*1024 else f"{file_size / (1024*1024):.1f} MB"
+                            
+                            from PySide6.QtWidgets import QMessageBox
+                            QMessageBox.information(
+                                self, 
+                                "Frame Captured", 
+                                f"📸 Frame saved successfully!\n\n"
+                                f"📁 Location: {os.path.basename(file_path)}\n"
+                                f"📏 Size: {size_text}\n"
+                                f"🕐 Timestamp: {timestamp}\n\n"
+                                f"Full path: {file_path}"
+                            )
+                        else:
+                            print(f"❌ Failed to save frame to: {file_path}")
+                            from PySide6.QtWidgets import QMessageBox
+                            QMessageBox.warning(
+                                self, 
+                                "Save Error", 
+                                f"Failed to save frame to:\n{file_path}\n\nPlease check file permissions and disk space."
+                            )
+                    else:
+                        # User cancelled - still emit signal for in-memory processing
+                        print("📸 Frame capture cancelled by user")
+                
+                # Always emit signal for any other processing (like switching to picture mode)
+                self.frame_processed.emit(captured_frame)
+                        
+            except Exception as e:
+                print(f"❌ Error capturing frame: {e}")
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.critical(
+                    self, 
+                    "Capture Error", 
+                    f"Error capturing frame: {e}"
+                )
     
     def cleanup(self):
         """Cleanup camera resources."""
@@ -788,7 +894,7 @@ class ImageDisplayWidget(QLabel):
         self.current_pixmap = None
         self.zoom_factor = 1.0
         self.show_annotations = True
-        self.barcode_items = []
+        self.detection_items = []  # Store all detection items (barcodes, documents, MRZ)
         
         # Display placeholder
         self.show_placeholder()
@@ -798,14 +904,14 @@ class ImageDisplayWidget(QLabel):
         self.setText("🖼️ Drag and drop files here\n\n📁 Supported formats:\n• Images: JPG, PNG, BMP, TIFF, WEBP\n• PDF files (native support)\n\n🖱️ Or click 'Load File' button")
         self.setStyleSheet("border: 2px dashed #ccc; background-color: #f9f9f9; color: #666; font-size: 14px;")
     
-    def set_image(self, cv_image, barcode_items=None):
-        """Set the image to display with optional barcode annotations."""
+    def set_image(self, cv_image, detection_items=None):
+        """Set the image to display with optional detection annotations."""
         if cv_image is None:
             self.show_placeholder()
             return
         
         self.original_image = cv_image.copy()
-        self.barcode_items = barcode_items if barcode_items else []
+        self.detection_items = detection_items if detection_items else []
         self.update_display()
     
     def update_display(self):
@@ -815,8 +921,8 @@ class ImageDisplayWidget(QLabel):
         
         # Create annotated image if needed
         display_image = self.original_image.copy()
-        if self.show_annotations and self.barcode_items:
-            display_image = self.draw_detection_annotations(display_image, self.barcode_items)
+        if self.show_annotations and self.detection_items:
+            display_image = self.draw_detection_annotations(display_image, self.detection_items)
         
         # Convert to QPixmap
         height, width, channel = display_image.shape
@@ -868,13 +974,20 @@ class ImageDisplayWidget(QLabel):
         for i, item in enumerate(items):
             try:
                 # Check item type and handle accordingly
-                if hasattr(item, 'get_text'):  # Barcode item
-                    self._draw_barcode_annotation(annotated_image, item, font_scale, thickness)
-                elif hasattr(item, 'get_source_deskew_quad') or (hasattr(item, 'get_location') and not hasattr(item, 'get_text')):  # Document item
+                if hasattr(item, 'get_text') and hasattr(item, 'get_location'):  
+                    # This could be either a barcode item OR a TextLineResultItem (MRZ text line)
+                    # Check if it's a barcode by trying to get barcode-specific attributes
+                    if hasattr(item, 'get_format'):  # Barcode items have get_format()
+                        self._draw_barcode_annotation(annotated_image, item, font_scale, thickness)
+                    else:
+                        # This is a TextLineResultItem (MRZ text line) with location
+                        self._draw_mrz_annotation(annotated_image, item, i, font_scale, thickness)
+                elif hasattr(item, 'get_source_deskew_quad') or (hasattr(item, 'get_location') and not hasattr(item, 'get_text')):  
+                    # Document item
                     self._draw_document_annotation(annotated_image, item, i, font_scale, thickness)
-                elif hasattr(item, 'get_code_type'):  # MRZ/ParsedResultItem
-                    self._draw_mrz_annotation(annotated_image, item, i, font_scale, thickness)
+                # Skip ParsedResultItem objects (no location data) - they are for results display only
             except Exception as e:
+                print(f"Debug: Picture mode annotation error for item {i}: {e}")
                 continue  # Skip problematic items
         
         return annotated_image
@@ -976,28 +1089,60 @@ class ImageDisplayWidget(QLabel):
             pass
     
     def _draw_mrz_annotation(self, annotated_image, item, index, font_scale, thickness):
-        """Draw MRZ annotation."""
+        """Draw MRZ annotation for picture mode."""
         try:
-            # For MRZ, draw a simple rectangle as MRZ items don't have location points
-            h, w = annotated_image.shape[:2]
+            # Get the actual location of the MRZ item (just like in mrz_file.py)
+            location = item.get_location()
+            points = [(int(point.x), int(point.y)) for point in location.points]
             
-            # MRZ is typically in the bottom portion of documents
-            rect_y = int(h * 0.7)
-            rect_height = int(h * 0.2)
+            # Try to get text content from MRZ item
+            mrz_text = ""
+            if hasattr(item, 'get_text'):
+                mrz_text = item.get_text()
+            elif hasattr(item, 'get_parsed_field_value'):
+                # Try to get some meaningful field from parsed result
+                try:
+                    mrz_text = item.get_parsed_field_value("MRZ_TEXT") or "MRZ Data"
+                except:
+                    mrz_text = "MRZ Detected"
+            else:
+                mrz_text = "MRZ Item"
             
-            color = (0, 255, 255)  # Yellow in BGR
+            color = (0, 165, 255)  # Orange in BGR - much more readable than yellow
             
-            # Draw MRZ region rectangle
-            cv2.rectangle(annotated_image, (10, rect_y), (w-10, rect_y + rect_height), color, thickness + 1)
+            # Draw the actual MRZ region contour using real coordinates
+            cv2.drawContours(annotated_image, [np.array(points)], 0, color, thickness + 1)
             
-            # Add label
+            # Add label with MRZ info
             label = f"MRZ #{index+1}"
-            cv2.putText(annotated_image, label, (20, rect_y - 10),
-                       cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
-        except:
+            if mrz_text and mrz_text != "MRZ Item":
+                # Show first few characters of MRZ text
+                preview = mrz_text[:20] + "..." if len(mrz_text) > 20 else mrz_text
+                label += f": {preview}"
+            
+            # Use the first point for text positioning
+            if points:
+                x1, y1 = points[0]
+                
+                # Draw background for text
+                (text_width, text_height), baseline = cv2.getTextSize(
+                    label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness
+                )
+                
+                cv2.rectangle(annotated_image, 
+                             (x1 - 2, y1 - text_height - TEXT_OFFSET_Y - 2),
+                             (x1 + text_width + 2, y1 - TEXT_OFFSET_Y + baseline + 2),
+                             (255, 255, 255), -1)
+                cv2.rectangle(annotated_image, 
+                             (x1 - 2, y1 - text_height - TEXT_OFFSET_Y - 2),
+                             (x1 + text_width + 2, y1 - TEXT_OFFSET_Y + baseline + 2),
+                             color, 1)
+                
+                cv2.putText(annotated_image, label, (x1, y1 - TEXT_OFFSET_Y),
+                           cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
+        except Exception as e:
+            print(f"Debug: MRZ annotation error: {e}")
             pass
-        
-        return annotated_image
     
     def set_zoom(self, zoom_factor):
         """Set zoom factor and update display."""
@@ -1009,7 +1154,7 @@ class ImageDisplayWidget(QLabel):
             self.resize(self.current_pixmap.size())
     
     def toggle_annotations(self, show):
-        """Toggle barcode annotations on/off."""
+        """Toggle detection annotations on/off for all detection types."""
         self.show_annotations = show
         self.update_display()
     
@@ -1388,7 +1533,7 @@ class BarcodeReaderMainWindow(QMainWindow):
         actions_group = QGroupBox("⚡ Actions")
         actions_layout = QVBoxLayout(actions_group)
         
-        self.camera_capture_btn = QPushButton("📸 Capture Current Frame")
+        self.camera_capture_btn = QPushButton("📸 Capture & Save Frame")
         self.camera_capture_btn.clicked.connect(self.capture_camera_frame)
         actions_layout.addWidget(self.camera_capture_btn)
         
@@ -1834,31 +1979,36 @@ class BarcodeReaderMainWindow(QMainWindow):
                 
                 elif mode_name == "MRZ":
                     # Handle MRZ detection with parsed data
-                    from utils import MRZResult
-                    mrz_result = MRZResult(item)
-                    
-                    detection_data.update({
-                        'type': 'MRZ',
-                        'doc_type': mrz_result.doc_type,
-                        'doc_id': mrz_result.doc_id,
-                        'surname': mrz_result.surname,
-                        'given_name': mrz_result.given_name,
-                        'nationality': mrz_result.nationality,
-                        'issuer': mrz_result.issuer,
-                        'gender': mrz_result.gender,
-                        'date_of_birth': mrz_result.date_of_birth,
-                        'date_of_expiry': mrz_result.date_of_expiry,
-                        'raw_text': mrz_result.raw_text
-                    })
-                    
-                    # Check for new MRZ detection based on document ID
-                    is_new = True
-                    for existing in self.camera_history:
-                        if (existing.get('doc_id') == mrz_result.doc_id and 
-                            existing.get('mode') == 'MRZ' and
-                            (current_time - existing['timestamp']).total_seconds() < 5):  # 5 seconds for MRZ
-                            is_new = False
-                            break
+                    # Only process ParsedResultItem objects (these have MRZ data and get_code_type method)
+                    if hasattr(item, 'get_code_type'):
+                        from utils import MRZResult
+                        mrz_result = MRZResult(item)
+                        
+                        detection_data.update({
+                            'type': 'MRZ',
+                            'doc_type': mrz_result.doc_type,
+                            'doc_id': mrz_result.doc_id,
+                            'surname': mrz_result.surname,
+                            'given_name': mrz_result.given_name,
+                            'nationality': mrz_result.nationality,
+                            'issuer': mrz_result.issuer,
+                            'gender': mrz_result.gender,
+                            'date_of_birth': mrz_result.date_of_birth,
+                            'date_of_expiry': mrz_result.date_of_expiry,
+                            'raw_text': mrz_result.raw_text
+                        })
+                        
+                        # Check for new MRZ detection based on document ID
+                        is_new = True
+                        for existing in self.camera_history:
+                            if (existing.get('doc_id') == mrz_result.doc_id and 
+                                existing.get('mode') == 'MRZ' and
+                                (current_time - existing['timestamp']).total_seconds() < 5):  # 5 seconds for MRZ
+                                is_new = False
+                                break
+                    else:
+                        # Skip TextLineResultItem objects in camera mode for MRZ data processing
+                        continue
                 
                 if is_new:
                     self.camera_history.append(detection_data)
@@ -2324,10 +2474,22 @@ class BarcodeReaderMainWindow(QMainWindow):
                         if processed_doc_result:
                             items = processed_doc_result.get_deskewed_image_result_items()
                     elif mode_name == "MRZ":
-                        # Handle MRZ detection results
+                        # Handle MRZ detection results - collect BOTH types of items
+                        items = []
+                        
+                        # First, get text line results for location data (annotations)
+                        line_result = result.get_recognized_text_lines_result()
+                        if line_result:
+                            line_items = line_result.get_items()
+                            items.extend(line_items)  # These have get_location() method
+                        
+                        # Then, get parsed results for MRZ data (results display)
                         parsed_result = result.get_parsed_result()
                         if parsed_result:
-                            items = parsed_result.get_items()
+                            parsed_items = parsed_result.get_items()
+                            items.extend(parsed_items)  # These have get_code_type() method
+                        
+                        # Note: items list now contains both TextLineResultItem and ParsedResultItem objects
                     
                     # Map page index to hash_id and store results
                     page_index = i
@@ -2576,8 +2738,13 @@ class BarcodeReaderMainWindow(QMainWindow):
         current_mode_text = self.picture_detection_mode_combo.currentText()
         mode_name = current_mode_text.split(" - ")[0]
         
-        # Update page summary
-        self.page_summary.setText(f"Page {self.current_page_index + 1}: {len(items)} {mode_name.lower()}(s)")
+        # Update page summary with correct count
+        if mode_name == "MRZ":
+            # For MRZ, count only ParsedResultItem objects (the ones with actual MRZ data)
+            relevant_items = [item for item in items if hasattr(item, 'get_code_type')]
+            self.page_summary.setText(f"Page {self.current_page_index + 1}: {len(relevant_items)} {mode_name.lower()}(s)")
+        else:
+            self.page_summary.setText(f"Page {self.current_page_index + 1}: {len(items)} {mode_name.lower()}(s)")
         
         # Format results with HTML based on detection mode
         html_content = f'<h3 style="color: #1E3A8A; background-color: #F0F8FF;">📄 PAGE {self.current_page_index + 1} RESULTS</h3>'
@@ -2655,8 +2822,14 @@ class BarcodeReaderMainWindow(QMainWindow):
         """Format MRZ detection results."""
         from utils import MRZResult
         
+        # Filter to only process ParsedResultItem objects (these have MRZ data)
+        parsed_items = [item for item in items if hasattr(item, 'get_code_type')]
+        
+        if not parsed_items:
+            return '<p style="color: #666;">No parsed MRZ data available for display.</p>'
+        
         html_content = ""
-        for i, item in enumerate(items, 1):
+        for i, item in enumerate(parsed_items, 1):
             html_content += f'<div style="margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #ffcc00;">'
             html_content += f'<h4 style="color: #DC2626; margin: 0;">🆔 MRZ #{i:02d}</h4>'
             
