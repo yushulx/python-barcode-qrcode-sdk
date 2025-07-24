@@ -7,6 +7,8 @@ A comprehensive PySide6-based desktop application for real-time and file-based d
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.x-red.svg)
 ![Dynamsoft](https://img.shields.io/badge/Dynamsoft-SDK-orange.svg)
 
+<img width="1590" height="1024" alt="Dynamsoft Capture Vision for barcode, mrz and document detection" src="https://github.com/user-attachments/assets/eddc931c-8313-4161-8364-e24507fe04c1" />
+
 ## 🌟 Features
 
 ### 📁 **Picture Mode**
