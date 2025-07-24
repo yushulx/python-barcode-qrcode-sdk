@@ -56,6 +56,8 @@ Install the Dynamsoft Capture Vision SDK:
 pip install dynamsoft-capture-vision-bundle
 ```
 
+**📝 Note**: The application includes a default trial license. For extended use, get a free 30-day trial license through **Settings** → **Enter License Key...** → **Get 30-Day Trial License**.
+
 ### Additional Dependencies
 ```bash
 pip install psutil  # Optional: for memory monitoring
@@ -136,3 +138,28 @@ python main.py
 - **USB Cameras**: Standard UVC-compatible cameras
 - **Built-in Cameras**: Laptop/tablet integrated cameras
 - **Network Cameras**: IP cameras (with proper drivers)
+
+## 🔧 Configuration
+
+### License Management
+The application includes a built-in license management system:
+
+#### Default License
+- The application comes with a default trial license
+- This license may expire and require renewal
+
+#### Updating License Key
+1. Go to **Settings** → **Enter License Key...**
+2. **For new users**: Click **"🌐 Get 30-Day Trial License"** to open the Dynamsoft trial page
+3. **For existing users**: Enter your valid Dynamsoft license key
+4. Click **"Apply License"** to validate and apply
+5. The license is tested before activation
+6. Success confirmation will be shown
+
+#### Getting a Trial License
+- [**Free 30-Day Trial**](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform): Click the trial license button in the license dialog
+- **Automatic Browser**: Opens the Dynamsoft trial page automatically
+- **Quick Setup**: Fill out the form and receive license via email
+- **Instant Activation**: Copy and paste the license key to activate immediately
+
+

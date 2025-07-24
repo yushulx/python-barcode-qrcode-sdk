@@ -22,14 +22,14 @@ from PySide6.QtWidgets import (
     QPushButton, QLabel, QTextEdit, QScrollArea, QFrame, QSplitter, QGroupBox,
     QComboBox, QCheckBox, QSpinBox, QProgressBar, QStatusBar, QFileDialog,
     QMessageBox, QDialog, QRadioButton, QButtonGroup, QDialogButtonBox,
-    QTabWidget, QSlider, QLineEdit
+    QTabWidget, QSlider, QLineEdit, QInputDialog
 )
 from PySide6.QtCore import (
-    Qt, QThread, Signal, QTimer, QSize, QRect, QPoint, QMutex, QMutexLocker
+    Qt, QThread, Signal, QTimer, QSize, QRect, QPoint, QMutex, QMutexLocker, QUrl
 )
 from PySide6.QtGui import (
     QPixmap, QImage, QPainter, QPen, QBrush, QColor, QFont, QAction, 
-    QDragEnterEvent, QDropEvent, QClipboard, QIcon
+    QDragEnterEvent, QDropEvent, QClipboard, QIcon, QDesktopServices
 )
 from PySide6.QtMultimedia import QCamera, QMediaDevices
 from PySide6.QtMultimediaWidgets import QVideoWidget
@@ -1098,6 +1098,112 @@ class ExportFormatDialog(QDialog):
         """Get the selected format index."""
         return self.selected_format
 
+class LicenseDialog(QDialog):
+    """Custom dialog for license key entry with trial license option."""
+    
+    def __init__(self, current_license_key, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("License Management")
+        self.setFixedSize(500, 300)
+        self.license_key = ""
+        self.result_type = None  # 'license', 'trial', or None
+        
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("🔑 Dynamsoft License Management")
+        title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+        
+        # Current license info
+        current_key_display = current_license_key[:20] + "..." if len(current_license_key) > 20 else current_license_key
+        current_info = QLabel(f"Current license: {current_key_display}")
+        current_info.setStyleSheet("color: gray; font-size: 10px; padding: 10px;")
+        layout.addWidget(current_info)
+        
+        # License key input
+        input_group = QGroupBox("Enter New License Key")
+        input_layout = QVBoxLayout(input_group)
+        
+        self.license_input = QLineEdit()
+        self.license_input.setPlaceholderText("Paste your Dynamsoft license key here...")
+        input_layout.addWidget(self.license_input)
+        
+        layout.addWidget(input_group)
+        
+        # Trial license section
+        trial_group = QGroupBox("Need a License?")
+        trial_layout = QVBoxLayout(trial_group)
+        
+        trial_info = QLabel("Get a 30-day free trial license from Dynamsoft:")
+        trial_layout.addWidget(trial_info)
+        
+        self.trial_button = QPushButton("🌐 Get 30-Day Trial License")
+        self.trial_button.setStyleSheet("""
+            QPushButton {
+                background-color: #007acc;
+                color: white;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #005a9e;
+            }
+        """)
+        self.trial_button.clicked.connect(self.open_trial_page)
+        trial_layout.addWidget(self.trial_button)
+        
+        layout.addWidget(trial_group)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        
+        self.apply_button = QPushButton("Apply License")
+        self.apply_button.setDefault(True)
+        self.apply_button.clicked.connect(self.apply_license)
+        
+        cancel_button = QPushButton("Cancel")
+        cancel_button.clicked.connect(self.reject)
+        
+        button_layout.addWidget(cancel_button)
+        button_layout.addWidget(self.apply_button)
+        
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
+    
+    def open_trial_page(self):
+        """Open the trial license page in the default browser."""
+        trial_url = "https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform"
+        QDesktopServices.openUrl(QUrl(trial_url))
+        
+        # Show info message
+        QMessageBox.information(
+            self,
+            "Trial License",
+            "🌐 The trial license page has been opened in your browser.\n\n"
+            "Steps to get your trial license:\n"
+            "1. Fill out the form on the opened page\n"
+            "2. Submit to receive your license key via email\n"
+            "3. Copy the license key and paste it here\n"
+            "4. Click 'Apply License' to activate"
+        )
+    
+    def apply_license(self):
+        """Apply the entered license key."""
+        self.license_key = self.license_input.text().strip()
+        if self.license_key:
+            self.result_type = 'license'
+            self.accept()
+        else:
+            QMessageBox.warning(self, "Missing License", "Please enter a license key.")
+    
+    def get_license_key(self):
+        """Get the entered license key."""
+        return self.license_key
+
 class BarcodeReaderMainWindow(QMainWindow):
     """Main window for the PySide6 barcode reader application with camera support."""
     
@@ -1599,6 +1705,13 @@ class BarcodeReaderMainWindow(QMainWindow):
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
+        
+        # Settings menu
+        settings_menu = menubar.addMenu("Settings")
+        
+        license_action = QAction("Enter License Key...", self)
+        license_action.triggered.connect(self.enter_license_key)
+        settings_menu.addAction(license_action)
         
         # View menu
         view_menu = menubar.addMenu("View")
@@ -2923,6 +3036,78 @@ class BarcodeReaderMainWindow(QMainWindow):
                          "• Export capabilities (TXT, CSV, JSON)\n"
                          "• Professional user interface\n\n"
                          "Supports both file-based and live camera scanning.")
+    
+    def enter_license_key(self):
+        """Show dialog to enter a new license key."""
+        global LICENSE_KEY, _LICENSE_INITIALIZED
+        
+        # Show custom license dialog
+        dialog = LicenseDialog(LICENSE_KEY, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            license_key = dialog.get_license_key()
+            
+            if license_key:
+                # Show confirmation dialog
+                reply = QMessageBox.question(
+                    self, 
+                    "Update License", 
+                    f"Update license key to:\n{license_key[:20]}...\n\nThe license will be tested and applied.\n\nContinue?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
+                
+                if reply == QMessageBox.StandardButton.Yes:
+                    try:
+                        # Test the new license
+                        test_error_code, test_error_message = LicenseManager.init_license(license_key)
+                        
+                        if test_error_code == EnumErrorCode.EC_OK or test_error_code == EnumErrorCode.EC_LICENSE_CACHE_USED:
+                            # License is valid, update the global LICENSE_KEY
+                            LICENSE_KEY = license_key
+                            
+                            # Reinitialize the license system
+                            _LICENSE_INITIALIZED = False
+                            
+                            if initialize_license_once():
+                                # Reinitialize the CVR instance
+                                if self.cvr_instance:
+                                    self.cvr_instance = None
+                                
+                                self.cvr_instance = CaptureVisionRouter()
+                                intermediate_result_manager = self.cvr_instance.get_intermediate_result_manager()
+                                self.custom_receiver = MyIntermediateResultReceiver(intermediate_result_manager)
+                                intermediate_result_manager.add_result_receiver(self.custom_receiver)
+                                
+                                # Update camera widget if it exists
+                                if hasattr(self, 'camera_widget'):
+                                    self.camera_widget.initialize_dynamsoft_camera(self.cvr_instance)
+                                
+                                QMessageBox.information(
+                                    self, 
+                                    "License Updated", 
+                                    "✅ License key updated successfully!\n\nThe new license is now active."
+                                )
+                                
+                                self.log_message("✅ License key updated successfully")
+                            else:
+                                QMessageBox.critical(
+                                    self, 
+                                    "License Error", 
+                                    "❌ Failed to reinitialize with new license key.\n\nPlease restart the application."
+                                )
+                        else:
+                            QMessageBox.critical(
+                                self, 
+                                "Invalid License", 
+                                f"❌ License validation failed:\n\nError Code: {test_error_code}\nError Message: {test_error_message}\n\nPlease check your license key and try again."
+                            )
+                            
+                    except Exception as e:
+                        QMessageBox.critical(
+                            self, 
+                            "License Error", 
+                            f"❌ Error updating license:\n\n{str(e)}\n\nPlease try again or restart the application."
+                        )
 
 def main():
     """Main application entry point."""
