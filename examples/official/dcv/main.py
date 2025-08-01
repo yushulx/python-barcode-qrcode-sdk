@@ -286,9 +286,12 @@ class CameraWidget(QWidget):
     frame_processed = Signal(object)  # Processed frame with annotations
     error_occurred = Signal(str)     # Error message
     
-    def __init__(self):
+    def __init__(self, main_window=None):
         super().__init__()
         self.setMinimumSize(640, 480)
+        
+        # Reference to main window for directory tracking
+        self.main_window = main_window
         
         # Camera variables
         self.camera = None
@@ -858,14 +861,25 @@ class CameraWidget(QWidget):
                     
                     # Let user choose save location
                     from PySide6.QtWidgets import QFileDialog
+                    import os
+                    
+                    # Get initial directory from main window if available
+                    initial_dir = filename
+                    if self.main_window and hasattr(self.main_window, 'get_last_used_directory'):
+                        initial_dir = os.path.join(self.main_window.get_last_used_directory(), filename)
+                    
                     file_path, _ = QFileDialog.getSaveFileName(
                         self,
                         "Save Captured Frame",
-                        filename,
+                        initial_dir,
                         "JPEG files (*.jpg);;PNG files (*.png);;BMP files (*.bmp);;All files (*.*)"
                     )
                     
                     if file_path:
+                        # Update directory tracking in main window
+                        if self.main_window and hasattr(self.main_window, 'update_last_used_directory'):
+                            self.main_window.update_last_used_directory(file_path)
+                        
                         # Save the frame to file
                         import cv2
                         success = cv2.imwrite(file_path, captured_frame)
@@ -1488,6 +1502,9 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.current_page_index = 0
         self.page_results = {}  # Store detection results for each page
         self.is_processing = False
+        
+        # Directory tracking for file dialogs
+        self.last_used_directory = ""  # Track last used directory for file dialogs
         self.process_start_time = None
         self.current_detection_mode = "Barcode"  # Default detection mode
         
@@ -1508,6 +1525,17 @@ class BarcodeReaderMainWindow(QMainWindow):
         
         # Initialize Dynamsoft
         self.initialize_license()
+    
+    def update_last_used_directory(self, file_path):
+        """Update the last used directory from a file path."""
+        import os
+        if file_path:
+            self.last_used_directory = os.path.dirname(file_path)
+    
+    def get_last_used_directory(self):
+        """Get the last used directory, or current directory if none."""
+        import os
+        return self.last_used_directory if self.last_used_directory else os.getcwd()
     
     def setup_ui(self):
         """Setup the main user interface with tabbed layout."""
@@ -1572,7 +1600,7 @@ class BarcodeReaderMainWindow(QMainWindow):
         splitter.addWidget(self.camera_control_panel)
         
         # Camera display (center)
-        self.camera_widget = CameraWidget()
+        self.camera_widget = CameraWidget(self)
         
         # Set initial detection mode from combo box
         initial_mode = list(DETECTION_MODES.keys())[0]  # Default to first mode (Barcode)
@@ -2273,11 +2301,12 @@ class BarcodeReaderMainWindow(QMainWindow):
             file_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Export Camera Results",
-                f"camera_detections{ext}",
+                os.path.join(self.get_last_used_directory(), f"camera_detections{ext}"),
                 f"{format_name} files (*{ext});;All files (*.*)"
             )
             
             if file_path:
+                self.update_last_used_directory(file_path)
                 if ext == ".txt":
                     self.export_camera_to_text(file_path)
                 elif ext == ".csv":
@@ -2515,11 +2544,12 @@ class BarcodeReaderMainWindow(QMainWindow):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             "Select Image or PDF file",
-            "",
+            self.get_last_used_directory(),
             file_types
         )
         
         if file_path:
+            self.update_last_used_directory(file_path)
             self.load_file_path(file_path)
     
     def load_file_path(self, file_path):
@@ -2948,11 +2978,12 @@ class BarcodeReaderMainWindow(QMainWindow):
             file_path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Save Normalized Document",
-                default_name,
+                os.path.join(self.get_last_used_directory(), default_name),
                 "JPEG files (*.jpg);;PNG files (*.png);;BMP files (*.bmp);;TIFF files (*.tiff);;All files (*.*)"
             )
             
             if file_path:
+                self.update_last_used_directory(file_path)
                 # Save the image
                 success = cv2.imwrite(file_path, normalized_image)
                 if success:
@@ -3028,13 +3059,14 @@ class BarcodeReaderMainWindow(QMainWindow):
             directory = QFileDialog.getExistingDirectory(
                 self,
                 "Select Directory to Save Face Crops",
-                "",
+                self.get_last_used_directory(),
                 QFileDialog.Option.ShowDirsOnly
             )
             
             if not directory:
                 return
             
+            self.update_last_used_directory(directory)
             saved_count = 0
             
             # Generate base filename
@@ -3372,11 +3404,12 @@ class BarcodeReaderMainWindow(QMainWindow):
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Export Results",
-            f"barcode_results{ext}",
+            os.path.join(self.get_last_used_directory(), f"barcode_results{ext}"),
             f"{format_name} files (*{ext});;All files (*.*)"
         )
         
         if file_path:
+            self.update_last_used_directory(file_path)
             try:
                 if ext == ".txt":
                     self.export_to_text(file_path)
@@ -3606,48 +3639,39 @@ class BarcodeReaderMainWindow(QMainWindow):
                 
                 if reply == QMessageBox.StandardButton.Yes:
                     try:
-                        # Test the new license
-                        test_error_code, test_error_message = LicenseManager.init_license(license_key)
+                        # Update the global LICENSE_KEY
+                        LICENSE_KEY = license_key
                         
-                        if test_error_code == EnumErrorCode.EC_OK or test_error_code == EnumErrorCode.EC_LICENSE_CACHE_USED:
-                            # License is valid, update the global LICENSE_KEY
-                            LICENSE_KEY = license_key
+                        # Reinitialize the license system
+                        _LICENSE_INITIALIZED = False
+                        
+                        # Test and initialize with the new license
+                        if initialize_license_once():
+                            # Reinitialize the CVR instance
+                            if self.cvr_instance:
+                                self.cvr_instance = None
                             
-                            # Reinitialize the license system
-                            _LICENSE_INITIALIZED = False
+                            self.cvr_instance = CaptureVisionRouter()
+                            intermediate_result_manager = self.cvr_instance.get_intermediate_result_manager()
+                            self.custom_receiver = MyIntermediateResultReceiver(intermediate_result_manager)
+                            intermediate_result_manager.add_result_receiver(self.custom_receiver)
                             
-                            if initialize_license_once():
-                                # Reinitialize the CVR instance
-                                if self.cvr_instance:
-                                    self.cvr_instance = None
+                            # Update camera widget if it exists
+                            if hasattr(self, 'camera_widget'):
+                                self.camera_widget.initialize_dynamsoft_camera(self.cvr_instance)
                                 
-                                self.cvr_instance = CaptureVisionRouter()
-                                intermediate_result_manager = self.cvr_instance.get_intermediate_result_manager()
-                                self.custom_receiver = MyIntermediateResultReceiver(intermediate_result_manager)
-                                intermediate_result_manager.add_result_receiver(self.custom_receiver)
-                                
-                                # Update camera widget if it exists
-                                if hasattr(self, 'camera_widget'):
-                                    self.camera_widget.initialize_dynamsoft_camera(self.cvr_instance)
-                                
-                                QMessageBox.information(
-                                    self, 
-                                    "License Updated", 
-                                    "✅ License key updated successfully!\n\nThe new license is now active."
-                                )
-                                
-                                self.log_message("✅ License key updated successfully")
-                            else:
-                                QMessageBox.critical(
-                                    self, 
-                                    "License Error", 
-                                    "❌ Failed to reinitialize with new license key.\n\nPlease restart the application."
-                                )
+                            QMessageBox.information(
+                                self, 
+                                "License Updated", 
+                                "✅ License key updated successfully!\n\nThe new license is now active."
+                            )
+                            
+                            self.log_message("✅ License key updated successfully")
                         else:
                             QMessageBox.critical(
                                 self, 
-                                "Invalid License", 
-                                f"❌ License validation failed:\n\nError Code: {test_error_code}\nError Message: {test_error_message}\n\nPlease check your license key and try again."
+                                "License Error", 
+                                "❌ Failed to initialize with new license key.\n\nPlease check your license key and try again."
                             )
                             
                     except Exception as e:
@@ -3659,11 +3683,6 @@ class BarcodeReaderMainWindow(QMainWindow):
 
 def main():
     """Main application entry point."""
-    # Initialize license ONCE at startup before creating any UI
-    print("🔑 Initializing Dynamsoft license...")
-    if not initialize_license_once():
-        print("❌ Failed to initialize license. Exiting.")
-        sys.exit(1)
     
     app = QApplication(sys.argv)
     
