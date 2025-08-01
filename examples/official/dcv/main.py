@@ -170,12 +170,7 @@ class CameraWidget(QWidget):
         self.current_frame = None
         self.annotated_frame = None
         self.frame_mutex = QMutex()
-        self.detection_enabled = True
-        self._current_barcode_items = []  # Store current detection results for live overlay
-        
-        import time
-        self._last_detection_time = time.time()  # Initialize with current time to prevent issues
-        
+        self.detection_enabled = True   
         # Detection mode
         self.current_detection_mode = "Barcode"  # Default to barcode detection
         
@@ -186,9 +181,6 @@ class CameraWidget(QWidget):
         self.frame_timer = QTimer()
         self.frame_timer.timeout.connect(self.update_frame)
         
-        # Timer for processing results
-        self.result_timer = QTimer()
-        self.result_timer.timeout.connect(self.process_detection_results)
         
         # Initialize available cameras
         self.update_camera_list()
@@ -356,7 +348,6 @@ class CameraWidget(QWidget):
             
             # Start timers
             self.frame_timer.start(33)  # ~30 FPS
-            self.result_timer.start(100)  # Check results every 100ms
             
         except Exception as e:
             self.error_occurred.emit(f"Error in camera background startup: {e}")
@@ -375,7 +366,6 @@ class CameraWidget(QWidget):
         try:
             self.camera_running = False
             self.frame_timer.stop()
-            self.result_timer.stop()
             
             if self.opencv_capture:
                 self.opencv_capture.release()
@@ -383,7 +373,6 @@ class CameraWidget(QWidget):
             
             # Clear all annotation data to prevent overlay issues
             self.annotated_frame = None
-            self._current_barcode_items = []
             
             self.start_stop_btn.setText("📷 Start Camera")
             self.capture_btn.setEnabled(False)
@@ -432,11 +421,15 @@ class CameraWidget(QWidget):
         """Toggle real-time barcode detection."""
         self.detection_enabled = enabled
         if not enabled:
-            # Clear annotations immediately when detection is disabled
-            self._current_barcode_items = []
+            # Clear the result queue when detection is disabled to prevent stale overlays
+            try:
+                while not self.result_queue.empty():
+                    self.result_queue.get_nowait()
+            except:
+                pass
     
     def update_frame(self):
-        """Update camera frame display with proper synchronization."""
+        """Update camera frame display with real-time results fetching."""
         if not self.camera_running or not self.opencv_capture:
             return
         
@@ -460,24 +453,16 @@ class CameraWidget(QWidget):
             # Always start with a fresh frame copy
             display_frame = frame.copy()
             
-            # Only add annotations if we have VERY recent detections to prevent ghosting
-            if (self.detection_enabled and 
-                hasattr(self, '_current_barcode_items') and 
-                self._current_barcode_items and
-                hasattr(self, '_last_detection_time')):
-                
-                import time
-                current_time = time.time()
-                
-                # Only show annotations if they're very recent (less than 0.3 seconds old)
-                if current_time - self._last_detection_time < 0.3:
+            # Fetch latest results directly from queue for overlay drawing
+            if self.detection_enabled:
+                latest_items = self._get_latest_detection_results()
+                if latest_items:
                     try:
-                        display_frame = self.draw_detection_annotations(display_frame, self._current_barcode_items)
+                        display_frame = self.draw_detection_annotations(display_frame, latest_items)
+                        # Emit signal with detected items for results panel
+                        self.barcodes_detected.emit(latest_items)
                     except Exception as e:
                         pass  # Fall back to clean frame if annotation fails
-                else:
-                    # Clear old annotations if they're stale
-                    self._current_barcode_items = []
             
             # Convert to Qt format and display
             rgb_frame = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
@@ -499,24 +484,26 @@ class CameraWidget(QWidget):
         except Exception as e:
             pass  # Silently ignore frame update errors
     
-    def process_detection_results(self):
-        """Process detection results and update live annotations."""
+    def _get_latest_detection_results(self):
+        """Get the latest detection results directly from the queue.
+        
+        Returns:
+            list: Latest detection items, or empty list if no results available.
+        """
         import time
+        import queue
         
-        if not self.detection_enabled:
-            # Clear current results when detection is disabled
-            self._current_barcode_items = []
-            return
-        
-        current_time = time.time()
         detected_items = []
         
-        # Process all available results
+        # Process all available results to get the most recent ones
         while not self.result_queue.empty():
             try:
                 captured_result = self.result_queue.get_nowait()
                 
-                # Get all items from the captured result (like reference files)
+                # Clear previous items and use only the latest result
+                detected_items.clear()
+                
+                # Get all items from the captured result
                 items = captured_result.get_items()
                 
                 for item in items:
@@ -527,12 +514,12 @@ class CameraWidget(QWidget):
                             detected_items.append(item)
                     
                     elif self.current_detection_mode == "Document":
-                        # Document detection looks for deskewed images (like document_camera.py)
+                        # Document detection looks for deskewed images
                         if item_type == EnumCapturedResultItemType.CRIT_DESKEWED_IMAGE:
                             detected_items.append(item)
                     
                     elif self.current_detection_mode == "MRZ":
-                        # MRZ detection looks for text lines and parsed results (like mrz_camera.py)
+                        # MRZ detection looks for text lines and parsed results
                         if item_type in [EnumCapturedResultItemType.CRIT_TEXT_LINE, 
                                        EnumCapturedResultItemType.CRIT_PARSED_RESULT]:
                             detected_items.append(item)
@@ -542,8 +529,7 @@ class CameraWidget(QWidget):
             except Exception as e:
                 continue
         
-        # Finalize detection results
-        self._finalize_detection_results(detected_items, current_time)
+        return detected_items
     
     def _is_mrz_like_text(self, text):
         """Check if text looks like MRZ data."""
@@ -559,22 +545,6 @@ class CameraWidget(QWidget):
         # Check for MRZ-like patterns
         uppercase_and_symbols = sum(1 for c in text if c.isupper() or c.isdigit() or c == '<')
         return uppercase_and_symbols / len(text) > 0.8
-    
-    def _finalize_detection_results(self, detected_items, current_time):
-        """Finalize detection results and update display."""
-        # ALWAYS clear previous annotations first to prevent ghosting
-        self._current_barcode_items = []
-        
-        # Update with new detections if any
-        if detected_items:
-            self._current_barcode_items = detected_items
-            self._last_detection_time = current_time
-            # Emit signal with detected items for results panel
-            self.barcodes_detected.emit(detected_items)
-        else:
-            # Clear old annotations more aggressively (0.5 seconds instead of 1)
-            if current_time - self._last_detection_time > 0.5:
-                self._current_barcode_items = []
     
     def draw_detection_annotations(self, frame, detection_items):
         """Draw detection annotations on the frame with consistent colors."""
