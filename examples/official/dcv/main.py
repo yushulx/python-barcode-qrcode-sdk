@@ -1370,6 +1370,9 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.process_start_time = None
         self.current_detection_mode = "Barcode"  # Default detection mode
         
+        # Document mode variables
+        self.current_normalized_documents = {}  # Store normalized documents {page_index: cv_image}
+        
         # Camera mode variables
         self.camera_results = []  # Store recent camera detection results
         self.camera_history = []  # Store detection history
@@ -1668,6 +1671,7 @@ class BarcodeReaderMainWindow(QMainWindow):
         for mode, config in DETECTION_MODES.items():
             self.picture_detection_mode_combo.addItem(f"{mode} - {config['description']}")
         self.picture_detection_mode_combo.setCurrentIndex(0)  # Default to Barcode
+        self.picture_detection_mode_combo.currentTextChanged.connect(self.on_picture_detection_mode_changed)
         mode_layout.addWidget(self.picture_detection_mode_combo)
         process_layout.addLayout(mode_layout)
         
@@ -1714,6 +1718,14 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.copy_button.setEnabled(False)
         self.copy_button.clicked.connect(self.copy_to_clipboard)
         actions_layout.addWidget(self.copy_button)
+        
+        # Save normalized document button (only for document mode)
+        self.save_document_button = QPushButton("💾 Save Normalized Document")
+        self.save_document_button.setEnabled(False)
+        self.save_document_button.setVisible(False)  # Hidden by default (only show in Document mode)
+        self.save_document_button.clicked.connect(self.save_normalized_document)
+        self.save_document_button.setToolTip("Save the normalized document image to file")
+        actions_layout.addWidget(self.save_document_button)
         
         clear_button = QPushButton("🗑️ Clear All")
         clear_button.clicked.connect(self.clear_all)
@@ -1915,6 +1927,24 @@ class BarcodeReaderMainWindow(QMainWindow):
         current_mode = mode_name
         self.setWindowTitle(f"Dynamsoft Capture Vision - {current_mode} Scanner")
         self.log_message(f"🔄 Switched to {current_mode} detection mode")
+    
+    def on_picture_detection_mode_changed(self, mode_text):
+        """Handle detection mode change in picture mode."""
+        mode_name = mode_text.split(" - ")[0]  # Extract mode name from combo text
+        
+        # Show/hide save document button based on mode
+        if hasattr(self, 'save_document_button'):
+            if mode_name == "Document":
+                self.save_document_button.setVisible(True)
+                # Enable button only if we have a normalized document for current page
+                has_normalized = (hasattr(self, 'current_normalized_documents') and 
+                                self.current_page_index in self.current_normalized_documents)
+                self.save_document_button.setEnabled(has_normalized)
+            else:
+                self.save_document_button.setVisible(False)
+                self.save_document_button.setEnabled(False)
+        
+        self.log_message(f"🔄 Picture mode switched to {mode_name} detection")
     
     def on_tab_changed(self, index):
         """Handle tab change events."""
@@ -2616,6 +2646,10 @@ class BarcodeReaderMainWindow(QMainWindow):
         try:
             if not document_items:
                 self.image_widget.set_image(original_image, [])
+                # Clear stored normalized document
+                if self.current_page_index in self.current_normalized_documents:
+                    del self.current_normalized_documents[self.current_page_index]
+                self.save_document_button.setEnabled(False)
                 return
             
             # Create annotated original image
@@ -2649,6 +2683,10 @@ class BarcodeReaderMainWindow(QMainWindow):
                     if normalized_image_data:
                         normalized_image = convertImageData2Mat(normalized_image_data)
                         
+                        # Store normalized document for saving
+                        self.current_normalized_documents[self.current_page_index] = normalized_image
+                        self.save_document_button.setEnabled(True)
+                        
                         # Create side-by-side display
                         combined_image = self.create_side_by_side_display(annotated_original, normalized_image)
                         self.image_widget.set_image(combined_image, [])  # No additional annotations needed
@@ -2658,6 +2696,10 @@ class BarcodeReaderMainWindow(QMainWindow):
             
             # Fallback: just show original with boundaries if normalized image extraction fails
             self.image_widget.set_image(annotated_original, [])
+            # Clear stored normalized document and disable save button
+            if self.current_page_index in self.current_normalized_documents:
+                del self.current_normalized_documents[self.current_page_index]
+            self.save_document_button.setEnabled(False)
             
         except Exception as e:
             print(f"Error in document display: {e}")
@@ -2714,6 +2756,47 @@ class BarcodeReaderMainWindow(QMainWindow):
         except Exception as e:
             print(f"Error creating side-by-side display: {e}")
             return original_image
+    
+    def save_normalized_document(self):
+        """Save the current normalized document image to file."""
+        if self.current_page_index not in self.current_normalized_documents:
+            QMessageBox.warning(self, "No Document", "No normalized document available to save.")
+            return
+        
+        try:
+            normalized_image = self.current_normalized_documents[self.current_page_index]
+            
+            # Generate default filename
+            if self.current_file_path:
+                base_name = os.path.splitext(os.path.basename(self.current_file_path))[0]
+                if len(self.current_pages) > 1:
+                    default_name = f"{base_name}_page{self.current_page_index + 1}_normalized.jpg"
+                else:
+                    default_name = f"{base_name}_normalized.jpg"
+            else:
+                default_name = f"normalized_document_page{self.current_page_index + 1}.jpg"
+            
+            # Show save dialog
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save Normalized Document",
+                default_name,
+                "JPEG files (*.jpg);;PNG files (*.png);;BMP files (*.bmp);;TIFF files (*.tiff);;All files (*.*)"
+            )
+            
+            if file_path:
+                # Save the image
+                success = cv2.imwrite(file_path, normalized_image)
+                if success:
+                    self.log_message(f"💾 Normalized document saved: {os.path.basename(file_path)}")
+                    QMessageBox.information(self, "Save Complete", 
+                                          f"Normalized document saved successfully to:\n{file_path}")
+                else:
+                    raise Exception("Failed to write image file")
+                    
+        except Exception as e:
+            self.log_message(f"❌ Save error: {e}")
+            QMessageBox.critical(self, "Save Error", f"Failed to save normalized document: {e}")
     
     def display_page_results(self):
         """Display detection results for the current page."""
@@ -3170,6 +3253,10 @@ class BarcodeReaderMainWindow(QMainWindow):
             self.page_results = {}
             self.current_page_index = 0
             
+            # Clear normalized documents
+            if hasattr(self, 'current_normalized_documents'):
+                self.current_normalized_documents.clear()
+            
             # Clear custom receiver
             if self.custom_receiver:
                 self.custom_receiver.images.clear()
@@ -3187,6 +3274,8 @@ class BarcodeReaderMainWindow(QMainWindow):
             self.process_button.setEnabled(False)
             self.export_button.setEnabled(False)
             self.copy_button.setEnabled(False)
+            if hasattr(self, 'save_document_button'):
+                self.save_document_button.setEnabled(False)
             
             # Hide navigation
             self.nav_group.hide()
