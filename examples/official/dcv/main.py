@@ -42,6 +42,16 @@ try:
 except ImportError:
     PSUTIL_AVAILABLE = False
 
+# Try to import face detection
+try:
+    from facenet_pytorch import MTCNN
+    import torch
+    FACENET_AVAILABLE = True
+    print("✅ FaceNet PyTorch available for face detection")
+except ImportError:
+    FACENET_AVAILABLE = False
+    print("⚠️ FaceNet PyTorch not available. Install with: pip install facenet-pytorch torch torchvision")
+
 # Constants
 LICENSE_KEY = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
 
@@ -98,6 +108,132 @@ TEXT_OFFSET_Y = 10
 # Fixed color assignment for consistent barcode detection visualization
 BARCODE_COLORS = {}  # Will store {barcode_text: color_index} for consistent colors
 BARCODE_LAST_SEEN = {}  # Track when each barcode was last detected
+
+class FaceDetector:
+    """Face detection utility class using MTCNN from facenet_pytorch."""
+    
+    def __init__(self):
+        self.mtcnn = None
+        self.device = None
+        if FACENET_AVAILABLE:
+            try:
+                # Check if CUDA is available, otherwise use CPU
+                self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+                print(f"📱 Face detection using device: {self.device}")
+                
+                # Initialize MTCNN with optimized settings for document images
+                self.mtcnn = MTCNN(
+                    image_size=160,
+                    margin=20,
+                    min_face_size=20,
+                    thresholds=[0.6, 0.7, 0.7],
+                    factor=0.709,
+                    post_process=False,
+                    device=self.device
+                )
+                print("✅ MTCNN face detector initialized successfully")
+            except Exception as e:
+                print(f"❌ Failed to initialize MTCNN: {e}")
+                self.mtcnn = None
+    
+    def detect_and_crop_faces(self, cv_image, min_confidence=0.9):
+        """
+        Detect faces in the image and return cropped face regions.
+        
+        Args:
+            cv_image: OpenCV image (BGR format)
+            min_confidence: Minimum confidence threshold for face detection
+            
+        Returns:
+            List of dictionaries containing:
+            - 'bbox': [x, y, width, height] bounding box
+            - 'confidence': detection confidence
+            - 'face_image': cropped face image (BGR format)
+        """
+        if not self.mtcnn or not FACENET_AVAILABLE:
+            return []
+        
+        try:
+            # Convert BGR to RGB for MTCNN
+            rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+            
+            # Detect faces with bounding boxes and confidence scores
+            boxes, probs = self.mtcnn.detect(rgb_image)
+            
+            faces = []
+            if boxes is not None:
+                for i, (box, prob) in enumerate(zip(boxes, probs)):
+                    if prob >= min_confidence:
+                        # Convert box coordinates to integers
+                        x1, y1, x2, y2 = [int(coord) for coord in box]
+                        
+                        # Ensure coordinates are within image bounds
+                        h, w = cv_image.shape[:2]
+                        x1 = max(0, x1)
+                        y1 = max(0, y1)
+                        x2 = min(w, x2)
+                        y2 = min(h, y2)
+                        
+                        # Calculate width and height
+                        width = x2 - x1
+                        height = y2 - y1
+                        
+                        # Crop face from original BGR image
+                        face_crop = cv_image[y1:y2, x1:x2]
+                        
+                        if face_crop.size > 0:  # Ensure we have a valid crop
+                            faces.append({
+                                'bbox': [x1, y1, width, height],
+                                'confidence': float(prob),
+                                'face_image': face_crop
+                            })
+            
+            return faces
+            
+        except Exception as e:
+            print(f"❌ Error in face detection: {e}")
+            return []
+    
+    def draw_face_annotations(self, cv_image, faces):
+        """
+        Draw face detection annotations on the image.
+        
+        Args:
+            cv_image: OpenCV image to draw on
+            faces: List of face detection results
+            
+        Returns:
+            Annotated image
+        """
+        annotated_image = cv_image.copy()
+        
+        for i, face in enumerate(faces):
+            bbox = face['bbox']
+            confidence = face['confidence']
+            
+            x, y, w, h = bbox
+            
+            # Draw bounding box
+            cv2.rectangle(annotated_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            
+            # Draw confidence label
+            label = f"Face {i+1}: {confidence:.2f}"
+            label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)[0]
+            
+            # Draw label background
+            cv2.rectangle(annotated_image, 
+                         (x, y - label_size[1] - 10), 
+                         (x + label_size[0], y), 
+                         (0, 255, 0), -1)
+            
+            # Draw label text
+            cv2.putText(annotated_image, label, (x, y - 5), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
+        
+        return annotated_image
+
+# Initialize global face detector
+face_detector = FaceDetector() if FACENET_AVAILABLE else None
 
 def cleanup_old_barcode_colors():
     """Remove barcode colors for barcodes not seen recently."""
@@ -571,6 +707,21 @@ class CameraWidget(QWidget):
                            
             except Exception as e:
                 continue  # Skip problematic annotations
+        
+        # Add face detection for MRZ mode
+        if self.current_detection_mode == "MRZ" and FACENET_AVAILABLE and face_detector:
+            try:
+                faces = face_detector.detect_and_crop_faces(frame, min_confidence=0.8)
+                if faces:
+                    annotated_frame = face_detector.draw_face_annotations(annotated_frame, faces)
+                    
+                    # Add face count indicator
+                    h, w = frame.shape[:2]
+                    face_text = f"👤 Faces: {len(faces)}"
+                    cv2.putText(annotated_frame, face_text, (10, h - 20),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            except Exception as e:
+                pass  # Silently ignore face detection errors in real-time
         
         return annotated_frame
     
@@ -1343,6 +1494,9 @@ class BarcodeReaderMainWindow(QMainWindow):
         # Document mode variables
         self.current_normalized_documents = {}  # Store normalized documents {page_index: cv_image}
         
+        # Face detection variables
+        self.current_detected_faces = {}  # Store detected faces {page_index: [face_data]}
+        
         # Camera mode variables
         self.camera_results = []  # Store recent camera detection results
         self.camera_history = []  # Store detection history
@@ -1490,6 +1644,15 @@ class BarcodeReaderMainWindow(QMainWindow):
         
         self.camera_beep_check = QCheckBox("Beep on detection")
         detection_layout.addWidget(self.camera_beep_check)
+        
+        # Face detection status indicator
+        self.camera_face_status = QLabel("👤 Face Detection: Ready" if FACENET_AVAILABLE else "👤 Face Detection: Not Available")
+        self.camera_face_status.setStyleSheet(
+            "font-size: 10px; color: #006400; padding: 3px;" if FACENET_AVAILABLE else 
+            "font-size: 10px; color: #666; padding: 3px;"
+        )
+        self.camera_face_status.setVisible(False)  # Only show in MRZ mode
+        detection_layout.addWidget(self.camera_face_status)
         
         layout.addWidget(detection_group)
         
@@ -1688,6 +1851,14 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.save_document_button.setToolTip("Save the normalized document image to file")
         actions_layout.addWidget(self.save_document_button)
         
+        # Save face crops button (only for MRZ mode with face detection)
+        self.save_faces_button = QPushButton("👤 Save Face Crops")
+        self.save_faces_button.setEnabled(False)
+        self.save_faces_button.setVisible(False)  # Hidden by default (only show in MRZ mode)
+        self.save_faces_button.clicked.connect(self.save_face_crops)
+        self.save_faces_button.setToolTip("Extract and save face images from MRZ documents")
+        actions_layout.addWidget(self.save_faces_button)
+        
         clear_button = QPushButton("🗑️ Clear All")
         clear_button.clicked.connect(self.clear_all)
         actions_layout.addWidget(clear_button)
@@ -1884,6 +2055,19 @@ class BarcodeReaderMainWindow(QMainWindow):
         if hasattr(self, 'camera_widget'):
             self.camera_widget.set_detection_mode(mode_name)
         
+        # Show/hide face detection status based on mode
+        if hasattr(self, 'camera_face_status'):
+            if mode_name == "MRZ":
+                self.camera_face_status.setVisible(True)
+                if FACENET_AVAILABLE:
+                    self.camera_face_status.setText("👤 Face Detection: Active")
+                    self.camera_face_status.setStyleSheet("font-size: 10px; color: #006400; padding: 3px;")
+                else:
+                    self.camera_face_status.setText("👤 Face Detection: Install facenet-pytorch")
+                    self.camera_face_status.setStyleSheet("font-size: 10px; color: #FF6600; padding: 3px;")
+            else:
+                self.camera_face_status.setVisible(False)
+        
         # Update window title to reflect current mode
         current_mode = mode_name
         self.setWindowTitle(f"Dynamsoft Capture Vision - {current_mode} Scanner")
@@ -1904,6 +2088,19 @@ class BarcodeReaderMainWindow(QMainWindow):
             else:
                 self.save_document_button.setVisible(False)
                 self.save_document_button.setEnabled(False)
+        
+        # Show/hide save face crops button based on mode and face detection availability
+        if hasattr(self, 'save_faces_button'):
+            if mode_name == "MRZ" and FACENET_AVAILABLE:
+                self.save_faces_button.setVisible(True)
+                # Enable button only if we have detection results for current page
+                has_results = (hasattr(self, 'page_results') and 
+                             self.current_page_index in self.page_results and
+                             len(self.page_results[self.current_page_index]) > 0)
+                self.save_faces_button.setEnabled(has_results)
+            else:
+                self.save_faces_button.setVisible(False)
+                self.save_faces_button.setEnabled(False)
         
         self.log_message(f"🔄 Picture mode switched to {mode_name} detection")
     
@@ -2266,6 +2463,12 @@ class BarcodeReaderMainWindow(QMainWindow):
         elif mode_name == "MRZ":
             unique_items = len(set(d.get('doc_id', '') for d in self.camera_history if d.get('mode') == 'MRZ' and d.get('doc_id')))
             stats_text = f"Unique documents: {unique_items}\nMRZ detections: {mrz_count}\nLast detection: {last_detection}"
+            
+            # Add face detection status for MRZ mode
+            if FACENET_AVAILABLE:
+                stats_text += f"\n👤 Face Detection: ON"
+            else:
+                stats_text += f"\n👤 Face Detection: OFF"
         else:
             stats_text = f"Barcodes: {barcode_count} | Docs: {document_count} | MRZ: {mrz_count}\nTotal: {total_detections}\nLast: {last_detection}"
         
@@ -2422,6 +2625,7 @@ class BarcodeReaderMainWindow(QMainWindow):
         # Clear previous results
         self.page_results = {}
         self.page_hash_mapping = {}
+        self.current_detected_faces = {}  # Clear face detection results
         if self.custom_receiver:
             self.custom_receiver.images.clear()
         
@@ -2593,8 +2797,11 @@ class BarcodeReaderMainWindow(QMainWindow):
         # Special handling for document detection - show normalized documents if available
         if mode_name == "Document" and detection_items:
             self.display_document_results(cv_image, detection_items)
+        elif mode_name == "MRZ" and detection_items and FACENET_AVAILABLE:
+            # For MRZ mode, perform face detection on the original image
+            self.display_mrz_with_faces(cv_image, detection_items)
         else:
-            # Standard display for barcodes and MRZ
+            # Standard display for barcodes and MRZ without face detection
             self.image_widget.set_image(cv_image, detection_items)
         
         self.display_page_results()
@@ -2758,6 +2965,118 @@ class BarcodeReaderMainWindow(QMainWindow):
         except Exception as e:
             self.log_message(f"❌ Save error: {e}")
             QMessageBox.critical(self, "Save Error", f"Failed to save normalized document: {e}")
+    
+    def display_mrz_with_faces(self, cv_image, detection_items):
+        """Display MRZ results with face detection annotations."""
+        try:
+            # First, display the normal MRZ annotations
+            annotated_image = cv_image.copy()
+            
+            # Draw MRZ annotations
+            for item in detection_items:
+                if hasattr(item, 'get_location'):  # Has location data
+                    location = item.get_location()
+                    if location and location.points:
+                        points = location.points
+                        
+                        # Draw MRZ boundary
+                        pts = np.array([[int(p.x), int(p.y)] for p in points], np.int32)
+                        cv2.polylines(annotated_image, [pts], True, (0, 165, 255), 2)  # Orange for MRZ
+            
+            # Perform face detection
+            if face_detector:
+                faces = face_detector.detect_and_crop_faces(cv_image, min_confidence=0.8)
+                
+                # Store faces for saving later
+                self.current_detected_faces[self.current_page_index] = faces
+                
+                # Draw face annotations
+                annotated_image = face_detector.draw_face_annotations(annotated_image, faces)
+                
+                # Update face crops button state
+                if hasattr(self, 'save_faces_button'):
+                    self.save_faces_button.setEnabled(len(faces) > 0)
+                
+                self.log_message(f"👤 Detected {len(faces)} face(s) in MRZ document")
+            else:
+                # Clear faces if no detector
+                self.current_detected_faces[self.current_page_index] = []
+                if hasattr(self, 'save_faces_button'):
+                    self.save_faces_button.setEnabled(False)
+            
+            # Display the annotated image
+            self.image_widget.set_image(annotated_image, [])  # Don't pass detection_items to avoid double annotation
+            
+        except Exception as e:
+            self.log_message(f"❌ Error in face detection: {e}")
+            # Fallback to normal display
+            self.image_widget.set_image(cv_image, detection_items)
+    
+    def save_face_crops(self):
+        """Save detected face crops from the current page."""
+        if self.current_page_index not in self.current_detected_faces:
+            QMessageBox.warning(self, "No Faces", "No faces detected on current page.")
+            return
+        
+        faces = self.current_detected_faces[self.current_page_index]
+        if not faces:
+            QMessageBox.warning(self, "No Faces", "No faces detected on current page.")
+            return
+        
+        try:
+            # Select directory to save faces
+            directory = QFileDialog.getExistingDirectory(
+                self,
+                "Select Directory to Save Face Crops",
+                "",
+                QFileDialog.Option.ShowDirsOnly
+            )
+            
+            if not directory:
+                return
+            
+            saved_count = 0
+            
+            # Generate base filename
+            if self.current_file_path:
+                base_name = os.path.splitext(os.path.basename(self.current_file_path))[0]
+                if len(self.current_pages) > 1:
+                    base_prefix = f"{base_name}_page{self.current_page_index + 1}"
+                else:
+                    base_prefix = base_name
+            else:
+                base_prefix = f"mrz_page{self.current_page_index + 1}"
+            
+            # Save each face crop
+            for i, face_data in enumerate(faces):
+                face_image = face_data['face_image']
+                confidence = face_data['confidence']
+                
+                # Create filename with confidence score
+                filename = f"{base_prefix}_face{i+1}_conf{confidence:.2f}.jpg"
+                file_path = os.path.join(directory, filename)
+                
+                # Save the face crop
+                success = cv2.imwrite(file_path, face_image)
+                if success:
+                    saved_count += 1
+                    self.log_message(f"👤 Saved face crop: {filename}")
+                else:
+                    self.log_message(f"❌ Failed to save face crop: {filename}")
+            
+            if saved_count > 0:
+                QMessageBox.information(
+                    self, 
+                    "Faces Saved", 
+                    f"Successfully saved {saved_count} face crop(s) to:\n{directory}"
+                )
+                self.log_message(f"✅ Saved {saved_count} face crops to {directory}")
+            else:
+                QMessageBox.warning(self, "Save Failed", "Failed to save any face crops.")
+                
+        except Exception as e:
+            self.log_message(f"❌ Error saving face crops: {e}")
+            QMessageBox.critical(self, "Save Error", f"Failed to save face crops: {e}")
     
     def display_page_results(self):
         """Display detection results for the current page."""
@@ -3218,6 +3537,10 @@ class BarcodeReaderMainWindow(QMainWindow):
             if hasattr(self, 'current_normalized_documents'):
                 self.current_normalized_documents.clear()
             
+            # Clear detected faces
+            if hasattr(self, 'current_detected_faces'):
+                self.current_detected_faces.clear()
+            
             # Clear custom receiver
             if self.custom_receiver:
                 self.custom_receiver.images.clear()
@@ -3237,6 +3560,8 @@ class BarcodeReaderMainWindow(QMainWindow):
             self.copy_button.setEnabled(False)
             if hasattr(self, 'save_document_button'):
                 self.save_document_button.setEnabled(False)
+            if hasattr(self, 'save_faces_button'):
+                self.save_faces_button.setEnabled(False)
             
             # Hide navigation
             self.nav_group.hide()
