@@ -1491,15 +1491,6 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.camera_beep_check = QCheckBox("Beep on detection")
         detection_layout.addWidget(self.camera_beep_check)
         
-        # Detection frequency
-        freq_layout = QHBoxLayout()
-        freq_layout.addWidget(QLabel("Detection frequency:"))
-        self.detection_freq_combo = QComboBox()
-        self.detection_freq_combo.addItems(["High (30Hz)", "Medium (10Hz)", "Low (5Hz)"])
-        self.detection_freq_combo.setCurrentIndex(1)  # Default to Medium
-        freq_layout.addWidget(self.detection_freq_combo)
-        detection_layout.addLayout(freq_layout)
-        
         layout.addWidget(detection_group)
         
         # Camera Actions Group
