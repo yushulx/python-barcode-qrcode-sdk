@@ -1003,7 +1003,6 @@ class ProcessingWorker(QThread):
             
             # Get the appropriate template for the detection mode
             template = DETECTION_MODES[mode_name]["template"]
-            
             results = self.cvr_instance.capture_multi_pages(self.file_path, template)
             
             self.finished.emit(results)
@@ -1496,6 +1495,7 @@ class BarcodeReaderMainWindow(QMainWindow):
         # Initialize variables
         self.cvr_instance = None
         self.custom_receiver = None
+        self.receiver_active = False  # Track if intermediate receiver is currently active
         self.current_file_path = None
         self.current_pages = {}  # Store page data {page_index: cv_image}
         self.page_hash_mapping = {}  # Map page_index to hash_id
@@ -2057,8 +2057,10 @@ class BarcodeReaderMainWindow(QMainWindow):
             if initialize_license_once():
                 self.cvr_instance = CaptureVisionRouter()
                 intermediate_result_manager = self.cvr_instance.get_intermediate_result_manager()
+                
+                # Create receiver but don't add it yet - only add for barcode detection
                 self.custom_receiver = MyIntermediateResultReceiver(intermediate_result_manager)
-                intermediate_result_manager.add_result_receiver(self.custom_receiver)
+                self.receiver_active = False  # Track if receiver is currently active
                 
                 self.log_message("✅ License initialized successfully!")
                 
@@ -2076,6 +2078,36 @@ class BarcodeReaderMainWindow(QMainWindow):
         """Initialize camera with delay to avoid conflicts."""
         if hasattr(self, 'camera_widget'):
             self.camera_widget.initialize_dynamsoft_camera(self.cvr_instance)
+    
+    def manage_intermediate_receiver(self, detection_mode, action='add'):
+        """
+        Conditionally manage the intermediate result receiver based on detection mode.
+        Only add the receiver for barcode detection to avoid deadlocks in document/MRZ modes.
+        
+        Args:
+            detection_mode (str): The detection mode ('Barcode', 'Document', 'MRZ')
+            action (str): 'add' to add receiver, 'remove' to remove receiver
+        """
+        if not self.cvr_instance or not self.custom_receiver:
+            return
+        
+        try:
+            intermediate_result_manager = self.cvr_instance.get_intermediate_result_manager()
+            
+            if action == 'add' and detection_mode == "Barcode" and not self.receiver_active:
+                # Only add receiver for barcode detection
+                intermediate_result_manager.add_result_receiver(self.custom_receiver)
+                self.receiver_active = True
+                print("🔧 Added intermediate receiver for barcode detection")
+                
+            elif action == 'remove' and self.receiver_active:
+                # Remove receiver for non-barcode modes or when explicitly requested
+                intermediate_result_manager.remove_result_receiver(self.custom_receiver)
+                self.receiver_active = False
+                print("🔧 Removed intermediate receiver to avoid deadlock")
+                
+        except Exception as e:
+            print(f"⚠️ Warning: Error managing intermediate receiver: {e}")
     
     def on_detection_mode_changed(self, mode_text):
         """Handle detection mode change in camera."""
@@ -2646,6 +2678,13 @@ class BarcodeReaderMainWindow(QMainWindow):
         current_mode_text = self.picture_detection_mode_combo.currentText()
         mode_name = current_mode_text.split(" - ")[0]
         
+        # Manage intermediate receiver based on detection mode to avoid deadlocks
+        # Only use receiver for barcode detection - remove for document/MRZ modes
+        if mode_name == "Barcode":
+            self.manage_intermediate_receiver(mode_name, 'add')
+        else:
+            self.manage_intermediate_receiver(mode_name, 'remove')
+        
         self.is_processing = True
         self.process_button.setEnabled(False)
         self.process_button.setText(f"🔄 Processing {mode_name}...")
@@ -2724,9 +2763,18 @@ class BarcodeReaderMainWindow(QMainWindow):
                 else:
                     self.log_message(f"⚠️ Error on page {i+1}: {result.get_error_string()}")
             
-            # Extract pages from intermediate receiver for PDF files
+            # Extract pages from intermediate receiver for PDF files (only for Barcode mode)
+            # For Document/MRZ modes, we extract pages directly from results to avoid deadlock
             if self.current_file_path and self.current_file_path.lower().endswith('.pdf'):
-                self.extract_pdf_pages_from_receiver()
+                if mode_name == "Barcode" and self.receiver_active:
+                    self.extract_pdf_pages_from_receiver()
+                else:
+                    # For Document/MRZ modes, extract pages directly from results
+                    self.extract_pdf_pages_from_results(results)
+            elif self.current_file_path and not self.current_file_path.lower().endswith('.pdf'):
+                # For single images, ensure we have the image in current_pages
+                if 0 not in self.current_pages and hasattr(self, 'image_widget') and self.image_widget.original_image is not None:
+                    self.current_pages[0] = self.image_widget.original_image.copy()
             
             # Setup navigation for multi-page PDFs
             if len(self.current_pages) > 1:
@@ -2811,6 +2859,62 @@ class BarcodeReaderMainWindow(QMainWindow):
             self.log_message(f"✅ Extracted {len(self.current_pages)} page(s) from PDF in correct order")
         else:
             self.log_message("⚠️ No pages extracted from PDF")
+    
+    def extract_pdf_pages_from_results(self, captured_results):
+        """
+        Extract PDF pages directly from capture results without intermediate receiver.
+        This method is used for Document/MRZ modes to avoid deadlock issues.
+        """
+        try:
+            self.current_pages = {}
+            
+            # Get the original image data from each result
+            result_list = captured_results.get_results()
+            
+            for page_index, result in enumerate(result_list):
+                if result.get_error_code() == EnumErrorCode.EC_OK:
+                    try:
+                        # Try to get the original image directly from the result
+                        original_image = result.get_original_image()
+                        if original_image is not None:
+                            # Convert Dynamsoft image to OpenCV format
+                            from dynamsoft_capture_vision_bundle import ImageIO
+                            image_io = ImageIO()
+                            saved = image_io.save_to_numpy(original_image)
+                            
+                            if saved is not None:
+                                # Handle different return formats
+                                if isinstance(saved, tuple) and len(saved) == 3:
+                                    error_code, error_message, numpy_array = saved
+                                    if error_code == 0 and numpy_array is not None:
+                                        self.current_pages[page_index] = numpy_array
+                                elif isinstance(saved, tuple) and len(saved) == 2:
+                                    success, numpy_array = saved
+                                    if success and numpy_array is not None:
+                                        self.current_pages[page_index] = numpy_array
+                                else:
+                                    # Direct numpy array return
+                                    self.current_pages[page_index] = saved
+                                    
+                                self.log_message(f"📄 Extracted page {page_index + 1} directly from results")
+                        else:
+                            self.log_message(f"⚠️ No image data for page {page_index + 1}")
+                            
+                    except Exception as e:
+                        self.log_message(f"⚠️ Error extracting page {page_index + 1}: {e}")
+                        continue
+                else:
+                    self.log_message(f"⚠️ Error on page {page_index + 1}: {result.get_error_string()}")
+            
+            # Set the first page as current
+            if self.current_pages:
+                self.current_page_index = 0
+                self.log_message(f"✅ Extracted {len(self.current_pages)} page(s) from PDF results (no receiver)")
+            else:
+                self.log_message("⚠️ No pages extracted from PDF results")
+                
+        except Exception as e:
+            self.log_message(f"❌ Error in direct PDF page extraction: {e}")
     
     def display_current_page(self):
         """Display the current page with annotations."""
@@ -3653,8 +3757,10 @@ class BarcodeReaderMainWindow(QMainWindow):
                             
                             self.cvr_instance = CaptureVisionRouter()
                             intermediate_result_manager = self.cvr_instance.get_intermediate_result_manager()
+                            
+                            # Create receiver but don't add it yet - only add for barcode detection
                             self.custom_receiver = MyIntermediateResultReceiver(intermediate_result_manager)
-                            intermediate_result_manager.add_result_receiver(self.custom_receiver)
+                            self.receiver_active = False  # Track if receiver is currently active
                             
                             # Update camera widget if it exists
                             if hasattr(self, 'camera_widget'):
