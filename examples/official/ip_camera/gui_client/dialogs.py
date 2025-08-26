@@ -97,6 +97,12 @@ class ConnectionDialog(QDialog):
         self.name_edit.setPlaceholderText("My IP Camera")
         form_layout.addRow("Camera Name:", self.name_edit)
         
+        # Protocol selection
+        self.stream_protocol_combo = QComboBox()
+        self.stream_protocol_combo.addItems(["HTTP (MJPEG)", "RTSP"])
+        self.stream_protocol_combo.currentTextChanged.connect(self.on_protocol_changed)
+        form_layout.addRow("Protocol:", self.stream_protocol_combo)
+        
         # Server IP
         self.ip_edit = QLineEdit()
         self.ip_edit.setValidator(IPValidator())
@@ -110,12 +116,6 @@ class ConnectionDialog(QDialog):
         self.port_spinbox.setValue(5000)
         self.port_spinbox.valueChanged.connect(self.update_url_preview)
         form_layout.addRow("Port:", self.port_spinbox)
-        
-        # Protocol
-        self.protocol_combo = QComboBox()
-        self.protocol_combo.addItems(["http", "https"])
-        self.protocol_combo.currentTextChanged.connect(self.update_url_preview)
-        form_layout.addRow("Protocol:", self.protocol_combo)
         
         # Stream path
         self.path_edit = QLineEdit()
@@ -139,25 +139,48 @@ class ConnectionDialog(QDialog):
         layout.addLayout(form_layout)
         
         # Update preview initially
+        self.on_protocol_changed()
+        self.update_url_preview()
+        
+    def on_protocol_changed(self):
+        """Handle protocol change"""
+        is_rtsp = "RTSP" in self.stream_protocol_combo.currentText()
+        
+        if is_rtsp:
+            self.port_spinbox.setValue(554)  # Default RTSP port
+            self.path_edit.setText("/stream")
+        else:
+            self.port_spinbox.setValue(5000)  # Default HTTP port
+            self.path_edit.setText("/video_feed")
+            
         self.update_url_preview()
 
         
     def update_url_preview(self):
         """Update the URL preview"""
-        protocol = self.protocol_combo.currentText()
         ip = self.ip_edit.text() or "0.0.0.0"
         port = self.port_spinbox.value()
         path = self.path_edit.text() or "/"
         
         if not path.startswith('/'):
             path = '/' + path
+        
+        is_rtsp = "RTSP" in self.stream_protocol_combo.currentText()
+        
+        if is_rtsp:
+            url = f"rtsp://{ip}:{port}{path}"
+        else:
+            url = f"http://{ip}:{port}{path}"
             
-        url = f"{protocol}://{ip}:{port}{path}"
         self.url_preview.setText(url)
         
     def get_current_url(self):
         """Get the current URL"""
         return self.url_preview.text()
+    
+    def get_stream_protocol(self):
+        """Get the selected streaming protocol"""
+        return "rtsp" if "RTSP" in self.stream_protocol_combo.currentText() else "http"
         
     def get_current_name(self):
         """Get the current camera name"""

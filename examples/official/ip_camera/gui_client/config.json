@@ -24,5 +24,16 @@
     "version": "1.0.0",
     "author": "IP Camera Tools",
     "description": "Professional desktop application for viewing IP camera streams"
-  }
+  },
+  "always_on_top": false,
+  "auto_reconnect": true,
+  "buffer_size": 1024,
+  "connection_timeout": 10,
+  "reconnect_delay": 3,
+  "save_position": true,
+  "show_overlay": false,
+  "start_fullscreen": false,
+  "theme": 0,
+  "user_agent": "IP-Camera-GUI-Client/1.0",
+  "video_fit_mode": 0
 }

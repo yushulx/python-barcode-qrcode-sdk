@@ -10,10 +10,10 @@ import os
 from typing import Dict, Any, Optional
 
 from PySide6.QtCore import Qt, QTimer, QSettings, QSize, QPoint, Signal
-from PySide6.QtGui import QAction, QKeySequence, QFont
+from PySide6.QtGui import QAction, QFont, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QMenuBar, QStatusBar, QToolBar, QPushButton, QLabel, QSplitter,
+    QStatusBar, QToolBar, QPushButton, QLabel, QSplitter,
     QMessageBox, QFileDialog, QFrame, QSizePolicy
 )
 
@@ -47,7 +47,6 @@ class MainWindow(QMainWindow):
         
         # Setup UI
         self.setup_ui()
-        self.setup_menus()
         self.setup_toolbar()
         self.setup_statusbar()
         self.setup_connections()
@@ -102,7 +101,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(panel)
         
         # Connection controls - removed duplicate buttons for simplicity
-        # (Connection controls are available in toolbar and menu)
+        # (Connection controls are available in toolbar)
         conn_layout = QHBoxLayout()
         conn_layout.addStretch()  # Just add stretch to maintain layout
         
@@ -126,87 +125,6 @@ class MainWindow(QMainWindow):
         layout.addLayout(info_layout)
         
         return panel
-        
-    def setup_menus(self):
-        """Setup application menus"""
-        menubar = self.menuBar()
-        
-        # File menu
-        file_menu = menubar.addMenu("&File")
-        
-        connect_action = QAction("&Connect to Camera...", self)
-        connect_action.setShortcut(QKeySequence.Open)
-        connect_action.setStatusTip("Connect to an IP camera")
-        connect_action.triggered.connect(self.show_connection_dialog)
-        file_menu.addAction(connect_action)
-        
-        disconnect_action = QAction("&Disconnect", self)
-        disconnect_action.setShortcut(QKeySequence("Ctrl+D"))
-        disconnect_action.setStatusTip("Disconnect from current camera")
-        disconnect_action.triggered.connect(self.disconnect_camera)
-        file_menu.addAction(disconnect_action)
-        self.disconnect_action = disconnect_action
-        
-        file_menu.addSeparator()
-        
-        screenshot_action = QAction("Take &Screenshot", self)
-        screenshot_action.setShortcut(QKeySequence("Ctrl+S"))
-        screenshot_action.setStatusTip("Save current frame as image")
-        screenshot_action.triggered.connect(self.take_screenshot)
-        file_menu.addAction(screenshot_action)
-        self.screenshot_action = screenshot_action
-        
-        file_menu.addSeparator()
-        
-        exit_action = QAction("E&xit", self)
-        exit_action.setShortcut(QKeySequence.Quit)
-        exit_action.setStatusTip("Exit the application")
-        exit_action.triggered.connect(self.close_application)
-        file_menu.addAction(exit_action)
-        
-        # View menu
-        view_menu = menubar.addMenu("&View")
-        
-        fullscreen_action = QAction("&Fullscreen", self)
-        fullscreen_action.setShortcut(QKeySequence("F11"))
-        fullscreen_action.setStatusTip("Toggle fullscreen mode")
-        fullscreen_action.triggered.connect(self.toggle_fullscreen)
-        view_menu.addAction(fullscreen_action)
-        
-        view_menu.addSeparator()
-        
-        # Video fit mode submenu
-        fit_menu = view_menu.addMenu("Video &Fit Mode")
-        
-        fit_actions = []
-        fit_modes = ["Keep Aspect Ratio", "Keep Aspect Ratio by Expanding", "Ignore Aspect Ratio"]
-        for i, mode in enumerate(fit_modes):
-            action = QAction(mode, self)
-            action.setCheckable(True)
-            action.setData(i)
-            action.triggered.connect(lambda checked, idx=i: self.set_video_fit_mode(idx))
-            fit_menu.addAction(action)
-            fit_actions.append(action)
-            
-        fit_actions[0].setChecked(True)  # Default to first mode
-        self.fit_mode_actions = fit_actions
-        
-        # Tools menu
-        tools_menu = menubar.addMenu("&Tools")
-        
-        settings_action = QAction("&Settings...", self)
-        settings_action.setShortcut(QKeySequence.Preferences)
-        settings_action.setStatusTip("Open application settings")
-        settings_action.triggered.connect(self.show_settings_dialog)
-        tools_menu.addAction(settings_action)
-        
-        # Help menu
-        help_menu = menubar.addMenu("&Help")
-        
-        about_action = QAction("&About...", self)
-        about_action.setStatusTip("About this application")
-        about_action.triggered.connect(self.show_about_dialog)
-        help_menu.addAction(about_action)
         
     def setup_toolbar(self):
         """Setup application toolbar"""
@@ -249,6 +167,20 @@ class MainWindow(QMainWindow):
         fullscreen_action.triggered.connect(self.toggle_fullscreen)
         toolbar.addAction(fullscreen_action)
         
+        toolbar.addSeparator()
+        
+        # Settings button
+        settings_action = QAction("Settings", self)
+        settings_action.setToolTip("Open settings")
+        settings_action.triggered.connect(self.show_settings_dialog)
+        toolbar.addAction(settings_action)
+        
+        # About button
+        about_action = QAction("About", self)
+        about_action.setToolTip("About this application")
+        about_action.triggered.connect(self.show_about_dialog)
+        toolbar.addAction(about_action)
+        
     def setup_statusbar(self):
         """Setup application status bar"""
         self.status_bar = QStatusBar()
@@ -281,15 +213,21 @@ class MainWindow(QMainWindow):
         
     def show_connection_dialog(self):
         """Show connection dialog"""
-        dialog = ConnectionDialog(self)
-        dialog.connection_requested.connect(self.connect_to_camera)
-        dialog.exec()
+        self.connection_dialog = ConnectionDialog(self)
+        self.connection_dialog.connection_requested.connect(self.connect_to_camera)
+        self.connection_dialog.exec()
         
     def connect_to_camera(self, url: str, name: str):
         """Connect to a camera"""
         try:
+            # Get protocol from the dialog
+            protocol = "http"  # Default fallback
+            if hasattr(self, 'connection_dialog'):
+                protocol = self.connection_dialog.get_stream_protocol()
+            
             self.current_camera_url = url
             self.current_camera_name = name
+            self.current_protocol = protocol
             
             # Apply connection timeout from settings
             timeout = self.app_settings.get('connection_timeout', 5)  # Shorter default timeout
@@ -298,10 +236,11 @@ class MainWindow(QMainWindow):
             # Reset error tracking
             self._last_error_time = 0
             
-            # Connect to stream
-            self.video_widget.connect_to_stream(url)
+            # Connect to stream with protocol
+            self.video_widget.connect_to_stream(url, protocol)
             
-            self.status_bar.showMessage(f"Connecting to {name}...", 3000)
+            protocol_display = "RTSP" if protocol == "rtsp" else "HTTP"
+            self.status_bar.showMessage(f"Connecting to {name} ({protocol_display})...", 3000)
             
         except Exception as e:
             QMessageBox.critical(self, "Connection Error", f"Failed to connect: {str(e)}")
@@ -311,6 +250,8 @@ class MainWindow(QMainWindow):
         self.video_widget.disconnect_stream()
         self.current_camera_url = ""
         self.current_camera_name = ""
+        self.current_protocol = "http"
+        self.connection_dialog = None
         self.update_ui_state()
         
     def on_connection_changed(self, connected: bool):
@@ -343,10 +284,6 @@ class MainWindow(QMainWindow):
             
     def update_ui_state(self):
         """Update UI state based on connection status"""
-        # Update menu actions
-        self.disconnect_action.setEnabled(self.is_connected)
-        self.screenshot_action.setEnabled(self.is_connected)
-        
         # Update toolbar actions
         self.toolbar_disconnect_action.setEnabled(self.is_connected)
         self.toolbar_screenshot_action.setEnabled(self.is_connected)
@@ -413,13 +350,11 @@ class MainWindow(QMainWindow):
         """Toggle fullscreen mode"""
         if self.is_fullscreen:
             self.showNormal()
-            self.menuBar().show()
             self.statusBar().show()
             self.findChild(QToolBar).show()
             self.is_fullscreen = False
         else:
             self.showFullScreen()
-            self.menuBar().hide()
             self.statusBar().hide()
             self.findChild(QToolBar).hide()
             self.is_fullscreen = True
@@ -429,10 +364,6 @@ class MainWindow(QMainWindow):
         fit_modes = [Qt.KeepAspectRatio, Qt.KeepAspectRatioByExpanding, Qt.IgnoreAspectRatio]
         if 0 <= mode < len(fit_modes):
             self.video_widget.set_fit_mode(fit_modes[mode])
-            
-            # Update menu checkmarks
-            for i, action in enumerate(self.fit_mode_actions):
-                action.setChecked(i == mode)
                 
     def show_settings_dialog(self):
         """Show settings dialog"""

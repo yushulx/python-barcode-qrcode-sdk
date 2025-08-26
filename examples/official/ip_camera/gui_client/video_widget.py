@@ -8,12 +8,115 @@ import sys
 import requests
 import threading
 import time
+import cv2
+import numpy as np
 from io import BytesIO
 from typing import Optional, Callable
 
 from PySide6.QtCore import QThread, Signal, QTimer, Qt, QSize
 from PySide6.QtGui import QPixmap, QImage, QPainter, QFont, QPen, QBrush
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QSizePolicy
+
+
+class OpenCVStreamThread(QThread):
+    """Thread for fetching streams using OpenCV VideoCapture (supports both HTTP and RTSP URLs)"""
+    
+    frame_ready = Signal(QImage)
+    error_occurred = Signal(str)
+    connection_status = Signal(bool)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.stream_url = ""
+        self.running = False
+        self.cap = None
+        self.retry_interval = 3
+        
+    def set_stream_url(self, url: str):
+        """Set the stream URL (HTTP or RTSP)"""
+        self.stream_url = url
+        
+    def stop_stream(self):
+        """Stop the stream thread"""
+        self.running = False
+        if self.cap:
+            try:
+                self.cap.release()
+            except:
+                pass
+            self.cap = None
+        # Force thread to quit
+        self.quit()
+        # Wait with timeout to prevent hanging
+        if not self.wait(3000):  # 3 second timeout
+            self.terminate()
+    
+    def run(self):
+        """Main thread loop for fetching frames using OpenCV"""
+        self.running = True
+        consecutive_errors = 0
+        max_consecutive_errors = 3
+        
+        while self.running and consecutive_errors < max_consecutive_errors:
+            try:
+                if not self.stream_url:
+                    self.msleep(1000)
+                    continue
+                
+                # Open stream with OpenCV
+                self.cap = cv2.VideoCapture(self.stream_url)
+                
+                # Set buffer size to reduce latency
+                self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                
+                if not self.cap.isOpened():
+                    raise Exception(f"Failed to open stream: {self.stream_url}")
+                
+                self.connection_status.emit(True)
+                consecutive_errors = 0  # Reset error count on success
+                
+                # Read frames
+                while self.running and self.cap.isOpened():
+                    ret, frame = self.cap.read()
+                    
+                    if not ret or frame is None:
+                        break
+                    
+                    # Convert BGR to RGB
+                    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    
+                    # Convert to QImage
+                    h, w, ch = rgb_frame.shape
+                    bytes_per_line = ch * w
+                    q_image = QImage(rgb_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
+                    
+                    if not q_image.isNull():
+                        self.frame_ready.emit(q_image.copy())
+                    
+                    # Small delay to control frame rate
+                    self.msleep(33)  # ~30 FPS max
+                    
+            except Exception as e:
+                consecutive_errors += 1
+                self.connection_status.emit(False)
+                
+                # Only emit error for first few attempts to prevent spam
+                if consecutive_errors <= 2:
+                    self.error_occurred.emit(f"Stream error: {str(e)}")
+                
+                # Wait before retry, but check if we should stop
+                for _ in range(self.retry_interval * 10):  # Check every 100ms
+                    if not self.running:
+                        break
+                    self.msleep(100)
+                    
+            finally:
+                if self.cap:
+                    try:
+                        self.cap.release()
+                    except:
+                        pass
+                    self.cap = None
 
 
 class MJPEGStreamThread(QThread):
@@ -329,37 +432,62 @@ class IPCameraVideoWidget(QWidget):
         self.video_display = VideoDisplayWidget()
         layout.addWidget(self.video_display)
         
-        # Create stream thread
-        self.stream_thread = MJPEGStreamThread()
-        self.stream_thread.frame_ready.connect(self.video_display.update_frame)
-        self.stream_thread.error_occurred.connect(self.error_occurred.emit)
-        self.stream_thread.connection_status.connect(self.connection_changed.emit)
+        # Create stream threads
+        self.opencv_thread = OpenCVStreamThread()  # For RTSP and OpenCV-compatible HTTP
+        self.mjpeg_thread = MJPEGStreamThread()    # For pure MJPEG HTTP streams
+        
+        # Connect signals for both threads
+        self.opencv_thread.frame_ready.connect(self.video_display.update_frame)
+        self.opencv_thread.error_occurred.connect(self.error_occurred.emit)
+        self.opencv_thread.connection_status.connect(self.connection_changed.emit)
+        
+        self.mjpeg_thread.frame_ready.connect(self.video_display.update_frame)
+        self.mjpeg_thread.error_occurred.connect(self.error_occurred.emit)
+        self.mjpeg_thread.connection_status.connect(self.connection_changed.emit)
         
         # Connection state
         self.is_connected = False
         self.current_url = ""
+        self.active_thread = None
         
-    def connect_to_stream(self, url: str):
-        """Connect to MJPEG stream"""
+    def connect_to_stream(self, url: str, protocol: str = "http"):
+        """Connect to stream using appropriate method based on protocol
+        
+        Args:
+            url: Stream URL
+            protocol: 'http' or 'rtsp'
+        """
         if self.is_connected:
             self.disconnect_stream()
             
         self.current_url = url
-        self.stream_thread.set_stream_url(url)
-        self.stream_thread.start()
+        
+        # Use OpenCV for RTSP or try OpenCV first for HTTP
+        if protocol.lower() == "rtsp" or url.startswith("rtsp://"):
+            self.active_thread = self.opencv_thread
+        else:
+            # Try OpenCV first for HTTP URLs (works with many formats)
+            self.active_thread = self.opencv_thread
+        
+        self.active_thread.set_stream_url(url)
+        self.active_thread.start()
         
     def disconnect_stream(self):
-        """Disconnect from stream"""
-        if self.stream_thread.isRunning():
-            self.stream_thread.stop_stream()
+        """Disconnect from current stream"""
+        # Stop all threads
+        if self.opencv_thread.isRunning():
+            self.opencv_thread.stop_stream()
+        if self.mjpeg_thread.isRunning():
+            self.mjpeg_thread.stop_stream()
             
         self.video_display.show_placeholder()
         self.is_connected = False
         self.current_url = ""
+        self.active_thread = None
         
     def set_connection_timeout(self, timeout: int):
-        """Set connection timeout"""
-        self.stream_thread.set_timeout(timeout)
+        """Set connection timeout (for MJPEG thread only)"""
+        self.mjpeg_thread.set_timeout(timeout)
         
     def set_overlay_enabled(self, enabled: bool):
         """Enable/disable overlay"""
