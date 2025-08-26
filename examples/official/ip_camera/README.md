@@ -4,6 +4,9 @@ A complete solution for transforming your USB camera into an IP camera with both
 
 Real-time barcode scanning powered by **Dynamsoft Barcode Reader**! The GUI client also supports live barcode detection with visual overlays showing detected codes directly on the video stream.
 
+https://github.com/user-attachments/assets/b244a25a-f463-4130-b3aa-b25c2ccdeea1
+
+
 ## 📋 Requirements
 
 - **Python**: 3.7 or higher
@@ -68,5 +71,6 @@ Then:
    - Detected codes appear as green overlays with yellow text
    - Results are displayed in the "Detected Barcodes" text area
 
+   ![IP camera viewer with barcode scanning](https://www.dynamsoft.com/codepool/img/2025/08/ip-camera-viewer.png)
 
 
