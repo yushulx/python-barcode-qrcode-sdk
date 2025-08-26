@@ -211,6 +211,7 @@ class MainWindow(QMainWindow):
     def setup_toolbar(self):
         """Setup application toolbar"""
         toolbar = QToolBar("Main Toolbar")
+        toolbar.setObjectName("MainToolBar")  # Set object name for state management
         toolbar.setMovable(False)
         self.addToolBar(toolbar)
         
