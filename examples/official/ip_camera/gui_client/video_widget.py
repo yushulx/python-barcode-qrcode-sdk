@@ -13,15 +13,23 @@ import numpy as np
 from io import BytesIO
 from typing import Optional, Callable
 
-from PySide6.QtCore import QThread, Signal, QTimer, Qt, QSize
-from PySide6.QtGui import QPixmap, QImage, QPainter, QFont, QPen, QBrush
+from PySide6.QtCore import QThread, Signal, QTimer, Qt, QSize, QPoint
+from PySide6.QtGui import QPixmap, QImage, QPainter, QFont, QPen, QBrush, QPolygon, QFontMetrics
 from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget, QSizePolicy
+
+try:
+    from barcode_scanner import BarcodeScanner
+    BARCODE_AVAILABLE = True
+except ImportError:
+    BARCODE_AVAILABLE = False
+    BarcodeScanner = None
 
 
 class OpenCVStreamThread(QThread):
     """Thread for fetching streams using OpenCV VideoCapture (supports both HTTP and RTSP URLs)"""
     
     frame_ready = Signal(QImage)
+    mat_ready = Signal(object)  # Emit original OpenCV Mat for barcode scanning
     error_occurred = Signal(str)
     connection_status = Signal(bool)
     
@@ -32,9 +40,21 @@ class OpenCVStreamThread(QThread):
         self.cap = None
         self.retry_interval = 3
         
+        # Barcode overlay properties
+        self.barcode_scanner = None
+        self.show_barcode_overlay = True
+        
     def set_stream_url(self, url: str):
         """Set the stream URL (HTTP or RTSP)"""
         self.stream_url = url
+        
+    def set_barcode_scanner(self, scanner):
+        """Set the barcode scanner reference for overlay drawing"""
+        self.barcode_scanner = scanner
+        
+    def set_barcode_overlay_enabled(self, enabled: bool):
+        """Enable/disable barcode overlay on frames"""
+        self.show_barcode_overlay = enabled
         
     def stop_stream(self):
         """Stop the stream thread"""
@@ -82,10 +102,18 @@ class OpenCVStreamThread(QThread):
                     if not ret or frame is None:
                         break
                     
-                    # Convert BGR to RGB
-                    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    # Emit original Mat for barcode scanning
+                    self.mat_ready.emit(frame.copy())
                     
-                    # Convert to QImage
+                    # Draw barcode overlays on frame if enabled
+                    display_frame = frame.copy()
+                    if self.show_barcode_overlay and self.barcode_scanner:
+                        self._draw_barcode_overlay_on_mat(display_frame)
+                    
+                    # Convert BGR to RGB for display
+                    rgb_frame = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
+                    
+                    # Convert to QImage for display
                     h, w, ch = rgb_frame.shape
                     bytes_per_line = ch * w
                     q_image = QImage(rgb_frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
@@ -117,6 +145,54 @@ class OpenCVStreamThread(QThread):
                     except:
                         pass
                     self.cap = None
+                    
+    def _draw_barcode_overlay_on_mat(self, mat):
+        """Draw barcode overlays directly on OpenCV Mat using fresh results"""
+        if not self.barcode_scanner:
+            return
+            
+        try:
+            # Get FRESH results right now - no caching, no timer delays
+            fresh_barcodes = self.barcode_scanner.get_fresh_results()
+            if not fresh_barcodes:
+                return
+                
+            # Draw each fresh barcode result immediately
+            for barcode in fresh_barcodes:
+                points = barcode.get('points', [])
+                text = barcode.get('text', '')
+                
+                if len(points) == 4 and text:
+                    # Convert points to numpy array for OpenCV
+                    import numpy as np
+                    pts = np.array(points, dtype=np.int32)
+                    
+                    # Draw green bounding box
+                    cv2.drawContours(mat, [pts], 0, (0, 255, 0), 3)
+                    
+                    # Draw text label with background
+                    if points:
+                        text_x, text_y = points[0]
+                        text_y = max(text_y - 10, 20)  # Position text above the box
+                        
+                        # Get text size for background
+                        font = cv2.FONT_HERSHEY_SIMPLEX
+                        font_scale = 0.7
+                        thickness = 2
+                        (text_width, text_height), baseline = cv2.getTextSize(text, font, font_scale, thickness)
+                        
+                        # Draw black background rectangle
+                        cv2.rectangle(mat, 
+                                    (text_x - 5, text_y - text_height - 5),
+                                    (text_x + text_width + 5, text_y + baseline + 5),
+                                    (0, 0, 0), -1)
+                        
+                        # Draw yellow text
+                        cv2.putText(mat, text, (text_x, text_y), font, font_scale, (0, 255, 255), thickness)
+                        
+        except Exception as e:
+            # Don't spam with drawing errors
+            pass
 
 
 class MJPEGStreamThread(QThread):
@@ -378,7 +454,7 @@ class VideoDisplayWidget(QLabel):
         font = QFont("Arial", 10, QFont.Bold)
         painter.setFont(font)
         
-        # Draw semi-transparent background
+        # Draw semi-transparent background for top overlay
         overlay_rect = pixmap.rect()
         overlay_rect.setHeight(30)
         painter.fillRect(overlay_rect, QBrush(Qt.black, Qt.SolidPattern))
@@ -416,10 +492,11 @@ class VideoDisplayWidget(QLabel):
 
 
 class IPCameraVideoWidget(QWidget):
-    """Complete video widget with stream thread management"""
+    """Complete video widget with stream thread management and barcode scanning"""
     
     connection_changed = Signal(bool)
     error_occurred = Signal(str)
+    barcode_detected = Signal(list)  # Emitted when barcodes are detected
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -437,18 +514,77 @@ class IPCameraVideoWidget(QWidget):
         self.mjpeg_thread = MJPEGStreamThread()    # For pure MJPEG HTTP streams
         
         # Connect signals for both threads
-        self.opencv_thread.frame_ready.connect(self.video_display.update_frame)
+        self.opencv_thread.frame_ready.connect(self._on_frame_ready)
+        self.opencv_thread.mat_ready.connect(self._on_mat_ready)
         self.opencv_thread.error_occurred.connect(self.error_occurred.emit)
         self.opencv_thread.connection_status.connect(self.connection_changed.emit)
         
-        self.mjpeg_thread.frame_ready.connect(self.video_display.update_frame)
+        self.mjpeg_thread.frame_ready.connect(self._on_frame_ready)
         self.mjpeg_thread.error_occurred.connect(self.error_occurred.emit)
         self.mjpeg_thread.connection_status.connect(self.connection_changed.emit)
+        
+        # Initialize barcode scanner
+        self.barcode_scanner = None
+        self.barcode_scanning_enabled = False
+        if BARCODE_AVAILABLE:
+            try:
+                self.barcode_scanner = BarcodeScanner()
+                self.barcode_scanner.barcode_detected.connect(self._on_barcode_detected)
+                self.barcode_scanner.error_occurred.connect(self._on_barcode_error)
+                # Pass scanner reference to OpenCV thread for overlay drawing
+                self.opencv_thread.set_barcode_scanner(self.barcode_scanner)
+            except Exception as e:
+                self.barcode_scanner = None
+                print(f"Failed to initialize barcode scanner: {e}")
         
         # Connection state
         self.is_connected = False
         self.current_url = ""
         self.active_thread = None
+        
+    def _on_frame_ready(self, qimage):
+        """Handle new QImage frame from stream thread"""
+        # Update video display
+        self.video_display.update_frame(qimage)
+            
+    def _on_mat_ready(self, mat):
+        """Handle new OpenCV Mat frame for barcode processing"""
+        # Process frame for barcode scanning if enabled
+        if self.barcode_scanning_enabled and self.barcode_scanner:
+            self.barcode_scanner.process_frame(mat)
+            
+    def _on_barcode_detected(self, barcodes):
+        """Handle barcode detection results"""
+        # Emit signal for external handling (text results)
+        # Overlay drawing is now handled in OpenCV thread
+        self.barcode_detected.emit(barcodes)
+        
+    def _on_barcode_error(self, error_message):
+        """Handle barcode scanner errors"""
+        # Don't spam with barcode errors, just emit to main error handler
+        self.error_occurred.emit(f"Barcode scanner: {error_message}")
+        
+    def enable_barcode_scanning(self, enabled: bool = True):
+        """Enable or disable barcode scanning"""
+        if not self.barcode_scanner:
+            return False
+            
+        self.barcode_scanning_enabled = enabled
+        
+        if enabled:
+            self.barcode_scanner.start_scanning()
+            # Enable overlay drawing in OpenCV thread
+            self.opencv_thread.set_barcode_overlay_enabled(True)
+        else:
+            self.barcode_scanner.stop_scanning()
+            # Disable overlay drawing in OpenCV thread
+            self.opencv_thread.set_barcode_overlay_enabled(False)
+            
+        return True
+        
+    def is_barcode_scanning_available(self) -> bool:
+        """Check if barcode scanning is available"""
+        return self.barcode_scanner is not None and self.barcode_scanner.is_available()
         
     def connect_to_stream(self, url: str, protocol: str = "http"):
         """Connect to stream using appropriate method based on protocol
@@ -474,6 +610,10 @@ class IPCameraVideoWidget(QWidget):
         
     def disconnect_stream(self):
         """Disconnect from current stream"""
+        # Stop barcode scanning
+        if self.barcode_scanning_enabled:
+            self.enable_barcode_scanning(False)
+            
         # Stop all threads
         if self.opencv_thread.isRunning():
             self.opencv_thread.stop_stream()
@@ -523,5 +663,7 @@ class IPCameraVideoWidget(QWidget):
         """Destructor - ensure cleanup"""
         try:
             self.disconnect_stream()
+            if self.barcode_scanner:
+                self.barcode_scanner.cleanup()
         except:
             pass

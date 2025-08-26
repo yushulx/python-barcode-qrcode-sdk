@@ -10,6 +10,9 @@ requests==2.31.0
 opencv-python==4.8.1.78
 numpy>=1.21.0,<2.0.0
 
+# Dynamsoft Capture Vision Bundle for barcode scanning
+dynamsoft-capture-vision-bundle>=3.0.6000
+
 # Additional utilities
 urllib3>=1.26.0
 certifi>=2023.0.0

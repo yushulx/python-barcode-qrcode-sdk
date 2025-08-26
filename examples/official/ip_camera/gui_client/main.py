@@ -10,11 +10,11 @@ import os
 from typing import Dict, Any, Optional
 
 from PySide6.QtCore import Qt, QTimer, QSettings, QSize, QPoint, Signal
-from PySide6.QtGui import QAction, QFont, QPixmap
+from PySide6.QtGui import QAction, QFont, QPixmap, QTextCursor
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QStatusBar, QToolBar, QPushButton, QLabel, QSplitter,
-    QMessageBox, QFileDialog, QFrame, QSizePolicy
+    QMessageBox, QFileDialog, QFrame, QSizePolicy, QCheckBox, QTextEdit
 )
 
 from video_widget import IPCameraVideoWidget
@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
         """Create the control panel"""
         panel = QFrame()
         panel.setFrameStyle(QFrame.StyledPanel)
-        panel.setMaximumHeight(120)
+        panel.setMaximumHeight(180)  # Increased height for barcode controls
         
         layout = QVBoxLayout(panel)
         
@@ -123,6 +123,49 @@ class MainWindow(QMainWindow):
         info_layout.addWidget(self.resolution_label)
         
         layout.addLayout(info_layout)
+        
+        # Barcode scanning section
+        barcode_layout = QVBoxLayout()
+        
+        # Barcode control row
+        barcode_control_layout = QHBoxLayout()
+        
+        # Barcode scanning toggle
+        self.barcode_enabled_checkbox = QCheckBox("Enable Barcode Scanning")
+        self.barcode_enabled_checkbox.setEnabled(False)  # Will be enabled when camera connects
+        self.barcode_enabled_checkbox.toggled.connect(self.toggle_barcode_scanning)
+        barcode_control_layout.addWidget(self.barcode_enabled_checkbox)
+        
+        barcode_control_layout.addStretch()
+        
+        # Barcode scanning status
+        self.barcode_status_label = QLabel("Barcode scanner: Not available")
+        self.barcode_status_label.setStyleSheet("color: #888; font-size: 10px;")
+        barcode_control_layout.addWidget(self.barcode_status_label)
+        
+        barcode_layout.addLayout(barcode_control_layout)
+        
+        # Barcode results display
+        results_label = QLabel("Detected Barcodes:")
+        results_label.setStyleSheet("font-weight: bold; margin-top: 5px;")
+        barcode_layout.addWidget(results_label)
+        
+        self.barcode_results_text = QTextEdit()
+        self.barcode_results_text.setMaximumHeight(60)
+        self.barcode_results_text.setReadOnly(True)
+        self.barcode_results_text.setPlaceholderText("No barcodes detected yet...")
+        self.barcode_results_text.setStyleSheet("""
+            QTextEdit {
+                background-color: #f5f5f5;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-family: monospace;
+                font-size: 11px;
+            }
+        """)
+        barcode_layout.addWidget(self.barcode_results_text)
+        
+        layout.addLayout(barcode_layout)
         
         return panel
         
@@ -205,11 +248,15 @@ class MainWindow(QMainWindow):
         # Video widget connections
         self.video_widget.connection_changed.connect(self.on_connection_changed)
         self.video_widget.error_occurred.connect(self.on_error_occurred)
+        self.video_widget.barcode_detected.connect(self.on_barcode_detected)
         
         # Status update timer
         self.status_timer = QTimer()
         self.status_timer.timeout.connect(self.update_status_info)
         self.status_timer.start(1000)  # Update every second
+        
+        # Update barcode scanner availability
+        self.update_barcode_status()
         
     def show_connection_dialog(self):
         """Show connection dialog"""
@@ -254,6 +301,55 @@ class MainWindow(QMainWindow):
         self.connection_dialog = None
         self.update_ui_state()
         
+    def update_barcode_status(self):
+        """Update barcode scanner status display"""
+        if self.video_widget.is_barcode_scanning_available():
+            self.barcode_status_label.setText("Barcode scanner: Ready")
+            self.barcode_status_label.setStyleSheet("color: green; font-size: 10px;")
+        else:
+            self.barcode_status_label.setText("Barcode scanner: Not available")
+            self.barcode_status_label.setStyleSheet("color: red; font-size: 10px;")
+            
+    def toggle_barcode_scanning(self, enabled: bool):
+        """Toggle barcode scanning on/off"""
+        if self.video_widget.enable_barcode_scanning(enabled):
+            if enabled:
+                self.barcode_status_label.setText("Barcode scanner: Active")
+                self.barcode_status_label.setStyleSheet("color: blue; font-size: 10px;")
+            else:
+                self.barcode_status_label.setText("Barcode scanner: Ready")
+                self.barcode_status_label.setStyleSheet("color: green; font-size: 10px;")
+                # Clear results when disabled
+                self.barcode_results_text.clear()
+        else:
+            # Failed to enable/disable, reset checkbox
+            self.barcode_enabled_checkbox.setChecked(False)
+            
+    def on_barcode_detected(self, barcodes: list):
+        """Handle barcode detection results"""
+        if not barcodes:
+            return
+            
+        # Add new barcodes to results display
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+        
+        for barcode in barcodes:
+            result_text = f"[{timestamp}] {barcode}\n"
+            self.barcode_results_text.append(result_text)
+            
+        # Keep only recent results (limit to ~100 lines)
+        text = self.barcode_results_text.toPlainText()
+        lines = text.split('\n')
+        if len(lines) > 100:
+            # Keep last 80 lines
+            self.barcode_results_text.setPlainText('\n'.join(lines[-80:]))
+            
+        # Scroll to bottom
+        cursor = self.barcode_results_text.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        self.barcode_results_text.setTextCursor(cursor)
+        
     def on_connection_changed(self, connected: bool):
         """Handle connection status change"""
         self.is_connected = connected
@@ -287,6 +383,15 @@ class MainWindow(QMainWindow):
         # Update toolbar actions
         self.toolbar_disconnect_action.setEnabled(self.is_connected)
         self.toolbar_screenshot_action.setEnabled(self.is_connected)
+        
+        # Update barcode scanning controls
+        can_scan = self.is_connected and self.video_widget.is_barcode_scanning_available()
+        self.barcode_enabled_checkbox.setEnabled(can_scan)
+        
+        if not self.is_connected:
+            # Disable barcode scanning when disconnected
+            self.barcode_enabled_checkbox.setChecked(False)
+            self.barcode_results_text.clear()
         
         # Update labels
         if self.is_connected and self.current_camera_name:
