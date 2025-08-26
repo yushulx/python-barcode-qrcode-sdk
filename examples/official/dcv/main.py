@@ -1035,7 +1035,7 @@ class ImageDisplayWidget(QLabel):
     
     def show_placeholder(self):
         """Show placeholder text when no image is loaded."""
-        self.setText("🖼️ Drag and drop files here\n\n📁 Supported formats:\n• Images: JPG, PNG, BMP, TIFF, WEBP\n• PDF files (native support)\n\n🖱️ Or click 'Load File' button")
+        self.setText("🖼️ Drag and drop files here\n\n📁 Supported formats:\n• Images: JPG, PNG, BMP, TIFF, WEBP\n• PDF files (native support)\n\n🖱️ Options:\n• Click 'Load File' button\n• Click 'Paste from Clipboard' button\n• Press Ctrl+V to paste")
         self.setStyleSheet("border: 2px dashed #ccc; background-color: #f9f9f9; color: #666; font-size: 14px;")
     
     def set_image(self, cv_image, detection_items=None):
@@ -1760,6 +1760,13 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.load_button.clicked.connect(self.load_file)
         file_layout.addWidget(self.load_button)
         
+        # Paste from clipboard button
+        self.paste_button = QPushButton("📋 Paste from Clipboard")
+        self.paste_button.setMinimumHeight(35)
+        self.paste_button.clicked.connect(self.paste_from_clipboard)
+        self.paste_button.setToolTip("Paste an image from clipboard (Ctrl+V)")
+        file_layout.addWidget(self.paste_button)
+        
         # File info
         info_group = QGroupBox("File Information")
         info_layout = QVBoxLayout(info_group)
@@ -2015,6 +2022,11 @@ class BarcodeReaderMainWindow(QMainWindow):
         open_action.setShortcut("Ctrl+O")
         open_action.triggered.connect(self.load_file)
         file_menu.addAction(open_action)
+        
+        paste_action = QAction("Paste from Clipboard", self)
+        paste_action.setShortcut("Ctrl+V")
+        paste_action.triggered.connect(self.paste_from_clipboard)
+        file_menu.addAction(paste_action)
         
         file_menu.addSeparator()
         
@@ -2554,9 +2566,27 @@ class BarcodeReaderMainWindow(QMainWindow):
             if hasattr(self, 'camera_widget'):
                 self.camera_widget.cleanup()
             
+            # Cleanup temporary clipboard files
+            if hasattr(self, 'temp_clipboard_files'):
+                for temp_file in self.temp_clipboard_files:
+                    try:
+                        if os.path.exists(temp_file):
+                            os.unlink(temp_file)
+                    except:
+                        pass  # Ignore cleanup errors
+            
             event.accept()
         else:
             event.ignore()
+    
+    def keyPressEvent(self, event):
+        """Handle key press events."""
+        # Handle Ctrl+V for paste from clipboard
+        if event.key() == Qt.Key.Key_V and event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            self.paste_from_clipboard()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
     
     def log_message(self, message):
         """Log a message to status bar and results panel."""
@@ -2583,6 +2613,83 @@ class BarcodeReaderMainWindow(QMainWindow):
         if file_path:
             self.update_last_used_directory(file_path)
             self.load_file_path(file_path)
+    
+    def paste_from_clipboard(self):
+        """Paste an image from the system clipboard."""
+        try:
+            clipboard = QApplication.clipboard()
+            mime_data = clipboard.mimeData()
+            
+            # Check if clipboard contains image data
+            if mime_data.hasImage():
+                # Get the image from clipboard
+                qimage = clipboard.image()
+                
+                if qimage.isNull():
+                    QMessageBox.information(self, "No Image", "No valid image found in clipboard.")
+                    return
+                
+                self.log_message("📋 Loading image from clipboard")
+                
+                # Convert QImage to a format we can work with
+                # Save temporarily to process it like a regular file
+                import tempfile
+                # Create a persistent temporary file that won't be auto-deleted
+                temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="clipboard_")
+                os.close(temp_fd)  # Close the file descriptor, but keep the file
+                
+                # Save the QImage to temporary file
+                success = qimage.save(temp_path, "PNG")
+                if not success:
+                    # Clean up the temporary file if save failed
+                    try:
+                        os.unlink(temp_path)
+                    except:
+                        pass
+                    QMessageBox.critical(self, "Error", "Failed to process clipboard image.")
+                    return
+                
+                # Store the temp path for cleanup later
+                if not hasattr(self, 'temp_clipboard_files'):
+                    self.temp_clipboard_files = []
+                self.temp_clipboard_files.append(temp_path)
+                
+                # Load the temporary file using standard file loading
+                # This ensures consistency with regular file loading
+                self.load_file_path(temp_path)
+                
+                # Override the file info to show it's from clipboard
+                width, height = qimage.width(), qimage.height()
+                self.file_info_label.setText(f"📋 Clipboard Image ({width}x{height})")
+                
+                self.log_message("✅ Clipboard image loaded successfully")
+                
+            elif mime_data.hasUrls():
+                # Handle file URLs from clipboard (copied file paths)
+                urls = mime_data.urls()
+                if urls:
+                    file_path = urls[0].toLocalFile()
+                    if file_path and os.path.exists(file_path):
+                        # Check if it's a supported image format
+                        supported_exts = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.webp', '.pdf'}
+                        file_ext = os.path.splitext(file_path)[1].lower()
+                        if file_ext in supported_exts:
+                            self.log_message(f"📋 Loading file from clipboard: {os.path.basename(file_path)}")
+                            self.load_file_path(file_path)
+                        else:
+                            QMessageBox.information(self, "Unsupported Format", 
+                                                  f"File format '{file_ext}' is not supported.")
+                    else:
+                        QMessageBox.information(self, "File Not Found", 
+                                              "The file path from clipboard could not be found.")
+            else:
+                QMessageBox.information(self, "No Image", 
+                                      "No image or supported file found in clipboard.\n\n"
+                                      "Try copying an image or screenshot first.")
+                
+        except Exception as e:
+            self.log_message(f"❌ Clipboard error: {e}")
+            QMessageBox.critical(self, "Clipboard Error", f"Failed to paste from clipboard: {e}")
     
     def load_file_path(self, file_path):
         """Load a file from the given path."""
@@ -2672,11 +2779,22 @@ class BarcodeReaderMainWindow(QMainWindow):
     def process_current_file(self):
         """Process the current file for detection."""
         if not self.current_file_path or self.is_processing:
+            self.log_message(f"❌ Cannot process: file_path={self.current_file_path}, is_processing={self.is_processing}")
+            return
+        
+        # Check if the file exists (important for clipboard temp files)
+        if not os.path.exists(self.current_file_path):
+            self.log_message(f"❌ File not found: {self.current_file_path}")
+            QMessageBox.critical(self, "File Error", f"The image file could not be found:\n{self.current_file_path}")
             return
         
         # Get current detection mode from the combo box
         current_mode_text = self.picture_detection_mode_combo.currentText()
         mode_name = current_mode_text.split(" - ")[0]
+        
+        self.log_message(f"🔍 Processing file: {os.path.basename(self.current_file_path)}")
+        self.log_message(f"📁 Full path: {self.current_file_path}")
+        self.log_message(f"🎯 Detection mode: {mode_name}")
         
         # Manage intermediate receiver based on detection mode to avoid deadlocks
         # Only use receiver for barcode detection - remove for document/MRZ modes
