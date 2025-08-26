@@ -1003,12 +1003,144 @@ class ProcessingWorker(QThread):
             
             # Get the appropriate template for the detection mode
             template = DETECTION_MODES[mode_name]["template"]
-            results = self.cvr_instance.capture_multi_pages(self.file_path, template)
+            
+            # Special handling for MRZ detection with document normalization fallback
+            if mode_name == "MRZ":
+                results = self._process_mrz_with_fallback(template)
+            else:
+                # Standard single-stage processing for Barcode and Document modes
+                results = self.cvr_instance.capture_multi_pages(self.file_path, template)
             
             self.finished.emit(results)
             
         except Exception as e:
             self.error.emit(str(e))
+    
+    def _process_mrz_with_fallback(self, mrz_template):
+        """Process MRZ with document normalization fallback for improved detection rates."""
+        try:
+            # Stage 1: Try MRZ detection on original image
+            self.progress.emit("📄 Stage 1: MRZ detection on original image...")
+            mrz_results = self.cvr_instance.capture_multi_pages(self.file_path, mrz_template)
+            
+            # Check if we found any MRZ results
+            has_mrz_results = False
+            result_list = mrz_results.get_results()
+            
+            for result in result_list:
+                if result.get_error_code() == EnumErrorCode.EC_OK:
+                    # Check for text line results
+                    line_result = result.get_recognized_text_lines_result()
+                    if line_result and line_result.get_items():
+                        has_mrz_results = True
+                        break
+                    
+                    # Check for parsed results
+                    parsed_result = result.get_parsed_result()
+                    if parsed_result and parsed_result.get_items():
+                        has_mrz_results = True
+                        break
+            
+            if has_mrz_results:
+                self.progress.emit("✅ MRZ detection successful on original image")
+                return mrz_results
+            
+            # Stage 2: No MRZ found, try document normalization + MRZ
+            self.progress.emit("📄 Stage 2: Document normalization + MRZ detection...")
+            
+            # Step 2a: Perform document detection to get normalized image
+            doc_template = DETECTION_MODES["Document"]["template"]
+            doc_results = self.cvr_instance.capture_multi_pages(self.file_path, doc_template)
+            
+            # Check if we got any normalized documents
+            normalized_images = []
+            doc_result_list = doc_results.get_results()
+
+            for result in doc_result_list:
+                if result.get_error_code() == EnumErrorCode.EC_OK:
+                    processed_doc_result = result.get_processed_document_result()
+                    if processed_doc_result:
+                        deskewed_items = processed_doc_result.get_deskewed_image_result_items()
+                        for item in deskewed_items:
+                            # Get the normalized image data
+                            normalized_image = item.get_image_data()
+                            normalized_images.append(normalized_image)
+            
+            if not normalized_images:
+                self.progress.emit("⚠️ No documents detected for normalization, using original results")
+                return mrz_results
+            
+            # Step 2b: Process normalized images for MRZ detection
+            self.progress.emit(f"🔍 Processing {len(normalized_images)} normalized document(s) for MRZ...")
+            
+            # Process the first normalized image (typically there's only one)
+            # Save it as a temporary file and process with standard method
+            for i, normalized_image in enumerate(normalized_images):
+                try:
+                    # Convert ImageData to OpenCV format and save as temporary file
+                    self.progress.emit(f"📋 Processing normalized document {i+1}/{len(normalized_images)}...")
+
+                    # Convert ImageData to OpenCV format using the utility function
+                    from utils import convertImageData2Mat
+                    cv_image = convertImageData2Mat(normalized_image)
+                    
+                    # Save the normalized image as a temporary file
+                    import tempfile
+                    temp_fd, temp_path = tempfile.mkstemp(suffix=".png", prefix="normalized_mrz_")
+                    os.close(temp_fd)
+                    
+                    # Save using OpenCV
+                    success = cv2.imwrite(temp_path, cv_image)
+                    if not success:
+                        self.progress.emit(f"⚠️ Failed to save normalized image {i+1}")
+                        continue
+                    
+                    # Process the normalized image for MRZ detection
+                    self.progress.emit(f"🔍 Running MRZ detection on normalized image {i+1}...")
+                    enhanced_results = self.cvr_instance.capture_multi_pages(temp_path, mrz_template)
+
+                    # Clean up temporary file
+                    try:
+                        os.unlink(temp_path)
+                    except:
+                        pass
+                    
+                    # Check if we got better results
+                    has_enhanced_results = False
+                    enhanced_result_list = enhanced_results.get_results()
+                    
+                    for result in enhanced_result_list:
+                        if result.get_error_code() == EnumErrorCode.EC_OK:
+                            # Check for text line results
+                            line_result = result.get_recognized_text_lines_result()
+                            if line_result and line_result.get_items():
+                                has_enhanced_results = True
+                                break
+                            
+                            # Check for parsed results
+                            parsed_result = result.get_parsed_result()
+                            if parsed_result and parsed_result.get_items():
+                                has_enhanced_results = True
+                                break
+                    
+                    if has_enhanced_results:
+                        self.progress.emit("✅ MRZ detection successful on normalized document!")
+                        return enhanced_results
+                    else:
+                        self.progress.emit(f"⚠️ No MRZ found in normalized document {i+1}")
+                        
+                except Exception as norm_error:
+                    self.progress.emit(f"⚠️ Error processing normalized image {i+1}: {norm_error}")
+                    continue
+            
+            # If we get here, no MRZ was found in any normalized images
+            self.progress.emit("⚠️ No MRZ found in any normalized documents, using original results")
+            return mrz_results
+                
+        except Exception as e:
+            self.progress.emit(f"❌ Error in MRZ fallback processing: {e}")
+            # Fallback to standard processing
+            return self.cvr_instance.capture_multi_pages(self.file_path, mrz_template)
 
 class ImageDisplayWidget(QLabel):
     """Custom widget for displaying and zooming images with barcode annotations."""
