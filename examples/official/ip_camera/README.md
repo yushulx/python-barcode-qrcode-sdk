@@ -1,11 +1,14 @@
-# USB Camera to IP Camera 
+# USB Camera to IP Camera with Barcode Scanning
 
 A complete solution for transforming your USB camera into an IP camera with both web access and a professional desktop client! This system includes a Python server that streams video from any USB camera over your local network, plus a modern GUI client for viewing and managing camera streams.
+
+Real-time barcode scanning powered by **Dynamsoft Barcode Reader**! The GUI client also supports live barcode detection with visual overlays showing detected codes directly on the video stream.
 
 ## 📋 Requirements
 
 - **Python**: 3.7 or higher
 - **Hardware**: USB camera connected to your PC
+- [30-day Trial License Key](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) for Dynamsoft Barcode Reader
 
 ## 🛠️ Installation
 
@@ -20,6 +23,13 @@ A complete solution for transforming your USB camera into an IP camera with both
    pip install -r requirements.txt
    ```
 
+4. Update the license key in `gui_client/barcode_scanner.py` for barcode scanning.
+    
+    ```python
+    license_key = "LICENSE-KEY"
+    ```
+    
+
 ## 🎯 Quick Start
 
 ### 1. Start the IP Camera Server
@@ -31,7 +41,6 @@ python ip_camera_server.py
 The server will:
 - Detect your USB camera automatically
 - Start streaming on port 5000
-- Display access URLs in console
 - Create a web interface at `http://localhost:5000`
 
 ### 2. Access Your Camera
@@ -47,11 +56,17 @@ python main.py
 ```
 
 Then:
-1. Click "Connect to Camera" or press Ctrl+O
+1. Click "Connect to Camera"
 2. Enter connection details:
    - **IP Address**: `localhost` (or your PC's IP)
    - **Port**: `5000`
    - **Stream Path**: `/video_feed`
 3. Click "Connect" to start streaming
+4. **Enable Barcode Scanning** (optional):
+   - Check "Enable Barcode Scanning" in the control panel
+   - Point camera at barcodes/QR codes to see real-time detection
+   - Detected codes appear as green overlays with yellow text
+   - Results are displayed in the "Detected Barcodes" text area
+
 
 
