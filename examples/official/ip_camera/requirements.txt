@@ -1,0 +1,25 @@
+# USB Camera to IP Camera Server Dependencies
+
+# Web Framework
+Flask==2.3.3
+
+# Computer Vision Library
+opencv-python==4.8.1.78
+
+# Additional utilities
+Werkzeug==2.3.7
+Jinja2==3.1.2
+MarkupSafe==2.1.3
+itsdangerous==2.1.2
+click==8.1.7
+
+# Optional: For enhanced video processing
+numpy>=1.21.0,<2.0.0
+
+# System utilities
+psutil==5.9.6
+
+# Development dependencies (optional)
+# pytest==7.4.2
+# black==23.9.1
+# flake8==6.1.0

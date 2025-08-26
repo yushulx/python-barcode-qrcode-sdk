@@ -1,0 +1,33 @@
+{
+    "camera_index": 0,
+    "host": "0.0.0.0",
+    "port": 5000,
+    "resolution": [
+        1280,
+        720
+    ],
+    "fps": 30,
+    "auto_reconnect": true,
+    "log_level": "INFO",
+    "stream_settings": {
+        "enable_timestamp": true,
+        "timestamp_color": [
+            0,
+            255,
+            0
+        ],
+        "timestamp_font_scale": 0.7,
+        "timestamp_thickness": 2
+    },
+    "camera_settings": {
+        "brightness": null,
+        "contrast": null,
+        "saturation": null,
+        "exposure": null
+    },
+    "network": {
+        "max_connections": 10,
+        "buffer_size": 1024,
+        "timeout": 30
+    }
+}

@@ -1,0 +1,28 @@
+{
+  "video_settings": {
+    "fit_mode": 0,
+    "show_overlay": true,
+    "auto_reconnect": true,
+    "reconnect_delay": 3
+  },
+  "connection_settings": {
+    "timeout": 10,
+    "buffer_size": 1024,
+    "user_agent": "IP-Camera-GUI-Client/1.0",
+    "retry_attempts": 3
+  },
+  "interface_settings": {
+    "always_on_top": false,
+    "start_fullscreen": false,
+    "save_window_position": true,
+    "theme": "system",
+    "language": "en"
+  },
+  "recent_connections": [],
+  "application": {
+    "name": "IP Camera Viewer",
+    "version": "1.0.0",
+    "author": "IP Camera Tools",
+    "description": "Professional desktop application for viewing IP camera streams"
+  }
+}
