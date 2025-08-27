@@ -1,5 +1,5 @@
 PySide6==6.7.2
-requests==2.31.0
+requests==2.32.4
 opencv-python==4.8.1.78
 numpy>=1.21.0,<2.0.0
 dynamsoft-capture-vision-bundle>=3.0.6000
