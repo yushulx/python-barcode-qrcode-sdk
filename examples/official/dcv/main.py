@@ -988,6 +988,7 @@ class ProcessingWorker(QThread):
     finished = Signal(object)  # Processing results
     error = Signal(str)        # Error message
     progress = Signal(str)     # Progress message
+    normalized_image_used = Signal(object)  # Signal when normalized image should replace original
     
     def __init__(self, cvr_instance, file_path, detection_mode="Barcode"):
         super().__init__()
@@ -1125,6 +1126,8 @@ class ProcessingWorker(QThread):
                     
                     if has_enhanced_results:
                         self.progress.emit("✅ MRZ detection successful on normalized document!")
+                        # Emit the normalized image to replace the original
+                        self.normalized_image_used.emit(cv_image)
                         return enhanced_results
                     else:
                         self.progress.emit(f"⚠️ No MRZ found in normalized document {i+1}")
@@ -2958,7 +2961,25 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.worker.finished.connect(self.on_processing_finished)
         self.worker.error.connect(self.on_processing_error)
         self.worker.progress.connect(self.log_message)
+        self.worker.normalized_image_used.connect(self.on_normalized_image_used)
         self.worker.start()
+    
+    def on_normalized_image_used(self, normalized_image):
+        """Handle when a normalized image should replace the original image."""
+        try:
+            self.log_message("🔄 Replacing original image with normalized document...")
+            
+            # Replace the original image in the image widget
+            if hasattr(self, 'image_widget') and self.image_widget:
+                self.image_widget.original_image = normalized_image.copy()
+                # Update the current pages if we have them
+                if hasattr(self, 'current_pages') and 0 in self.current_pages:
+                    self.current_pages[0] = normalized_image.copy()
+                
+                self.log_message("✅ Image replaced with normalized document for better MRZ coordinate mapping")
+                
+        except Exception as e:
+            self.log_message(f"⚠️ Error replacing image with normalized version: {e}")
     
     def on_processing_finished(self, results):
         """Handle completion of detection processing."""
