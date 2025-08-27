@@ -1,27 +1,5 @@
-# IP Camera Viewer GUI Client Dependencies
-
-# PySide6 GUI Framework
 PySide6==6.7.2
-
-# HTTP requests for MJPEG streaming
 requests==2.31.0
-
-# OpenCV for RTSP URL support
 opencv-python==4.8.1.78
 numpy>=1.21.0,<2.0.0
-
-# Dynamsoft Capture Vision Bundle for barcode scanning
 dynamsoft-capture-vision-bundle>=3.0.6000
-
-# Additional utilities
-urllib3>=1.26.0
-certifi>=2023.0.0
-
-# Optional: For enhanced image processing
-Pillow>=10.0.0
-
-# Development dependencies (optional)
-# pytest==7.4.2
-# pytest-qt==4.2.0
-# black==23.9.1
-# flake8==6.1.0
