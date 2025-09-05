@@ -1,0 +1,7 @@
+ultralytics==8.* 
+opencv-python 
+numpy 
+tqdm 
+pyyaml
+midv500
+pyside6
