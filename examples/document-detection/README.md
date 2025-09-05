@@ -2,6 +2,8 @@
 
 This directory contains a complete pipeline for training YOLO segmentation models for document detection using the [MIDV500 dataset](https://github.com/fcakyon/midv500/tree/master) and [ultralytics](https://pypi.org/project/ultralytics/).
 
+https://github.com/user-attachments/assets/7b42b523-b3f2-4bae-ac9f-53e3e6d3a7c2
+
 ## 🚀 Quick Start
 
 ### 1. Install Dependencies
