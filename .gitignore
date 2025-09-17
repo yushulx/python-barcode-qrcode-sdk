@@ -5,3 +5,4 @@ dist
 /examples/official/9.x/jupyter_notebook/.ipynb_checkpoints
 /examples/official/9.x/qt_gui/__pycache__/*.pyc
 .DS_Store
+*.pyc
