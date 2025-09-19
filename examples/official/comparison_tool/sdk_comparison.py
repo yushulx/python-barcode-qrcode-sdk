@@ -971,6 +971,18 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         # Progress bar
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid #bbb;
+                border-radius: 5px;
+                text-align: center;
+                font-weight: bold;
+            }
+            QProgressBar::chunk {
+                background-color: #007acc;
+                border-radius: 3px;
+            }
+        """)
         toolbar_layout.addWidget(self.progress_bar)
         
         main_layout.addLayout(toolbar_layout)
@@ -1027,6 +1039,9 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready - Configure SDKs to begin")
+
+        # New added file list
+        self.new_files = []
     
     def setup_drag_drop(self):
         """Setup drag and drop functionality"""
@@ -1053,16 +1068,11 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
                 for ext in ['*.png', '*.jpg', '*.jpeg', '*.bmp', '*.tiff']:
                     new_files.extend(Path(path).glob(ext))
                     new_files.extend(Path(path).glob(ext.upper()))
-        
+
         if new_files:
             # Convert Path objects to strings
-            new_files = [str(f) for f in new_files]
-            self.add_image_files(new_files)
-            
-            # If a folder was dropped and we have SDKs configured, process all images
-            # if folder_dropped and len(self.sdk_versions) >= 2:
-            #     self.process_batch_images(new_files)
-            # Processing will be triggered automatically by selecting the last added image
+            self.new_files = [str(f) for f in new_files]
+            self.add_image_files(self.new_files)
     
     def show_sdk_config(self):
         """Show SDK configuration dialog"""
@@ -1099,6 +1109,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             "Image Files (*.png *.jpg *.jpeg *.bmp *.tiff);;All Files (*)"
         )
         if files:
+            self.new_files = [str(f) for f in files]
             self.add_image_files(files)
     
     def add_image_files(self, files: List[str]):
@@ -1158,74 +1169,6 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             # Clear results table
             self.results_table.setRowCount(0)
     
-    def process_batch_images(self, image_files: List[str]):
-        """Process a batch of images from folder drop"""
-        if not image_files or len(self.sdk_versions) < 2:
-            return
-        
-        # Show progress
-        self.progress_bar.setVisible(True)
-        self.progress_bar.setRange(0, len(image_files) * len(self.sdk_versions))
-        self.progress_bar.setValue(0)
-        
-        self.status_bar.showMessage(f"Processing {len(image_files)} images in batch...")
-        
-        # Stop existing thread if running
-        if self.processing_thread and self.processing_thread.isRunning():
-            self.processing_thread.terminate()
-            self.processing_thread.wait(1000)
-        
-        # Start batch processing
-        self.processing_thread = ProcessingThread(image_files, self.sdk_versions)
-        
-        # Connect signals for batch processing
-        self.processing_thread.result_ready.connect(
-            self.on_batch_result_ready, Qt.ConnectionType.QueuedConnection
-        )
-        self.processing_thread.processing_complete.connect(
-            self.on_batch_processing_complete, Qt.ConnectionType.QueuedConnection
-        )
-        
-        self.processing_thread.start()
-    
-    def on_batch_result_ready(self, image_path: str, sdk_name: str, result: ProcessingResult):
-        """Handle batch processing result"""
-        if image_path not in self.results:
-            self.results[image_path] = {}
-        
-        self.results[image_path][sdk_name] = result
-        
-        # Update progress
-        current_value = self.progress_bar.value() + 1
-        self.progress_bar.setValue(current_value)
-        
-        # Update status
-        barcodes_found = len(result.barcodes) if result.success else 0
-        status_msg = f"Batch processing: {os.path.basename(image_path)} with {sdk_name} - {barcodes_found} barcodes"
-        self.status_bar.showMessage(status_msg)
-        
-        # If we have results from all SDKs for this image, add to table
-        if len(self.results[image_path]) == len(self.sdk_versions):
-            self.results_table.add_or_update_result(image_path, self.results[image_path])
-    
-    def on_batch_processing_complete(self):
-        """Handle batch processing completion"""
-        self.progress_bar.setVisible(False)
-        
-        total_images = len([img for img in self.results.keys() if len(self.results[img]) == len(self.sdk_versions)])
-        total_barcodes = sum(
-            sum(len(result.barcodes) for result in img_results.values())
-            for img_results in self.results.values()
-            if len(img_results) == len(self.sdk_versions)
-        )
-        
-        self.status_bar.showMessage(f"✅ Batch processing complete! {total_images} images, {total_barcodes} total barcodes found.")
-        
-        # Clean up thread
-        if self.processing_thread:
-            self.processing_thread.wait()
-            self.processing_thread = None
-    
     def process_selected_image(self, image_path: str):
         """Process a single selected image"""
         if not image_path or not os.path.exists(image_path):
@@ -1250,7 +1193,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             
         # Show progress
         self.progress_bar.setVisible(True)
-        self.progress_bar.setRange(0, len(self.sdk_versions))
+        self.progress_bar.setRange(0, len(self.sdk_versions) * len(self.new_files))
         self.progress_bar.setValue(0)
         
         self.status_bar.showMessage(f"Processing {os.path.basename(image_path)}...")
@@ -1261,7 +1204,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             self.processing_thread.wait(1000)
         
         # Start processing the selected image
-        self.processing_thread = ProcessingThread([image_path], self.sdk_versions)
+        self.processing_thread = ProcessingThread(self.new_files, self.sdk_versions)
         
         # Connect signals
         self.processing_thread.result_ready.connect(
@@ -1329,8 +1272,6 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
     
     def clear_all(self):
         """Clear all data"""
-        self.image_comparison.sdk1_results_text.clear()
-        self.image_comparison.sdk2_results_text.clear()
         self.image_files.clear()
         self.file_list.clear()
         self.results.clear()
@@ -1338,6 +1279,8 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.image_comparison.sdk1_scene.clear()
         self.image_comparison.sdk2_scene.clear()
         self.image_comparison.summary_label.setText("Add images to begin comparison")
+        self.image_comparison.sdk1_results_text.clear()
+        self.image_comparison.sdk2_results_text.clear()
         self.status_bar.showMessage("Cleared all data")
     
     def show_image_comparison(self, image_path: str):
