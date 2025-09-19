@@ -15,6 +15,7 @@ import os
 import subprocess
 import json
 import time
+import hashlib
 from pathlib import Path
 from typing import Dict, List, Optional
 from dataclasses import dataclass
@@ -53,16 +54,22 @@ def load_image_and_draw_overlays(image_path: str, results_dict: Optional[Dict[st
         
         if results_dict:
             # Create separate images for each SDK with overlays
-            for sdk_name, result in results_dict.items():
+            sdk_names = list(results_dict.keys())
+            color_palette = [
+                (0, 150, 255),    # Blue for first SDK
+                (255, 0, 150),    # Pink for second SDK
+                (0, 255, 150),    # Green for third SDK
+                (255, 150, 0),    # Orange for fourth SDK
+                (150, 0, 255),    # Purple for fifth SDK
+            ]
+            
+            for i, (sdk_name, result) in enumerate(results_dict.items()):
                 img_copy = img_rgb.copy()
                 
                 # Draw barcode overlays directly on the image
                 if result.success and result.barcodes:
-                    # Define colors for different SDKs
-                    if "v1" in sdk_name.lower() or "3.0.4100" in sdk_name:
-                        color = (0, 150, 255)  # Blue for SDK v1
-                    else:
-                        color = (255, 0, 150)  # Pink for SDK v2
+                    # Use different colors for different SDKs
+                    color = color_palette[i % len(color_palette)]
                     
                     for i, barcode in enumerate(result.barcodes):
                         if barcode.points and len(barcode.points) >= 4:
@@ -109,6 +116,27 @@ class SDKVersion:
     version: str
     python_path: str
     description: str
+    
+    @property
+    def unique_id(self) -> str:
+        """Generate a unique identifier combining version and environment path"""
+        # Extract a short identifier from the path for uniqueness
+        path_parts = Path(self.python_path).parts
+        env_identifier = ""
+        
+        # Look for environment indicators in the path
+        for i, part in enumerate(path_parts):
+            if part.lower() in ['envs', 'venv', 'virtualenv', 'conda']:
+                if i + 1 < len(path_parts):
+                    env_identifier = path_parts[i + 1]
+                break
+        
+        # If no clear env identifier found, use a hash of the path
+        if not env_identifier:
+            import hashlib
+            env_identifier = hashlib.md5(self.python_path.encode()).hexdigest()[:8]
+        
+        return f"{self.name}_{env_identifier}"
 
 class SDKVersionDetector:
     """Utility class to detect SDK versions in virtual environments"""
@@ -416,12 +444,16 @@ class ResultsTableWidget(QTableWidget):
     def __init__(self):
         super().__init__()
         self.sdk_versions = []  # Store SDK versions for header updates
+        self.sdk_id_to_version = {}  # Map unique_id to SDKVersion objects
         self.setup_table()
         self.itemSelectionChanged.connect(self.on_selection_changed)
     
     def update_sdk_headers(self, sdk_versions: List[SDKVersion]):
         """Update table headers with actual SDK version names"""
         self.sdk_versions = sdk_versions
+        # Create mapping from unique_id to SDKVersion for display purposes
+        self.sdk_id_to_version = {sdk.unique_id: sdk for sdk in sdk_versions}
+        
         if len(sdk_versions) >= 2:
             headers = [
                 "Image", 
@@ -453,6 +485,12 @@ class ResultsTableWidget(QTableWidget):
         self.setAlternatingRowColors(True)
         self.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+    
+    def get_display_name(self, unique_id: str) -> str:
+        """Get the display name for a unique SDK ID"""
+        if unique_id in self.sdk_id_to_version:
+            return self.sdk_id_to_version[unique_id].name
+        return unique_id  # Fallback to unique_id if not found
     
     def add_comparison_result(self, image_path: str, results: Dict[str, ProcessingResult]):
         """Add a comparison result to the table"""
@@ -672,6 +710,7 @@ class ImageComparisonWidget(QWidget):
         self.setup_ui()
         self.current_image = None
         self.results = {}
+        self.sdk_id_to_version = {}  # Map unique_id to SDKVersion objects
     
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -747,6 +786,9 @@ class ImageComparisonWidget(QWidget):
     
     def update_sdk_labels(self, sdk_versions: List[SDKVersion]):
         """Update SDK version labels with actual version names"""
+        # Update the mapping
+        self.sdk_id_to_version = {sdk.unique_id: sdk for sdk in sdk_versions}
+        
         if len(sdk_versions) >= 2:
             self.sdk1_label.setText(f"📊 {sdk_versions[0].name}")
             self.sdk2_label.setText(f"📊 {sdk_versions[1].name}")
@@ -756,6 +798,12 @@ class ImageComparisonWidget(QWidget):
         else:
             self.sdk1_label.setText("📊 Configure SDK Version 1")
             self.sdk2_label.setText("📊 Configure SDK Version 2")
+    
+    def get_display_name(self, unique_id: str) -> str:
+        """Get the display name for a unique SDK ID"""
+        if unique_id in self.sdk_id_to_version:
+            return self.sdk_id_to_version[unique_id].name
+        return unique_id  # Fallback to unique_id if not found
     
     def show_comparison(self, image_path: str, results: Dict[str, ProcessingResult]):
         """Show side-by-side comparison for an image"""
@@ -798,9 +846,11 @@ class ImageComparisonWidget(QWidget):
                 self.sdk2_scene.addPixmap(sdk2_pixmap)
                 self.sdk2_scene.setSceneRect(sdk2_pixmap.rect())
             
-            # Update labels with actual SDK names
-            self.sdk1_label.setText(f"📊 {sdk_names[0]}")
-            self.sdk2_label.setText(f"📊 {sdk_names[1]}")
+            # Update labels with actual SDK names (use display names instead of unique IDs)
+            sdk1_display_name = self.get_display_name(sdk_names[0])
+            sdk2_display_name = self.get_display_name(sdk_names[1])
+            self.sdk1_label.setText(f"📊 {sdk1_display_name}")
+            self.sdk2_label.setText(f"📊 {sdk2_display_name}")
             
             # Update barcode result text areas
             self.update_barcode_text_area(self.sdk1_results_text, results[sdk_names[0]])
@@ -810,8 +860,8 @@ class ImageComparisonWidget(QWidget):
             result1 = results[sdk_names[0]]
             result2 = results[sdk_names[1]]
             summary = (f"📊 {os.path.basename(image_path)} | "
-                      f"{sdk_names[0]}: {len(result1.barcodes)} barcodes ({result1.processing_time:.3f}s) | "
-                      f"{sdk_names[1]}: {len(result2.barcodes)} barcodes ({result2.processing_time:.3f}s)")
+                      f"{sdk1_display_name}: {len(result1.barcodes)} barcodes ({result1.processing_time:.3f}s) | "
+                      f"{sdk2_display_name}: {len(result2.barcodes)} barcodes ({result2.processing_time:.3f}s)")
             self.summary_label.setText(summary)
         elif len(sdk_names) == 1:
             # Only one SDK result available
@@ -826,7 +876,8 @@ class ImageComparisonWidget(QWidget):
                 self.sdk1_scene.addPixmap(sdk1_pixmap)
                 self.sdk1_scene.setSceneRect(sdk1_pixmap.rect())
             
-            self.sdk1_label.setText(f"📊 {sdk_names[0]}")
+            sdk1_display_name = self.get_display_name(sdk_names[0])
+            self.sdk1_label.setText(f"📊 {sdk1_display_name}")
             self.sdk2_label.setText("📊 No comparison data")
             
             # Update text areas
@@ -836,7 +887,7 @@ class ImageComparisonWidget(QWidget):
             
             result1 = results[sdk_names[0]]
             summary = (f"📊 {os.path.basename(image_path)} | "
-                      f"{sdk_names[0]}: {len(result1.barcodes)} barcodes ({result1.processing_time:.3f}s)")
+                      f"{sdk1_display_name}: {len(result1.barcodes)} barcodes ({result1.processing_time:.3f}s)")
             self.summary_label.setText(summary)
         else:
             # No results, just show the base image
@@ -1280,7 +1331,7 @@ class ProcessingThread(QThread):
         for image_path in self.image_files:
             for sdk_version in self.sdk_versions:
                 result = self.process_single_image(image_path, sdk_version)
-                self.result_ready.emit(image_path, sdk_version.name, result)
+                self.result_ready.emit(image_path, sdk_version.unique_id, result)
         
         self.processing_complete.emit()
     
