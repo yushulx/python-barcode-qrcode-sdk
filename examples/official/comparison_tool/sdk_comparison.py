@@ -959,6 +959,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.image_files = []
         self.results = {}  # {image_path: {sdk_name: ProcessingResult}}
         self.processing_thread = None  # Initialize to None
+        self._updating_selection = False  # Flag to prevent selection loops
         
         # Setup UI
         self.setup_ui()
@@ -1036,6 +1037,19 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.file_list.setDragDropMode(QListWidget.DragDropMode.DropOnly)
         self.file_list.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
         
+        # Add custom styling for better visibility
+        self.file_list.setStyleSheet("""
+            QListWidget::item:selected {
+                background-color: #007acc;
+                color: white;
+                font-weight: bold;
+            }
+            QListWidget::item:hover {
+                background-color: #4da6e0;
+                color: white;
+            }
+        """)
+        
         # Connect selection change to processing
         self.file_list.currentItemChanged.connect(self.on_image_selected)
         
@@ -1048,7 +1062,24 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         results_layout = QVBoxLayout(results_group)
         
         self.results_table = ResultsTableWidget()
+        
+        # Add custom styling for better visibility
+        self.results_table.setStyleSheet("""
+            QTableWidget::item:selected {
+                background-color: #007acc;
+                color: white;
+                font-weight: bold;
+            }
+            QTableWidget::item:hover {
+                background-color: #4da6e0;
+                color: white;
+            }
+        """)
+        
         results_layout.addWidget(self.results_table)
+        
+        # Connect results table selection to file list synchronization
+        self.results_table.image_selected.connect(self.on_results_table_selection)
         
         # Export button (after table creation)
         export_btn = QPushButton("📤 Export to CSV")
@@ -1188,6 +1219,12 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             
         self.status_bar.showMessage(f"Selected: {os.path.basename(image_path)}")
         
+        # Synchronize with results table selection (avoid loops)
+        if not self._updating_selection:
+            self._updating_selection = True
+            self.highlight_results_table_row(image_path)
+            self._updating_selection = False
+        
         # Check if we have SDK versions configured
         if len(self.sdk_versions) >= 2:
             # Process the selected image
@@ -1315,6 +1352,103 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.image_comparison.sdk2_results_text.clear()
         self.status_bar.showMessage("Cleared all data")
     
+    def on_results_table_selection(self, image_path: str):
+        """Handle selection from results table - synchronize with file list"""
+        if self._updating_selection:
+            return
+            
+        self._updating_selection = True
+        
+        # Find and select the corresponding item in the file list
+        for i in range(self.file_list.count()):
+            item = self.file_list.item(i)
+            if item and item.data(Qt.ItemDataRole.UserRole) == image_path:
+                self.file_list.setCurrentItem(item)
+                break
+        
+        self._updating_selection = False
+        
+        # Update the image comparison view
+        if image_path in self.results:
+            self.image_comparison.show_comparison(image_path, self.results[image_path])
+    
+    def highlight_results_table_row(self, image_path: str):
+        """Highlight the row in results table corresponding to the selected image"""
+        if self._updating_selection:
+            return
+            
+        # Find and select the corresponding row in results table
+        for row in range(self.results_table.rowCount()):
+            item = self.results_table.item(row, 0)
+            if item and item.data(Qt.ItemDataRole.UserRole) == image_path:
+                # Clear any previous highlighting
+                self.clear_results_table_highlighting()
+                
+                # Highlight the selected row with bright blue background
+                for col in range(self.results_table.columnCount()):
+                    cell_item = self.results_table.item(row, col)
+                    if cell_item:
+                        # Don't override the difference column colors, just make them brighter
+                        if col == 3:  # Barcode Δ column - keep original logic but brighter
+                            text = cell_item.text()
+                            if text.startswith('+') and text != '+0':
+                                cell_item.setBackground(QColor(100, 255, 100))  # Brighter green
+                            elif text.startswith('-') or (text.isdigit() and int(text) < 0):
+                                cell_item.setBackground(QColor(255, 100, 100))  # Brighter red
+                            elif text == '0':
+                                cell_item.setBackground(QColor(200, 200, 200))  # Brighter gray
+                            else:
+                                cell_item.setBackground(QColor(0, 122, 204))  # Bright blue
+                        elif col == 4:  # Speed Δ column - keep original logic but brighter
+                            text = cell_item.text()
+                            if text.endswith('s') and not text.startswith('+') and text != '0.000s':
+                                cell_item.setBackground(QColor(100, 255, 100))  # Brighter green
+                            elif text.startswith('+'):
+                                cell_item.setBackground(QColor(255, 100, 100))  # Brighter red
+                            elif text == '0.000s':
+                                cell_item.setBackground(QColor(200, 200, 200))  # Brighter gray
+                            else:
+                                cell_item.setBackground(QColor(0, 122, 204))  # Bright blue
+                        else:
+                            # Use bright blue for other columns
+                            cell_item.setBackground(QColor(0, 122, 204))  # Bright blue
+                            cell_item.setForeground(QColor(255, 255, 255))  # White text
+                
+                # Select the row
+                self.results_table.selectRow(row)
+                break
+    
+    def clear_results_table_highlighting(self):
+        """Clear blue highlighting from all rows in results table"""
+        for row in range(self.results_table.rowCount()):
+            for col in range(self.results_table.columnCount()):
+                item = self.results_table.item(row, col)
+                if item:
+                    # Check if this is a difference column that should keep its color
+                    if col == 3:  # Barcode Δ column
+                        text = item.text()
+                        if text.startswith('+') and text != '+0':
+                            item.setBackground(QColor(200, 255, 200))  # Green for improvement
+                        elif text.startswith('-') or (text.isdigit() and int(text) < 0):
+                            item.setBackground(QColor(255, 200, 200))  # Red for regression
+                        elif text == '0':
+                            item.setBackground(QColor(240, 240, 240))  # Gray for same
+                        else:
+                            item.setBackground(QColor())  # Default
+                    elif col == 4:  # Speed Δ column
+                        text = item.text()
+                        if text.endswith('s') and not text.startswith('+') and text != '0.000s':
+                            item.setBackground(QColor(200, 255, 200))  # Green for faster
+                        elif text.startswith('+'):
+                            item.setBackground(QColor(255, 200, 200))  # Red for slower
+                        elif text == '0.000s':
+                            item.setBackground(QColor(240, 240, 240))  # Gray for same
+                        else:
+                            item.setBackground(QColor())  # Default
+                    else:
+                        # Clear background for other columns
+                        item.setBackground(QColor())  # Default background
+
 class ProcessingThread(QThread):
     """Background thread for image processing"""
     
