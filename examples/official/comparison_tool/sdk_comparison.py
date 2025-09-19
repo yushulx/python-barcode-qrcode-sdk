@@ -15,39 +15,26 @@ import os
 import subprocess
 import json
 import time
-import threading
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 import tempfile
 import shutil
-import re
 
-# Try to import OpenCV for image processing and EXIF handling
+# OpenCV for image processing and EXIF handling
 import cv2
 import numpy as np
-
-# Try to import PIL as fallback
-try:
-    from PIL import Image, ExifTags
-    PIL_AVAILABLE = True
-except ImportError:
-    PIL_AVAILABLE = False
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QTextEdit, QListWidget, QFrame, QGroupBox, 
     QProgressBar, QFileDialog, QMessageBox, QListWidgetItem, QSplitter,
-    QTabWidget, QCheckBox, QStatusBar, QScrollArea, QLineEdit, 
-    QTableWidget, QTableWidgetItem, QHeaderView, QComboBox, QSpinBox,
-    QFormLayout, QTreeWidget, QTreeWidgetItem, QGraphicsView, 
-    QGraphicsScene, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsTextItem,
-    QDialog  # Add QDialog import
+    QStatusBar, QTableWidget, QTableWidgetItem, QHeaderView, 
+    QGraphicsView, QGraphicsScene, QDialog
 )
 from PySide6.QtCore import Qt, QThread, Signal, QTimer, QMimeData, QUrl
 from PySide6.QtGui import (
-    QPixmap, QDragEnterEvent, QDropEvent, QFont, QPainter, QPen, 
-    QBrush, QColor, QAction, QIcon, QTransform, QImage
+    QPixmap, QDragEnterEvent, QDropEvent, QFont, QColor, QImage
 )
 
 def load_image_and_draw_overlays(image_path: str, results_dict: Optional[Dict[str, 'ProcessingResult']] = None) -> Dict[str, QPixmap]:
@@ -874,10 +861,6 @@ class ImageComparisonWidget(QWidget):
         # Force view updates
         self.sdk1_view.update()
         self.sdk2_view.update()
-    
-    # The add_barcode_overlays method is no longer needed since overlays are drawn directly
-    # onto the OpenCV Mat in the load_image_and_draw_overlays function
-    
     def update_barcode_text_area(self, text_area: QTextEdit, result: ProcessingResult):
         """Update barcode results text area with formatted barcode data"""
         text_area.clear()
@@ -923,7 +906,6 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         # Data
         self.sdk_versions = []
         self.image_files = []
-        self.workers = {}
         self.results = {}  # {image_path: {sdk_name: ProcessingResult}}
         self.processing_thread = None  # Initialize to None
         
@@ -1015,7 +997,6 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         results_layout = QVBoxLayout(results_group)
         
         self.results_table = ResultsTableWidget()
-        # Remove the image selection connection since we use file list selection now
         results_layout.addWidget(self.results_table)
         
         # Export button (after table creation)
@@ -1283,11 +1264,6 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.image_comparison.sdk2_results_text.clear()
         self.status_bar.showMessage("Cleared all data")
     
-    def show_image_comparison(self, image_path: str):
-        """Show image comparison for selected image"""
-        if image_path in self.results:
-            self.image_comparison.show_comparison(image_path, self.results[image_path])
-
 class ProcessingThread(QThread):
     """Background thread for image processing"""
     
