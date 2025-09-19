@@ -1,6 +1,8 @@
-# Dynamsoft SDK Version Comparison Tool
+# Version Comparison Tool for Dynamsoft Python Barcode SDK  
 
 This comparison tool allows you to compare 1D/2D barcode detection performance between different versions of the Dynamsoft Capture Vision SDK. The tool provides a comprehensive graphical interface with side-by-side visual comparisons, detailed results analysis, and performance metrics.
+
+https://github.com/user-attachments/assets/b69ab922-1cf4-4385-b61f-3988c1147296
 
 ## Features
 
