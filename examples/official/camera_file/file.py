@@ -33,13 +33,15 @@ if __name__ == '__main__':
             if not os.path.exists(image_path):
                 print("The image path does not exist.")
                 continue
+
+            cv_image = cv2.imread(image_path)
             result = cvr_instance.capture(
-                image_path, EnumPresetTemplate.PT_READ_BARCODES.value)
+                cv_image, EnumPresetTemplate.PT_READ_BARCODES.value)
             if result.get_error_code() != EnumErrorCode.EC_OK:
                 print("Error:", result.get_error_code(),
                       result.get_error_string())
             else:
-                cv_image = cv2.imread(image_path)
+                
 
                 items = result.get_items()
                 print('Found {} barcodes.'.format(len(items)))
