@@ -17,19 +17,20 @@ This project demonstrates how to use **Tesseract OCR** as a complementary techno
 - Tesseract OCR installation
   - Windows: Install [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki)
   - macOS:
-   
-        ```bash
-        brew install tesseract
-        ```
+    
+     ```bash
+     brew install tesseract
+     ```
   
-  - Linux: 
+  - Linux:
+  
        ```bash
-        sudo apt update
-        sudo apt install tesseract-ocr -y
-        sudo apt install libtesseract-dev -y
-        ```
+       sudo apt update
+       sudo apt install tesseract-ocr -y
+       sudo apt install libtesseract-dev -y
+       ```
 
-- Python dependencies
+- Python dependencies:
     
     ```bash
     pip install dynamsoft-capture-vision-bundle pytesseract pillow
