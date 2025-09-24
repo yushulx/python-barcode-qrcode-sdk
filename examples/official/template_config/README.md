@@ -2,6 +2,8 @@
 
 A GUI application built with PySide6 to help developers find optimal parameters for barcode scanning using the Dynamsoft Barcode Reader SDK. This tool provides an intuitive interface for parameter tuning, real-time barcode detection, and automated parameter optimization.
 
+https://github.com/user-attachments/assets/3297d213-8482-4dcc-8c84-7602a278ecc7
+
 ## 🎯 Purpose
 
 When working with barcode detection in various conditions (poor lighting, low quality images, different barcode types), finding the right parameters can be challenging and time-consuming. This tool simplifies the process by providing:
@@ -37,6 +39,8 @@ When working with barcode detection in various conditions (poor lighting, low qu
     
 
 ## 🚀 Quick Start
+
+<img width="1393" height="924" alt="dynamsoft-barcode-sdk-template-adjustment-tool" src="https://github.com/user-attachments/assets/785f767d-ba4d-4460-8de0-a289e97cb62e" />
 
 1. **Launch the Application**
    ```bash
