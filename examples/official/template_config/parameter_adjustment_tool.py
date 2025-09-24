@@ -3500,17 +3500,34 @@ class ParameterAdjustmentTool(QMainWindow):
             
             # Stop auto-adjustment if barcodes found
             if self.auto_adjusting:
+                test_number = getattr(self, 'auto_adjustment_index', 0)
+                total_tests = len(getattr(self, 'auto_adjustment_params', []))
                 self.toggle_auto_adjustment()
-                self.status_bar.showMessage(f"Auto-adjustment stopped - {len(results)} barcode(s) found!")
+                self.status_bar.showMessage(f"Success! Test {test_number}/{total_tests} found {len(results)} barcode(s) - auto-adjustment stopped")
+            else:
+                self.status_bar.showMessage(f"Detection complete - found {len(results)} barcode(s)")
         else:
             self.result_text.setPlainText("No barcodes detected")
+            if not self.auto_adjusting:
+                self.status_bar.showMessage("Detection complete - no barcodes found")
             
         # Update image overlay
         self.image_panel.set_barcode_results(results)
         
     def on_progress_update(self, message: str):
         """Handle progress updates from worker thread"""
-        self.status_bar.showMessage(message)
+        if self.auto_adjusting and hasattr(self, 'auto_adjustment_index') and hasattr(self, 'auto_adjustment_params'):
+            # During auto-adjustment, preserve the progress information
+            progress_info = f"Test {self.auto_adjustment_index}/{len(self.auto_adjustment_params)}"
+            if "Detecting barcodes" in message:
+                self.status_bar.showMessage(f"{progress_info}: Detecting barcodes...")
+            elif "Applying settings" in message:
+                self.status_bar.showMessage(f"{progress_info}: Applying parameter settings...")
+            else:
+                self.status_bar.showMessage(f"{progress_info}: {message}")
+        else:
+            # Normal operation, show message as-is
+            self.status_bar.showMessage(message)
         
     def toggle_auto_adjustment(self):
         """Toggle automatic parameter adjustment"""
@@ -3763,8 +3780,9 @@ class ParameterAdjustmentTool(QMainWindow):
             self.auto_adjusting = False
             self.auto_adjust_btn.setText("Auto Adjust")
             self.auto_adjustment_timer.stop()
-            self.status_bar.showMessage("Auto-adjustment completed - no barcodes found with any combination")
-            self.result_text.setPlainText("Auto-adjustment completed. No barcodes were detected with any parameter combination.")
+            total_tests = len(self.auto_adjustment_params)
+            self.status_bar.showMessage(f"Auto-adjustment completed - tested {total_tests} parameter combinations, no barcodes found")
+            self.result_text.setPlainText(f"Auto-adjustment completed. Tested {total_tests} parameter combinations. No barcodes were detected with any combination.")
             print("Auto-adjustment completed - no combinations left")
             return
             
