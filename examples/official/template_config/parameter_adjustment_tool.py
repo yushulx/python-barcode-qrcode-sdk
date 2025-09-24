@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QComboBox, QCheckBox, QSpinBox, QLineEdit, QFileDialog, QMessageBox,
     QProgressBar, QStatusBar, QMenuBar, QMenu, QTabWidget, QSlider,
     QButtonGroup, QRadioButton, QFormLayout, QDoubleSpinBox, QTreeWidget,
-    QTreeWidgetItem, QHeaderView
+    QTreeWidgetItem, QHeaderView, QListWidget, QDialog, QDialogButtonBox
 )
 from PySide6.QtCore import (
     Qt, QThread, Signal, QTimer, QSize, QRect, QPoint, QMimeData, QUrl
@@ -115,6 +115,74 @@ class BarcodeDetectionWorker(QThread):
             
         except Exception as e:
             self.result_ready.emit([], str(e))
+
+class CustomIterationsDialog(QDialog):
+    """Dialog for setting custom auto-adjustment iterations"""
+    
+    def __init__(self, current_value=40, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Custom Auto-Adjustment Iterations")
+        self.setModal(True)
+        self.setFixedSize(350, 180)
+        
+        layout = QVBoxLayout()
+        
+        # Description
+        description = QLabel(
+            "Specify the number of parameter combinations to test during auto-adjustment.\n"
+            "Higher values provide more thorough testing but take longer to complete."
+        )
+        description.setWordWrap(True)
+        layout.addWidget(description)
+        
+        # Input section
+        input_layout = QFormLayout()
+        
+        self.iterations_spin = QSpinBox()
+        self.iterations_spin.setRange(1, 500)
+        self.iterations_spin.setValue(current_value)
+        self.iterations_spin.setSuffix(" combinations")
+        self.iterations_spin.setMinimumWidth(150)
+        
+        input_layout.addRow("Iterations:", self.iterations_spin)
+        layout.addLayout(input_layout)
+        
+        # Recommendation label
+        self.recommendation_label = QLabel()
+        self.update_recommendation()
+        self.recommendation_label.setStyleSheet("color: #666; font-size: 11px;")
+        layout.addWidget(self.recommendation_label)
+        
+        # Connect value change to update recommendation
+        self.iterations_spin.valueChanged.connect(self.update_recommendation)
+        
+        # Button box
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+        
+        self.setLayout(layout)
+    
+    def update_recommendation(self):
+        """Update the recommendation text based on selected value"""
+        value = self.iterations_spin.value()
+        if value <= 20:
+            text = "Quick scan - basic parameter testing"
+        elif value <= 40:
+            text = "Standard scan - balanced thoroughness"
+        elif value <= 60:
+            text = "Comprehensive scan - detailed testing"
+        elif value <= 100:
+            text = "Deep scan - extensive parameter coverage"
+        else:
+            text = "Ultra-deep scan - maximum thoroughness (slow)"
+        
+        self.recommendation_label.setText(text)
+    
+    def get_iterations(self):
+        """Get the selected number of iterations"""
+        return self.iterations_spin.value()
 
 class ImagePanel(QLabel):
     """Image display panel with drag-drop support and overlay drawing"""
@@ -520,6 +588,20 @@ class ParameterAdjustmentTool(QMainWindow):
         self.auto_adjust_btn.clicked.connect(self.toggle_auto_adjustment)
         button_layout.addWidget(self.auto_adjust_btn)
         
+        # Auto adjustment mode selection
+        self.auto_adjust_mode = QComboBox()
+        self.auto_adjust_mode.addItems(["Quick (20 tests)", "Standard (40 tests)", "Comprehensive (60 tests)", "Deep Scan (100 tests)", "Custom..."])
+        self.auto_adjust_mode.setCurrentIndex(1)  # Default to Standard
+        self.auto_adjust_mode.setToolTip("Select auto adjustment thoroughness")
+        self.auto_adjust_mode.setMinimumWidth(140)
+        button_layout.addWidget(self.auto_adjust_mode)
+        
+        # Store custom iterations value (no UI widget needed now)
+        self.custom_iterations_value = 40
+        
+        # Connect mode change to handle custom selection
+        self.auto_adjust_mode.currentTextChanged.connect(self.on_auto_adjust_mode_changed)
+        
         self.reset_btn = QPushButton("Reset to Default")
         self.reset_btn.clicked.connect(self.reset_parameters)
         button_layout.addWidget(self.reset_btn)
@@ -550,6 +632,8 @@ class ParameterAdjustmentTool(QMainWindow):
         self.create_barcode_format_tab()
         self.create_barcode_reader_task_tab()
         self.create_image_parameter_tab()
+        self.create_global_parameter_tab()
+        self.create_target_roi_tab()
         self.create_capture_vision_template_tab()
         
     def create_barcode_format_tab(self):
@@ -644,6 +728,158 @@ class ParameterAdjustmentTool(QMainWindow):
                 advanced_group = QGroupBox("Advanced Settings")
                 advanced_layout = QFormLayout()
                 
+                # AllModuleDeviation
+                if 'AllModuleDeviation' in spec:
+                    deviation_spin = QSpinBox()
+                    deviation_spin.setRange(0, 100)
+                    deviation_spin.setValue(spec['AllModuleDeviation'])
+                    deviation_spin.setMinimumWidth(120)
+                    deviation_spin.valueChanged.connect(partial(self.on_all_module_deviation_changed, spec))
+                    advanced_layout.addRow("All Module Deviation:", deviation_spin)
+                    
+                    control_key = f"all_module_deviation_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (deviation_spin, 'value', spec['AllModuleDeviation'])
+                
+                # AustralianPostEncodingTable
+                if 'AustralianPostEncodingTable' in spec:
+                    aus_post_combo = QComboBox()
+                    aus_post_combo.addItems(['C', 'N'])
+                    aus_post_combo.setCurrentText(spec['AustralianPostEncodingTable'])
+                    aus_post_combo.setMinimumWidth(120)
+                    aus_post_combo.currentTextChanged.connect(partial(self.on_aus_post_encoding_changed, spec))
+                    advanced_layout.addRow("Australian Post Encoding:", aus_post_combo)
+                    
+                    control_key = f"aus_post_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (aus_post_combo, 'text', spec['AustralianPostEncodingTable'])
+                
+                # BarcodeTextRegExPattern
+                if 'BarcodeTextRegExPattern' in spec:
+                    regex_edit = QLineEdit()
+                    regex_edit.setText(spec['BarcodeTextRegExPattern'])
+                    regex_edit.setMinimumWidth(120)
+                    regex_edit.textChanged.connect(partial(self.on_barcode_regex_changed, spec))
+                    advanced_layout.addRow("Barcode Text Regex Pattern:", regex_edit)
+                    
+                    control_key = f"regex_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (regex_edit, 'text', spec['BarcodeTextRegExPattern'])
+                
+                # BarcodeZoneMinDistanceToImageBorders
+                if 'BarcodeZoneMinDistanceToImageBorders' in spec:
+                    border_distance_spin = QSpinBox()
+                    border_distance_spin.setRange(0, 100)
+                    border_distance_spin.setValue(spec['BarcodeZoneMinDistanceToImageBorders'])
+                    border_distance_spin.setMinimumWidth(120)
+                    border_distance_spin.valueChanged.connect(partial(self.on_border_distance_changed, spec))
+                    advanced_layout.addRow("Min Distance to Borders:", border_distance_spin)
+                    
+                    control_key = f"border_dist_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (border_distance_spin, 'value', spec['BarcodeZoneMinDistanceToImageBorders'])
+                
+                # Code128Subset
+                if 'Code128Subset' in spec:
+                    code128_edit = QLineEdit()
+                    code128_edit.setText(spec['Code128Subset'])
+                    code128_edit.setMinimumWidth(120)
+                    code128_edit.textChanged.connect(partial(self.on_code128_subset_changed, spec))
+                    advanced_layout.addRow("Code 128 Subset:", code128_edit)
+                    
+                    control_key = f"code128_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (code128_edit, 'text', spec['Code128Subset'])
+                
+                # DataMatrixModuleIsotropic
+                if 'DataMatrixModuleIsotropic' in spec:
+                    dm_isotropic_checkbox = QCheckBox("DataMatrix Module Isotropic")
+                    dm_isotropic_checkbox.setChecked(bool(spec['DataMatrixModuleIsotropic']))
+                    dm_isotropic_checkbox.stateChanged.connect(partial(self.on_dm_isotropic_changed, spec))
+                    advanced_layout.addRow(dm_isotropic_checkbox)
+                    
+                    control_key = f"dm_isotropic_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (dm_isotropic_checkbox, 'checked', bool(spec['DataMatrixModuleIsotropic']))
+                
+                # EnableAddOnCode
+                if 'EnableAddOnCode' in spec:
+                    addon_checkbox = QCheckBox("Enable Add-On Code")
+                    addon_checkbox.setChecked(bool(spec['EnableAddOnCode']))
+                    addon_checkbox.stateChanged.connect(partial(self.on_addon_code_changed, spec))
+                    advanced_layout.addRow(addon_checkbox)
+                    
+                    control_key = f"addon_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (addon_checkbox, 'checked', bool(spec['EnableAddOnCode']))
+                
+                # EnableDataMatrixECC000-140
+                if 'EnableDataMatrixECC000-140' in spec:
+                    ecc_checkbox = QCheckBox("Enable DataMatrix ECC000-140")
+                    ecc_checkbox.setChecked(bool(spec['EnableDataMatrixECC000-140']))
+                    ecc_checkbox.stateChanged.connect(partial(self.on_dm_ecc_changed, spec))
+                    advanced_layout.addRow(ecc_checkbox)
+                    
+                    control_key = f"dm_ecc_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (ecc_checkbox, 'checked', bool(spec['EnableDataMatrixECC000-140']))
+                
+                # EnableQRCodeModel1
+                if 'EnableQRCodeModel1' in spec:
+                    qr_model1_checkbox = QCheckBox("Enable QR Code Model 1")
+                    qr_model1_checkbox.setChecked(bool(spec['EnableQRCodeModel1']))
+                    qr_model1_checkbox.stateChanged.connect(partial(self.on_qr_model1_changed, spec))
+                    advanced_layout.addRow(qr_model1_checkbox)
+                    
+                    control_key = f"qr_model1_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (qr_model1_checkbox, 'checked', bool(spec['EnableQRCodeModel1']))
+                
+                # HeadModuleRatio
+                if 'HeadModuleRatio' in spec:
+                    head_ratio_edit = QLineEdit()
+                    head_ratio_edit.setText(spec['HeadModuleRatio'])
+                    head_ratio_edit.setMinimumWidth(120)
+                    head_ratio_edit.textChanged.connect(partial(self.on_head_ratio_changed, spec))
+                    advanced_layout.addRow("Head Module Ratio:", head_ratio_edit)
+                    
+                    control_key = f"head_ratio_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (head_ratio_edit, 'text', spec['HeadModuleRatio'])
+                
+                # TailModuleRatio
+                if 'TailModuleRatio' in spec:
+                    tail_ratio_edit = QLineEdit()
+                    tail_ratio_edit.setText(spec['TailModuleRatio'])
+                    tail_ratio_edit.setMinimumWidth(120)
+                    tail_ratio_edit.textChanged.connect(partial(self.on_tail_ratio_changed, spec))
+                    advanced_layout.addRow("Tail Module Ratio:", tail_ratio_edit)
+                    
+                    control_key = f"tail_ratio_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (tail_ratio_edit, 'text', spec['TailModuleRatio'])
+                
+                # IncludeImpliedAI01
+                if 'IncludeImpliedAI01' in spec:
+                    ai01_checkbox = QCheckBox("Include Implied AI 01")
+                    ai01_checkbox.setChecked(bool(spec['IncludeImpliedAI01']))
+                    ai01_checkbox.stateChanged.connect(partial(self.on_ai01_changed, spec))
+                    advanced_layout.addRow(ai01_checkbox)
+                    
+                    control_key = f"ai01_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (ai01_checkbox, 'checked', bool(spec['IncludeImpliedAI01']))
+                
+                # IncludeTrailingCheckDigit
+                if 'IncludeTrailingCheckDigit' in spec:
+                    check_digit_checkbox = QCheckBox("Include Trailing Check Digit")
+                    check_digit_checkbox.setChecked(bool(spec['IncludeTrailingCheckDigit']))
+                    check_digit_checkbox.stateChanged.connect(partial(self.on_check_digit_changed, spec))
+                    advanced_layout.addRow(check_digit_checkbox)
+                    
+                    control_key = f"check_digit_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (check_digit_checkbox, 'checked', bool(spec['IncludeTrailingCheckDigit']))
+                
+                # MSICodeCheckDigitCalculation
+                if 'MSICodeCheckDigitCalculation' in spec:
+                    msi_calc_combo = QComboBox()
+                    msi_calc_combo.addItems(['MSICCDC_MOD_10', 'MSICCDC_MOD_11', 'MSICCDC_MOD_1010', 'MSICCDC_MOD_1110', 'MSICCDC_MOD_11_IBM', 'MSICCDC_MOD_1011_IBM', 'MSICCDC_SKIP', 'MSICCDC_NO_CALCULATION'])
+                    msi_calc_combo.setCurrentText(spec['MSICodeCheckDigitCalculation'])
+                    msi_calc_combo.setMinimumWidth(120)
+                    msi_calc_combo.currentTextChanged.connect(partial(self.on_msi_calc_changed, spec))
+                    advanced_layout.addRow("MSI Check Digit Calculation:", msi_calc_combo)
+                    
+                    control_key = f"msi_calc_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (msi_calc_combo, 'text', spec['MSICodeCheckDigitCalculation'])
+                
                 # MinResultConfidence
                 if 'MinResultConfidence' in spec:
                     confidence_spin = QSpinBox()
@@ -667,6 +903,61 @@ class ParameterAdjustmentTool(QMainWindow):
                     
                     control_key = f"quiet_zone_{spec.get('Name', f'spec_{i}')}"
                     self.ui_controls[control_key] = (quiet_zone_spin, 'value', spec['MinQuietZoneWidth'])
+                
+                # MinRatioOfBarcodeZoneWidthToHeight
+                if 'MinRatioOfBarcodeZoneWidthToHeight' in spec:
+                    ratio_spin = QDoubleSpinBox()
+                    ratio_spin.setRange(0.0, 10.0)
+                    ratio_spin.setDecimals(2)
+                    ratio_spin.setSingleStep(0.1)
+                    ratio_spin.setValue(spec['MinRatioOfBarcodeZoneWidthToHeight'])
+                    ratio_spin.setMinimumWidth(120)
+                    ratio_spin.valueChanged.connect(partial(self.on_width_height_ratio_changed, spec))
+                    advanced_layout.addRow("Min Width/Height Ratio:", ratio_spin)
+                    
+                    control_key = f"wh_ratio_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (ratio_spin, 'value', spec['MinRatioOfBarcodeZoneWidthToHeight'])
+                
+                # RequireStartStopChars
+                if 'RequireStartStopChars' in spec:
+                    startstop_checkbox = QCheckBox("Require Start/Stop Characters")
+                    startstop_checkbox.setChecked(bool(spec['RequireStartStopChars']))
+                    startstop_checkbox.stateChanged.connect(partial(self.on_startstop_changed, spec))
+                    advanced_layout.addRow(startstop_checkbox)
+                    
+                    control_key = f"startstop_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (startstop_checkbox, 'checked', bool(spec['RequireStartStopChars']))
+                
+                # ReturnPartialBarcodeValue
+                if 'ReturnPartialBarcodeValue' in spec:
+                    partial_checkbox = QCheckBox("Return Partial Barcode Value")
+                    partial_checkbox.setChecked(bool(spec['ReturnPartialBarcodeValue']))
+                    partial_checkbox.stateChanged.connect(partial(self.on_partial_value_changed, spec))
+                    advanced_layout.addRow(partial_checkbox)
+                    
+                    control_key = f"partial_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (partial_checkbox, 'checked', bool(spec['ReturnPartialBarcodeValue']))
+                
+                # StandardFormat
+                if 'StandardFormat' in spec:
+                    std_format_edit = QLineEdit()
+                    std_format_edit.setText(spec['StandardFormat'])
+                    std_format_edit.setMinimumWidth(120)
+                    std_format_edit.textChanged.connect(partial(self.on_std_format_changed, spec))
+                    advanced_layout.addRow("Standard Format:", std_format_edit)
+                    
+                    control_key = f"std_format_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (std_format_edit, 'text', spec['StandardFormat'])
+                
+                # VerifyCheckDigit
+                if 'VerifyCheckDigit' in spec:
+                    verify_checkbox = QCheckBox("Verify Check Digit")
+                    verify_checkbox.setChecked(bool(spec['VerifyCheckDigit']))
+                    verify_checkbox.stateChanged.connect(partial(self.on_verify_digit_changed, spec))
+                    advanced_layout.addRow(verify_checkbox)
+                    
+                    control_key = f"verify_{spec.get('Name', f'spec_{i}')}"
+                    self.ui_controls[control_key] = (verify_checkbox, 'checked', bool(spec['VerifyCheckDigit']))
                 
                 # FindUnevenModuleBarcode checkbox
                 if 'FindUnevenModuleBarcode' in spec:
@@ -847,6 +1138,182 @@ class ParameterAdjustmentTool(QMainWindow):
                     threads_layout.addStretch()
                     group_layout.addLayout(threads_layout)
                 
+                # DPM Code Reading Modes
+                if 'DPMCodeReadingModes' in task:
+                    dpm_group = QGroupBox("DPM Code Reading Modes")
+                    dpm_layout = QVBoxLayout()
+                    
+                    for j, dpm_mode in enumerate(task['DPMCodeReadingModes']):
+                        dpm_widget = QWidget()
+                        dpm_widget_layout = QHBoxLayout()
+                        dpm_widget_layout.setContentsMargins(0, 0, 0, 0)
+                        
+                        # Barcode Format
+                        format_label = QLabel("Barcode Format:")
+                        format_combo = QComboBox()
+                        format_combo.addItems(['BF_DATAMATRIX', 'BF_QR_CODE', 'BF_PDF417', 'BF_AZTEC', 'BF_ALL'])
+                        format_combo.setCurrentText(dpm_mode.get('BarcodeFormat', 'BF_DATAMATRIX'))
+                        format_combo.setMinimumWidth(120)
+                        format_combo.currentTextChanged.connect(partial(self.on_dpm_format_changed, task, j))
+                        
+                        # Mode
+                        mode_label = QLabel("Mode:")
+                        mode_combo = QComboBox()
+                        mode_combo.addItems(['DPMCRM_SKIP', 'DPMCRM_GENERAL', 'DPMCRM_ADVANCED'])
+                        mode_combo.setCurrentText(dpm_mode.get('Mode', 'DPMCRM_SKIP'))
+                        mode_combo.setMinimumWidth(120)
+                        mode_combo.currentTextChanged.connect(partial(self.on_dpm_mode_changed, task, j))
+                        
+                        dpm_widget_layout.addWidget(format_label)
+                        dpm_widget_layout.addWidget(format_combo)
+                        dpm_widget_layout.addWidget(mode_label)
+                        dpm_widget_layout.addWidget(mode_combo)
+                        dpm_widget_layout.addStretch()
+                        
+                        dpm_widget.setLayout(dpm_widget_layout)
+                        dpm_layout.addWidget(dpm_widget)
+                        
+                        # Store references for resetting
+                        control_key = f"dpm_format_{task.get('Name', f'task_{i}')}_{j}"
+                        self.ui_controls[control_key] = (format_combo, 'text', dpm_mode.get('BarcodeFormat', 'BF_DATAMATRIX'))
+                        
+                        control_key = f"dpm_mode_{task.get('Name', f'task_{i}')}_{j}"
+                        self.ui_controls[control_key] = (mode_combo, 'text', dpm_mode.get('Mode', 'DPMCRM_SKIP'))
+                    
+                    dpm_group.setLayout(dpm_layout)
+                    group_layout.addWidget(dpm_group)
+                
+                # Text Result Order Modes
+                if 'TextResultOrderModes' in task:
+                    order_group = QGroupBox("Text Result Order Modes")
+                    order_layout = QVBoxLayout()
+                    
+                    for j, order_mode in enumerate(task['TextResultOrderModes']):
+                        order_widget = QWidget()
+                        order_widget_layout = QHBoxLayout()
+                        order_widget_layout.setContentsMargins(0, 0, 0, 0)
+                        
+                        order_label = QLabel(f"Order {j+1}:")
+                        order_combo = QComboBox()
+                        order_combo.addItems(['TROM_CONFIDENCE', 'TROM_POSITION', 'TROM_FORMAT', 'TROM_SKIP'])
+                        order_combo.setCurrentText(order_mode.get('Mode', 'TROM_CONFIDENCE'))
+                        order_combo.setMinimumWidth(120)
+                        order_combo.currentTextChanged.connect(partial(self.on_text_order_changed, task, j))
+                        
+                        order_widget_layout.addWidget(order_label)
+                        order_widget_layout.addWidget(order_combo)
+                        order_widget_layout.addStretch()
+                        
+                        order_widget.setLayout(order_widget_layout)
+                        order_layout.addWidget(order_widget)
+                        
+                        # Store reference for resetting
+                        control_key = f"text_order_{task.get('Name', f'task_{i}')}_{j}"
+                        self.ui_controls[control_key] = (order_combo, 'text', order_mode.get('Mode', 'TROM_CONFIDENCE'))
+                    
+                    order_group.setLayout(order_layout)
+                    group_layout.addWidget(order_group)
+                
+                # Region Predetection Modes (from sections)
+                if 'SectionArray' in task:
+                    for section in task['SectionArray']:
+                        if section.get('Section') == 'ST_REGION_PREDETECTION':
+                            for stage in section.get('StageArray', []):
+                                if 'RegionPredetectionModes' in stage:
+                                    region_group = QGroupBox("Region Predetection Modes")
+                                    region_layout = QVBoxLayout()
+                                    
+                                    for j, mode in enumerate(stage['RegionPredetectionModes']):
+                                        mode_widget = QWidget()
+                                        mode_layout = QFormLayout()
+                                        mode_layout.setContentsMargins(0, 0, 0, 0)
+                                        
+                                        # Mode
+                                        mode_combo = QComboBox()
+                                        mode_combo.addItems(['RPM_GENERAL', 'RPM_GENERAL_RGB_CONTRAST', 'RPM_GENERAL_GRAY_CONTRAST', 'RPM_SKIP'])
+                                        mode_combo.setCurrentText(mode.get('Mode', 'RPM_GENERAL'))
+                                        mode_combo.setMinimumWidth(120)
+                                        mode_combo.currentTextChanged.connect(partial(self.on_region_mode_changed, task, j))
+                                        mode_layout.addRow("Mode:", mode_combo)
+                                        
+                                        # Sensitivity
+                                        if 'Sensitivity' in mode:
+                                            sensitivity_spin = QSpinBox()
+                                            sensitivity_spin.setRange(1, 9)
+                                            sensitivity_spin.setValue(mode['Sensitivity'])
+                                            sensitivity_spin.setMinimumWidth(120)
+                                            sensitivity_spin.valueChanged.connect(partial(self.on_region_sensitivity_changed, task, j))
+                                            mode_layout.addRow("Sensitivity:", sensitivity_spin)
+                                            
+                                            control_key = f"region_sensitivity_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (sensitivity_spin, 'value', mode['Sensitivity'])
+                                        
+                                        # MinImageDimension
+                                        if 'MinImageDimension' in mode:
+                                            min_dim_spin = QSpinBox()
+                                            min_dim_spin.setRange(1, 1000000)
+                                            min_dim_spin.setValue(mode['MinImageDimension'])
+                                            min_dim_spin.setMinimumWidth(120)
+                                            min_dim_spin.valueChanged.connect(partial(self.on_region_min_dim_changed, task, j))
+                                            mode_layout.addRow("Min Image Dimension:", min_dim_spin)
+                                            
+                                            control_key = f"region_min_dim_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (min_dim_spin, 'value', mode['MinImageDimension'])
+                                        
+                                        # SpatialIndexBlockSize
+                                        if 'SpatialIndexBlockSize' in mode:
+                                            block_size_spin = QSpinBox()
+                                            block_size_spin.setRange(1, 32)
+                                            block_size_spin.setValue(mode['SpatialIndexBlockSize'])
+                                            block_size_spin.setMinimumWidth(120)
+                                            block_size_spin.valueChanged.connect(partial(self.on_region_block_size_changed, task, j))
+                                            mode_layout.addRow("Spatial Index Block Size:", block_size_spin)
+                                            
+                                            control_key = f"region_block_size_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (block_size_spin, 'value', mode['SpatialIndexBlockSize'])
+                                        
+                                        # FindAccurateBoundary
+                                        if 'FindAccurateBoundary' in mode:
+                                            accurate_checkbox = QCheckBox("Find Accurate Boundary")
+                                            accurate_checkbox.setChecked(bool(mode['FindAccurateBoundary']))
+                                            accurate_checkbox.stateChanged.connect(partial(self.on_region_accurate_changed, task, j))
+                                            mode_layout.addRow(accurate_checkbox)
+                                            
+                                            control_key = f"region_accurate_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (accurate_checkbox, 'checked', bool(mode['FindAccurateBoundary']))
+                                        
+                                        # MeasuredByPercentage
+                                        if 'MeasuredByPercentage' in mode:
+                                            percentage_checkbox = QCheckBox("Measured By Percentage")
+                                            percentage_checkbox.setChecked(bool(mode['MeasuredByPercentage']))
+                                            percentage_checkbox.stateChanged.connect(partial(self.on_region_percentage_changed, task, j))
+                                            mode_layout.addRow(percentage_checkbox)
+                                            
+                                            control_key = f"region_percentage_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (percentage_checkbox, 'checked', bool(mode['MeasuredByPercentage']))
+                                        
+                                        # DetectionModelName
+                                        if 'DetectionModelName' in mode:
+                                            model_edit = QLineEdit()
+                                            model_edit.setText(mode['DetectionModelName'])
+                                            model_edit.setMinimumWidth(120)
+                                            model_edit.textChanged.connect(partial(self.on_region_model_changed, task, j))
+                                            mode_layout.addRow("Detection Model Name:", model_edit)
+                                            
+                                            control_key = f"region_model_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (model_edit, 'text', mode['DetectionModelName'])
+                                        
+                                        mode_widget.setLayout(mode_layout)
+                                        region_layout.addWidget(mode_widget)
+                                        
+                                        # Store main mode control
+                                        control_key = f"region_mode_{task.get('Name', f'task_{i}')}_{j}"
+                                        self.ui_controls[control_key] = (mode_combo, 'text', mode.get('Mode', 'RPM_GENERAL'))
+                                    
+                                    region_group.setLayout(region_layout)
+                                    group_layout.addWidget(region_group)
+                                    break
+                
                 # Localization Modes (from sections)
                 if 'SectionArray' in task:
                     for section in task['SectionArray']:
@@ -872,36 +1339,110 @@ class ParameterAdjustmentTool(QMainWindow):
                                     for j, mode in enumerate(stage['LocalizationModes']):
                                         mode_text = mode.get('Mode', 'Unknown')
                                         mode_widget = QWidget()
-                                        mode_layout = QHBoxLayout()
-                                        mode_layout.setContentsMargins(0, 0, 0, 0)
+                                        mode_main_layout = QVBoxLayout()
+                                        mode_main_layout.setContentsMargins(5, 5, 5, 5)
                                         
+                                        # Mode header with checkbox
+                                        header_layout = QHBoxLayout()
                                         checkbox = QCheckBox(mode_text.replace('LM_', ''))
                                         checkbox.setChecked(True)
                                         checkbox.stateChanged.connect(
                                             partial(self.on_localization_mode_changed, task, mode_text)
                                         )
-                                        mode_layout.addWidget(checkbox)
+                                        header_layout.addWidget(checkbox)
                                         loc_checkboxes.append(checkbox)
+                                        header_layout.addStretch()
+                                        mode_main_layout.addLayout(header_layout)
                                         
-                                        # Add confidence threshold control if available
+                                        # Parameters grid layout
+                                        params_layout = QGridLayout()
+                                        row = 0
+                                        
+                                        # Confidence Threshold
                                         if 'ConfidenceThreshold' in mode:
                                             confidence_label = QLabel("Confidence:")
                                             confidence_spin = QSpinBox()
                                             confidence_spin.setRange(0, 100)
                                             confidence_spin.setValue(mode['ConfidenceThreshold'])
-                                            confidence_spin.setMinimumWidth(60)
+                                            confidence_spin.setMinimumWidth(80)
                                             confidence_spin.valueChanged.connect(
                                                 partial(self.on_localization_confidence_changed, task, j, mode_text)
                                             )
-                                            mode_layout.addWidget(confidence_label)
-                                            mode_layout.addWidget(confidence_spin)
+                                            params_layout.addWidget(confidence_label, row, 0)
+                                            params_layout.addWidget(confidence_spin, row, 1)
                                             
-                                            # Store UI control for reset functionality
                                             control_key = f"loc_conf_{task.get('Name', f'task_{i}')}_{j}_{mode_text}"
                                             self.ui_controls[control_key] = (confidence_spin, 'value', mode['ConfidenceThreshold'])
+                                            row += 1
                                         
-                                        mode_layout.addStretch()
-                                        mode_widget.setLayout(mode_layout)
+                                        # IsOneDStacked
+                                        if 'IsOneDStacked' in mode:
+                                            stacked_checkbox = QCheckBox("Is One-D Stacked")
+                                            stacked_checkbox.setChecked(bool(mode['IsOneDStacked']))
+                                            stacked_checkbox.stateChanged.connect(
+                                                partial(self.on_localization_stacked_changed, task, j, mode_text)
+                                            )
+                                            params_layout.addWidget(stacked_checkbox, row, 0, 1, 2)
+                                            
+                                            control_key = f"loc_stacked_{task.get('Name', f'task_{i}')}_{j}_{mode_text}"
+                                            self.ui_controls[control_key] = (stacked_checkbox, 'checked', bool(mode['IsOneDStacked']))
+                                            row += 1
+                                        
+                                        # ModuleSize
+                                        if 'ModuleSize' in mode:
+                                            module_label = QLabel("Module Size:")
+                                            module_spin = QSpinBox()
+                                            module_spin.setRange(0, 100)
+                                            module_spin.setValue(mode['ModuleSize'])
+                                            module_spin.setMinimumWidth(80)
+                                            module_spin.valueChanged.connect(
+                                                partial(self.on_localization_module_size_changed, task, j, mode_text)
+                                            )
+                                            params_layout.addWidget(module_label, row, 0)
+                                            params_layout.addWidget(module_spin, row, 1)
+                                            
+                                            control_key = f"loc_module_size_{task.get('Name', f'task_{i}')}_{j}_{mode_text}"
+                                            self.ui_controls[control_key] = (module_spin, 'value', mode['ModuleSize'])
+                                            row += 1
+                                        
+                                        # ScanDirection
+                                        if 'ScanDirection' in mode:
+                                            direction_label = QLabel("Scan Direction:")
+                                            direction_spin = QSpinBox()
+                                            direction_spin.setRange(0, 360)
+                                            direction_spin.setValue(mode['ScanDirection'])
+                                            direction_spin.setMinimumWidth(80)
+                                            direction_spin.valueChanged.connect(
+                                                partial(self.on_localization_scan_direction_changed, task, j, mode_text)
+                                            )
+                                            params_layout.addWidget(direction_label, row, 0)
+                                            params_layout.addWidget(direction_spin, row, 1)
+                                            
+                                            control_key = f"loc_direction_{task.get('Name', f'task_{i}')}_{j}_{mode_text}"
+                                            self.ui_controls[control_key] = (direction_spin, 'value', mode['ScanDirection'])
+                                            row += 1
+                                        
+                                        # ScanStride
+                                        if 'ScanStride' in mode:
+                                            stride_label = QLabel("Scan Stride:")
+                                            stride_spin = QSpinBox()
+                                            stride_spin.setRange(0, 50)
+                                            stride_spin.setValue(mode['ScanStride'])
+                                            stride_spin.setMinimumWidth(80)
+                                            stride_spin.valueChanged.connect(
+                                                partial(self.on_localization_scan_stride_changed, task, j, mode_text)
+                                            )
+                                            params_layout.addWidget(stride_label, row, 0)
+                                            params_layout.addWidget(stride_spin, row, 1)
+                                            
+                                            control_key = f"loc_stride_{task.get('Name', f'task_{i}')}_{j}_{mode_text}"
+                                            self.ui_controls[control_key] = (stride_spin, 'value', mode['ScanStride'])
+                                            row += 1
+                                        
+                                        if row > 0:
+                                            mode_main_layout.addLayout(params_layout)
+                                        
+                                        mode_widget.setLayout(mode_main_layout)
                                         loc_layout.addWidget(mode_widget)
                                         
                                         # Store UI control for reset functionality
@@ -915,6 +1456,262 @@ class ParameterAdjustmentTool(QMainWindow):
                                     loc_main_layout.addLayout(loc_layout)
                                     loc_group.setLayout(loc_main_layout)
                                     group_layout.addWidget(loc_group)
+                                    break
+                
+                # Deformation Resisting Modes (from sections)
+                if 'SectionArray' in task:
+                    for section in task['SectionArray']:
+                        if section.get('Section') == 'ST_BARCODE_DECODING':
+                            for stage in section.get('StageArray', []):
+                                if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                    deform_group = QGroupBox("Deformation Resisting Modes")
+                                    deform_layout = QVBoxLayout()
+                                    
+                                    for j, deform_mode in enumerate(stage['DeformationResistingModes']):
+                                        deform_widget = QWidget()
+                                        deform_widget_layout = QFormLayout()
+                                        
+                                        # Mode
+                                        mode_combo = QComboBox()
+                                        mode_combo.addItems(['DRM_SKIP', 'DRM_AUTO', 'DRM_GENERAL', 'DRM_DEWRAPPING'])
+                                        mode_combo.setCurrentText(deform_mode.get('Mode', 'DRM_SKIP'))
+                                        mode_combo.setMinimumWidth(120)
+                                        mode_combo.currentTextChanged.connect(partial(self.on_deform_mode_changed, task, j))
+                                        deform_widget_layout.addRow("Mode:", mode_combo)
+                                        
+                                        # Level
+                                        if 'Level' in deform_mode:
+                                            level_spin = QSpinBox()
+                                            level_spin.setRange(1, 9)
+                                            level_spin.setValue(deform_mode['Level'])
+                                            level_spin.setMinimumWidth(120)
+                                            level_spin.valueChanged.connect(partial(self.on_deform_level_changed, task, j))
+                                            deform_widget_layout.addRow("Level:", level_spin)
+                                            
+                                            control_key = f"deform_level_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (level_spin, 'value', deform_mode['Level'])
+                                        
+                                        # Binarization Mode (nested)
+                                        if 'BinarizationMode' in deform_mode:
+                                            bin_mode = deform_mode['BinarizationMode']
+                                            bin_group = QGroupBox("Binarization Mode")
+                                            bin_layout = QFormLayout()
+                                            
+                                            # Mode
+                                            bin_mode_combo = QComboBox()
+                                            bin_mode_combo.addItems(['BM_LOCAL_BLOCK', 'BM_THRESHOLD', 'BM_AUTO', 'BM_SKIP'])
+                                            bin_mode_combo.setCurrentText(bin_mode.get('Mode', 'BM_LOCAL_BLOCK'))
+                                            bin_mode_combo.setMinimumWidth(120)
+                                            bin_mode_combo.currentTextChanged.connect(partial(self.on_deform_bin_mode_changed, task, j))
+                                            bin_layout.addRow("Bin Mode:", bin_mode_combo)
+                                            
+                                            # BinarizationThreshold
+                                            if 'BinarizationThreshold' in bin_mode:
+                                                threshold_spin = QSpinBox()
+                                                threshold_spin.setRange(-1, 255)
+                                                threshold_spin.setValue(bin_mode['BinarizationThreshold'])
+                                                threshold_spin.setMinimumWidth(120)
+                                                threshold_spin.valueChanged.connect(partial(self.on_deform_bin_threshold_changed, task, j))
+                                                bin_layout.addRow("Binarization Threshold:", threshold_spin)
+                                                
+                                                control_key = f"deform_bin_threshold_{task.get('Name', f'task_{i}')}_{j}"
+                                                self.ui_controls[control_key] = (threshold_spin, 'value', bin_mode['BinarizationThreshold'])
+                                            
+                                            # BlockSizeX
+                                            if 'BlockSizeX' in bin_mode:
+                                                block_x_spin = QSpinBox()
+                                                block_x_spin.setRange(0, 1000)
+                                                block_x_spin.setValue(bin_mode['BlockSizeX'])
+                                                block_x_spin.setMinimumWidth(120)
+                                                block_x_spin.valueChanged.connect(partial(self.on_deform_bin_block_x_changed, task, j))
+                                                bin_layout.addRow("Block Size X:", block_x_spin)
+                                                
+                                                control_key = f"deform_bin_block_x_{task.get('Name', f'task_{i}')}_{j}"
+                                                self.ui_controls[control_key] = (block_x_spin, 'value', bin_mode['BlockSizeX'])
+                                            
+                                            # BlockSizeY
+                                            if 'BlockSizeY' in bin_mode:
+                                                block_y_spin = QSpinBox()
+                                                block_y_spin.setRange(0, 1000)
+                                                block_y_spin.setValue(bin_mode['BlockSizeY'])
+                                                block_y_spin.setMinimumWidth(120)
+                                                block_y_spin.valueChanged.connect(partial(self.on_deform_bin_block_y_changed, task, j))
+                                                bin_layout.addRow("Block Size Y:", block_y_spin)
+                                                
+                                                control_key = f"deform_bin_block_y_{task.get('Name', f'task_{i}')}_{j}"
+                                                self.ui_controls[control_key] = (block_y_spin, 'value', bin_mode['BlockSizeY'])
+                                            
+                                            # EnableFillBinaryVacancy
+                                            if 'EnableFillBinaryVacancy' in bin_mode:
+                                                fill_checkbox = QCheckBox("Enable Fill Binary Vacancy")
+                                                fill_checkbox.setChecked(bool(bin_mode['EnableFillBinaryVacancy']))
+                                                fill_checkbox.stateChanged.connect(partial(self.on_deform_bin_fill_changed, task, j))
+                                                bin_layout.addRow(fill_checkbox)
+                                                
+                                                control_key = f"deform_bin_fill_{task.get('Name', f'task_{i}')}_{j}"
+                                                self.ui_controls[control_key] = (fill_checkbox, 'checked', bool(bin_mode['EnableFillBinaryVacancy']))
+                                            
+                                            # ThresholdCompensation
+                                            if 'ThresholdCompensation' in bin_mode:
+                                                compensation_spin = QSpinBox()
+                                                compensation_spin.setRange(0, 255)
+                                                compensation_spin.setValue(bin_mode['ThresholdCompensation'])
+                                                compensation_spin.setMinimumWidth(120)
+                                                compensation_spin.valueChanged.connect(partial(self.on_deform_bin_compensation_changed, task, j))
+                                                bin_layout.addRow("Threshold Compensation:", compensation_spin)
+                                                
+                                                control_key = f"deform_bin_compensation_{task.get('Name', f'task_{i}')}_{j}"
+                                                self.ui_controls[control_key] = (compensation_spin, 'value', bin_mode['ThresholdCompensation'])
+                                            
+                                            bin_group.setLayout(bin_layout)
+                                            deform_widget_layout.addRow(bin_group)
+                                            
+                                            # Store bin mode combo control
+                                            control_key = f"deform_bin_mode_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (bin_mode_combo, 'text', bin_mode.get('Mode', 'BM_LOCAL_BLOCK'))
+                                        
+                                        # Grayscale Enhancement Mode (nested)
+                                        if 'GrayscaleEnhancementMode' in deform_mode:
+                                            gray_mode = deform_mode['GrayscaleEnhancementMode']
+                                            gray_group = QGroupBox("Grayscale Enhancement Mode")
+                                            gray_layout = QFormLayout()
+                                            
+                                            # Mode
+                                            gray_mode_combo = QComboBox()
+                                            gray_mode_combo.addItems(['GEM_GENERAL', 'GEM_GRAY_EQUALIZE', 'GEM_GRAY_SMOOTH', 'GEM_GRAY_SHARPEN', 'GEM_SKIP'])
+                                            gray_mode_combo.setCurrentText(gray_mode.get('Mode', 'GEM_GENERAL'))
+                                            gray_mode_combo.setMinimumWidth(120)
+                                            gray_mode_combo.currentTextChanged.connect(partial(self.on_deform_gray_mode_changed, task, j))
+                                            gray_layout.addRow("Gray Mode:", gray_mode_combo)
+                                            
+                                            # Sensitivity
+                                            if 'Sensitivity' in gray_mode:
+                                                gray_sensitivity_spin = QSpinBox()
+                                                gray_sensitivity_spin.setRange(1, 9)
+                                                gray_sensitivity_spin.setValue(gray_mode['Sensitivity'])
+                                                gray_sensitivity_spin.setMinimumWidth(120)
+                                                gray_sensitivity_spin.valueChanged.connect(partial(self.on_deform_gray_sensitivity_changed, task, j))
+                                                gray_layout.addRow("Sensitivity:", gray_sensitivity_spin)
+                                                
+                                                control_key = f"deform_gray_sensitivity_{task.get('Name', f'task_{i}')}_{j}"
+                                                self.ui_controls[control_key] = (gray_sensitivity_spin, 'value', gray_mode['Sensitivity'])
+                                            
+                                            gray_group.setLayout(gray_layout)
+                                            deform_widget_layout.addRow(gray_group)
+                                            
+                                            # Store gray mode combo control
+                                            control_key = f"deform_gray_mode_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (gray_mode_combo, 'text', gray_mode.get('Mode', 'GEM_GENERAL'))
+                                        
+                                        deform_widget.setLayout(deform_widget_layout)
+                                        deform_layout.addWidget(deform_widget)
+                                        
+                                        # Store main deform mode control
+                                        control_key = f"deform_mode_{task.get('Name', f'task_{i}')}_{j}"
+                                        self.ui_controls[control_key] = (mode_combo, 'text', deform_mode.get('Mode', 'DRM_SKIP'))
+                                    
+                                    deform_group.setLayout(deform_layout)
+                                    group_layout.addWidget(deform_group)
+                                    break
+                
+                # Barcode Complement Modes (from sections)
+                if 'SectionArray' in task:
+                    for section in task['SectionArray']:
+                        if section.get('Section') == 'ST_BARCODE_DECODING':
+                            for stage in section.get('StageArray', []):
+                                if stage.get('Stage') == 'SST_COMPLEMENT_BARCODE' and 'BarcodeComplementModes' in stage:
+                                    complement_group = QGroupBox("Barcode Complement Modes")
+                                    complement_layout = QVBoxLayout()
+                                    
+                                    for j, complement_mode in enumerate(stage['BarcodeComplementModes']):
+                                        complement_widget = QWidget()
+                                        complement_widget_layout = QFormLayout()
+                                        
+                                        # Mode
+                                        complement_mode_combo = QComboBox()
+                                        complement_mode_combo.addItems(['BCM_SKIP', 'BCM_AUTO', 'BCM_GENERAL'])
+                                        complement_mode_combo.setCurrentText(complement_mode.get('Mode', 'BCM_SKIP'))
+                                        complement_mode_combo.setMinimumWidth(120)
+                                        complement_mode_combo.currentTextChanged.connect(partial(self.on_complement_mode_changed, task, j))
+                                        complement_widget_layout.addRow("Mode:", complement_mode_combo)
+                                        
+                                        complement_widget.setLayout(complement_widget_layout)
+                                        complement_layout.addWidget(complement_widget)
+                                        
+                                        # Store control
+                                        control_key = f"complement_mode_{task.get('Name', f'task_{i}')}_{j}"
+                                        self.ui_controls[control_key] = (complement_mode_combo, 'text', complement_mode.get('Mode', 'BCM_SKIP'))
+                                    
+                                    complement_group.setLayout(complement_layout)
+                                    group_layout.addWidget(complement_group)
+                                    break
+                
+                # Barcode Scale Modes (from sections)
+                if 'SectionArray' in task:
+                    for section in task['SectionArray']:
+                        if section.get('Section') == 'ST_BARCODE_DECODING':
+                            for stage in section.get('StageArray', []):
+                                if stage.get('Stage') == 'SST_SCALE_BARCODE_IMAGE' and 'BarcodeScaleModes' in stage:
+                                    scale_group = QGroupBox("Barcode Scale Modes")
+                                    scale_layout = QVBoxLayout()
+                                    
+                                    for j, scale_mode in enumerate(stage['BarcodeScaleModes']):
+                                        scale_widget = QWidget()
+                                        scale_widget_layout = QFormLayout()
+                                        
+                                        # Mode
+                                        scale_mode_combo = QComboBox()
+                                        scale_mode_combo.addItems(['BSM_SKIP', 'BSM_AUTO', 'BSM_MANUAL'])
+                                        scale_mode_combo.setCurrentText(scale_mode.get('Mode', 'BSM_AUTO'))
+                                        scale_mode_combo.setMinimumWidth(120)
+                                        scale_mode_combo.currentTextChanged.connect(partial(self.on_scale_mode_changed, task, j))
+                                        scale_widget_layout.addRow("Mode:", scale_mode_combo)
+                                        
+                                        # AcuteAngleWithXThreshold
+                                        if 'AcuteAngleWithXThreshold' in scale_mode:
+                                            angle_spin = QSpinBox()
+                                            angle_spin.setRange(-1, 90)
+                                            angle_spin.setValue(scale_mode['AcuteAngleWithXThreshold'])
+                                            angle_spin.setMinimumWidth(120)
+                                            angle_spin.valueChanged.connect(partial(self.on_scale_angle_changed, task, j))
+                                            scale_widget_layout.addRow("Acute Angle Threshold:", angle_spin)
+                                            
+                                            control_key = f"scale_angle_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (angle_spin, 'value', scale_mode['AcuteAngleWithXThreshold'])
+                                        
+                                        # ModuleSizeThreshold
+                                        if 'ModuleSizeThreshold' in scale_mode:
+                                            module_threshold_spin = QSpinBox()
+                                            module_threshold_spin.setRange(0, 100)
+                                            module_threshold_spin.setValue(scale_mode['ModuleSizeThreshold'])
+                                            module_threshold_spin.setMinimumWidth(120)
+                                            module_threshold_spin.valueChanged.connect(partial(self.on_scale_module_threshold_changed, task, j))
+                                            scale_widget_layout.addRow("Module Size Threshold:", module_threshold_spin)
+                                            
+                                            control_key = f"scale_module_threshold_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (module_threshold_spin, 'value', scale_mode['ModuleSizeThreshold'])
+                                        
+                                        # TargetModuleSize
+                                        if 'TargetModuleSize' in scale_mode:
+                                            target_size_spin = QSpinBox()
+                                            target_size_spin.setRange(0, 100)
+                                            target_size_spin.setValue(scale_mode['TargetModuleSize'])
+                                            target_size_spin.setMinimumWidth(120)
+                                            target_size_spin.valueChanged.connect(partial(self.on_scale_target_size_changed, task, j))
+                                            scale_widget_layout.addRow("Target Module Size:", target_size_spin)
+                                            
+                                            control_key = f"scale_target_size_{task.get('Name', f'task_{i}')}_{j}"
+                                            self.ui_controls[control_key] = (target_size_spin, 'value', scale_mode['TargetModuleSize'])
+                                        
+                                        scale_widget.setLayout(scale_widget_layout)
+                                        scale_layout.addWidget(scale_widget)
+                                        
+                                        # Store main scale mode control
+                                        control_key = f"scale_mode_{task.get('Name', f'task_{i}')}_{j}"
+                                        self.ui_controls[control_key] = (scale_mode_combo, 'text', scale_mode.get('Mode', 'BSM_AUTO'))
+                                    
+                                    scale_group.setLayout(scale_layout)
+                                    group_layout.addWidget(scale_group)
                                     break
                 
                 group.setLayout(group_layout)
@@ -1055,6 +1852,255 @@ class ParameterAdjustmentTool(QMainWindow):
                             text_group.setLayout(text_layout)
                             stage_layout.addWidget(text_group)
                         
+                        # Colour Conversion Modes
+                        if 'ColourConversionModes' in stage:
+                            color_group = QGroupBox("Colour Conversion")
+                            color_layout = QFormLayout()
+                            
+                            for color_mode in stage['ColourConversionModes']:
+                                mode_text = color_mode.get('Mode', 'Unknown')
+                                color_layout.addRow(QLabel(f"Mode: {mode_text.replace('CICM_', '')}"))
+                                
+                                # Red Channel Weight
+                                if 'RedChannelWeight' in color_mode:
+                                    red_spin = QSpinBox()
+                                    red_spin.setRange(-1, 1000)
+                                    red_spin.setValue(color_mode['RedChannelWeight'])
+                                    red_spin.setMinimumWidth(120)
+                                    red_spin.valueChanged.connect(
+                                        partial(self.on_color_weight_changed, color_mode, 'RedChannelWeight')
+                                    )
+                                    color_layout.addRow("Red Weight:", red_spin)
+                                    
+                                    control_key = f"red_weight_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                    self.ui_controls[control_key] = (red_spin, 'value', color_mode['RedChannelWeight'])
+                                
+                                # Green Channel Weight  
+                                if 'GreenChannelWeight' in color_mode:
+                                    green_spin = QSpinBox()
+                                    green_spin.setRange(-1, 1000)
+                                    green_spin.setValue(color_mode['GreenChannelWeight'])
+                                    green_spin.setMinimumWidth(120)
+                                    green_spin.valueChanged.connect(
+                                        partial(self.on_color_weight_changed, color_mode, 'GreenChannelWeight')
+                                    )
+                                    color_layout.addRow("Green Weight:", green_spin)
+                                    
+                                    control_key = f"green_weight_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                    self.ui_controls[control_key] = (green_spin, 'value', color_mode['GreenChannelWeight'])
+                                
+                                # Blue Channel Weight
+                                if 'BlueChannelWeight' in color_mode:
+                                    blue_spin = QSpinBox()
+                                    blue_spin.setRange(-1, 1000)
+                                    blue_spin.setValue(color_mode['BlueChannelWeight'])
+                                    blue_spin.setMinimumWidth(120)
+                                    blue_spin.valueChanged.connect(
+                                        partial(self.on_color_weight_changed, color_mode, 'BlueChannelWeight')
+                                    )
+                                    color_layout.addRow("Blue Weight:", blue_spin)
+                                    
+                                    control_key = f"blue_weight_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                    self.ui_controls[control_key] = (blue_spin, 'value', color_mode['BlueChannelWeight'])
+                                
+                                # Reference Channel
+                                if 'ReferChannel' in color_mode:
+                                    ref_combo = QComboBox()
+                                    ref_combo.addItems(['H_CHANNEL', 'S_CHANNEL', 'V_CHANNEL'])
+                                    ref_combo.setCurrentText(color_mode['ReferChannel'])
+                                    ref_combo.setMinimumWidth(120)
+                                    ref_combo.currentTextChanged.connect(
+                                        partial(self.on_color_ref_changed, color_mode)
+                                    )
+                                    color_layout.addRow("Reference Channel:", ref_combo)
+                                    
+                                    control_key = f"ref_channel_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                    self.ui_controls[control_key] = (ref_combo, 'text', color_mode['ReferChannel'])
+                            
+                            color_group.setLayout(color_layout)
+                            stage_layout.addWidget(color_group)
+                        
+                        # Grayscale Enhancement Modes
+                        if 'GrayscaleEnhancementModes' in stage:
+                            enhance_group = QGroupBox("Grayscale Enhancement")
+                            enhance_layout = QFormLayout()
+                            
+                            for enhance_mode in stage['GrayscaleEnhancementModes']:
+                                mode_text = enhance_mode.get('Mode', 'Unknown')
+                                enhance_layout.addRow(QLabel(f"Mode: {mode_text.replace('GEM_', '')}"))
+                                
+                                # Sensitivity
+                                if 'Sensitivity' in enhance_mode:
+                                    sens_spin = QSpinBox()
+                                    sens_spin.setRange(1, 9)
+                                    sens_spin.setValue(enhance_mode['Sensitivity'])
+                                    sens_spin.setMinimumWidth(120)
+                                    sens_spin.valueChanged.connect(
+                                        partial(self.on_enhance_sensitivity_changed, enhance_mode)
+                                    )
+                                    enhance_layout.addRow("Sensitivity:", sens_spin)
+                                    
+                                    control_key = f"enhance_sens_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                    self.ui_controls[control_key] = (sens_spin, 'value', enhance_mode['Sensitivity'])
+                                
+                                # Sharpen Block Size X
+                                if 'SharpenBlockSizeX' in enhance_mode:
+                                    sharpen_x_spin = QSpinBox()
+                                    sharpen_x_spin.setRange(3, 1000)
+                                    sharpen_x_spin.setValue(enhance_mode['SharpenBlockSizeX'])
+                                    sharpen_x_spin.setMinimumWidth(120)
+                                    sharpen_x_spin.valueChanged.connect(
+                                        partial(self.on_enhance_block_changed, enhance_mode, 'SharpenBlockSizeX')
+                                    )
+                                    enhance_layout.addRow("Sharpen Block X:", sharpen_x_spin)
+                                    
+                                    control_key = f"sharpen_x_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                    self.ui_controls[control_key] = (sharpen_x_spin, 'value', enhance_mode['SharpenBlockSizeX'])
+                                
+                                # Sharpen Block Size Y
+                                if 'SharpenBlockSizeY' in enhance_mode:
+                                    sharpen_y_spin = QSpinBox()
+                                    sharpen_y_spin.setRange(3, 1000)
+                                    sharpen_y_spin.setValue(enhance_mode['SharpenBlockSizeY'])
+                                    sharpen_y_spin.setMinimumWidth(120)
+                                    sharpen_y_spin.valueChanged.connect(
+                                        partial(self.on_enhance_block_changed, enhance_mode, 'SharpenBlockSizeY')
+                                    )
+                                    enhance_layout.addRow("Sharpen Block Y:", sharpen_y_spin)
+                                    
+                                    control_key = f"sharpen_y_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                    self.ui_controls[control_key] = (sharpen_y_spin, 'value', enhance_mode['SharpenBlockSizeY'])
+                            
+                            enhance_group.setLayout(enhance_layout)
+                            stage_layout.addWidget(enhance_group)
+                        
+                        # Texture Detection Modes
+                        if 'TextureDetectionModes' in stage:
+                            texture_group = QGroupBox("Texture Detection")
+                            texture_layout = QFormLayout()
+                            
+                            for texture_mode in stage['TextureDetectionModes']:
+                                mode_text = texture_mode.get('Mode', 'Unknown')
+                                texture_layout.addRow(QLabel(f"Mode: {mode_text.replace('TDM_', '')}"))
+                                
+                                if 'Sensitivity' in texture_mode:
+                                    sens_spin = QSpinBox()
+                                    sens_spin.setRange(1, 9)
+                                    sens_spin.setValue(texture_mode['Sensitivity'])
+                                    sens_spin.setMinimumWidth(120)
+                                    sens_spin.valueChanged.connect(
+                                        partial(self.on_texture_sensitivity_changed, texture_mode)
+                                    )
+                                    texture_layout.addRow("Sensitivity:", sens_spin)
+                                    
+                                    control_key = f"texture_sens_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                    self.ui_controls[control_key] = (sens_spin, 'value', texture_mode['Sensitivity'])
+                            
+                            texture_group.setLayout(texture_layout)
+                            stage_layout.addWidget(texture_group)
+                        
+                        # Shortline Detection Mode
+                        if 'ShortlineDetectionMode' in stage:
+                            shortline_group = QGroupBox("Shortline Detection")
+                            shortline_layout = QFormLayout()
+                            
+                            shortline_mode = stage['ShortlineDetectionMode']
+                            mode_text = shortline_mode.get('Mode', 'Unknown')
+                            shortline_layout.addRow(QLabel(f"Mode: {mode_text.replace('SDM_', '')}"))
+                            
+                            if 'Sensitivity' in shortline_mode:
+                                sens_spin = QSpinBox()
+                                sens_spin.setRange(1, 9)
+                                sens_spin.setValue(shortline_mode['Sensitivity'])
+                                sens_spin.setMinimumWidth(120)
+                                sens_spin.valueChanged.connect(
+                                    partial(self.on_shortline_sensitivity_changed, shortline_mode)
+                                )
+                                shortline_layout.addRow("Sensitivity:", sens_spin)
+                                
+                                control_key = f"shortline_sens_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                self.ui_controls[control_key] = (sens_spin, 'value', shortline_mode['Sensitivity'])
+                            
+                            shortline_group.setLayout(shortline_layout)
+                            stage_layout.addWidget(shortline_group)
+                        
+                        # Line Assembly Mode
+                        if 'LineAssemblyMode' in stage:
+                            assembly_group = QGroupBox("Line Assembly")
+                            assembly_layout = QFormLayout()
+                            
+                            assembly_mode = stage['LineAssemblyMode']
+                            mode_text = assembly_mode.get('Mode', 'Unknown')
+                            assembly_layout.addRow(QLabel(f"Mode: {mode_text.replace('LAM_', '')}"))
+                            
+                            if 'Sensitivity' in assembly_mode:
+                                sens_spin = QSpinBox()
+                                sens_spin.setRange(1, 9)
+                                sens_spin.setValue(assembly_mode['Sensitivity'])
+                                sens_spin.setMinimumWidth(120)
+                                sens_spin.valueChanged.connect(
+                                    partial(self.on_assembly_sensitivity_changed, assembly_mode)
+                                )
+                                assembly_layout.addRow("Sensitivity:", sens_spin)
+                                
+                                control_key = f"assembly_sens_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                self.ui_controls[control_key] = (sens_spin, 'value', assembly_mode['Sensitivity'])
+                            
+                            assembly_group.setLayout(assembly_layout)
+                            stage_layout.addWidget(assembly_group)
+                        
+                        # Image Scale Setting
+                        if 'ImageScaleSetting' in stage:
+                            scale_group = QGroupBox("Image Scale Setting")
+                            scale_layout = QFormLayout()
+                            
+                            scale_setting = stage['ImageScaleSetting']
+                            
+                            # Edge Length Threshold
+                            if 'EdgeLengthThreshold' in scale_setting:
+                                edge_spin = QSpinBox()
+                                edge_spin.setRange(1, 10000)
+                                edge_spin.setValue(scale_setting['EdgeLengthThreshold'])
+                                edge_spin.setMinimumWidth(120)
+                                edge_spin.valueChanged.connect(
+                                    partial(self.on_edge_threshold_changed, scale_setting)
+                                )
+                                scale_layout.addRow("Edge Length Threshold:", edge_spin)
+                                
+                                control_key = f"edge_threshold_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                self.ui_controls[control_key] = (edge_spin, 'value', scale_setting['EdgeLengthThreshold'])
+                            
+                            # Reference Edge
+                            if 'ReferenceEdge' in scale_setting:
+                                ref_combo = QComboBox()
+                                ref_combo.addItems(['RE_SHORTER_EDGE', 'RE_LONGER_EDGE'])
+                                ref_combo.setCurrentText(scale_setting['ReferenceEdge'])
+                                ref_combo.setMinimumWidth(120)
+                                ref_combo.currentTextChanged.connect(
+                                    partial(self.on_ref_edge_changed, scale_setting)
+                                )
+                                scale_layout.addRow("Reference Edge:", ref_combo)
+                                
+                                control_key = f"ref_edge_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                self.ui_controls[control_key] = (ref_combo, 'text', scale_setting['ReferenceEdge'])
+                            
+                            # Scale Type
+                            if 'ScaleType' in scale_setting:
+                                type_combo = QComboBox()
+                                type_combo.addItems(['ST_SCALE_DOWN', 'ST_SCALE_UP'])
+                                type_combo.setCurrentText(scale_setting['ScaleType'])
+                                type_combo.setMinimumWidth(120)
+                                type_combo.currentTextChanged.connect(
+                                    partial(self.on_scale_type_changed, scale_setting)
+                                )
+                                scale_layout.addRow("Scale Type:", type_combo)
+                                
+                                control_key = f"scale_type_{param.get('Name', f'param_{i}')}_{stage_name}"
+                                self.ui_controls[control_key] = (type_combo, 'text', scale_setting['ScaleType'])
+                            
+                            scale_group.setLayout(scale_layout)
+                            stage_layout.addWidget(scale_group)
+                        
                         stage_group.setLayout(stage_layout)
                         group_layout.addWidget(stage_group)
                 
@@ -1069,6 +2115,147 @@ class ParameterAdjustmentTool(QMainWindow):
         layout.addWidget(scroll_area)
         tab.setLayout(layout)
         self.param_tabs.addTab(tab, "Image Processing")
+        
+    def create_global_parameter_tab(self):
+        """Create global parameter controls"""
+        tab = QWidget()
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("Global Parameters")
+        title.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+        layout.addWidget(title)
+        
+        scroll_area = QScrollArea()
+        scroll_widget = QWidget()
+        scroll_layout = QVBoxLayout(scroll_widget)
+        
+        # Get global parameters
+        global_params = self.default_settings.get('GlobalParameter', {})
+        if global_params:
+            # Max Total Image Dimension
+            param_layout = QFormLayout()
+            
+            max_dimension = global_params.get('MaxTotalImageDimension', 0)
+            max_dimension_spinbox = QSpinBox()
+            max_dimension_spinbox.setRange(0, 999999999)
+            max_dimension_spinbox.setValue(max_dimension)
+            max_dimension_spinbox.setSuffix(" pixels")
+            max_dimension_spinbox.setToolTip("Maximum total image dimension (0 = no limit)")
+            max_dimension_spinbox.valueChanged.connect(partial(self.on_max_dimension_changed))
+            param_layout.addRow("Max Total Image Dimension:", max_dimension_spinbox)
+            
+            # Store control reference
+            self.ui_controls[f"max_dimension"] = (max_dimension_spinbox, 'value', max_dimension)
+            
+            scroll_layout.addLayout(param_layout)
+        
+        scroll_area.setWidget(scroll_widget)
+        scroll_area.setWidgetResizable(True)
+        
+        layout.addWidget(scroll_area)
+        tab.setLayout(layout)
+        self.param_tabs.addTab(tab, "Global Parameters")
+        
+    def create_target_roi_tab(self):
+        """Create target ROI definition controls"""
+        tab = QWidget()
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("Target ROI Definition Options")
+        title.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+        layout.addWidget(title)
+        
+        scroll_area = QScrollArea()
+        scroll_widget = QWidget()
+        scroll_layout = QVBoxLayout(scroll_widget)
+        
+        # Get target ROI options
+        target_roi_options = self.default_settings.get('TargetROIDefOptions', [])
+        
+        for i, roi_option in enumerate(target_roi_options):
+            roi_group = QGroupBox(f"ROI: {roi_option.get('Name', f'ROI {i+1}')}")
+            roi_layout = QFormLayout()
+            
+            # Enable Results Deduplication
+            if 'EnableResultsDeduplication' in roi_option:
+                dedup_checkbox = QCheckBox()
+                dedup_checkbox.setChecked(bool(roi_option['EnableResultsDeduplication']))
+                dedup_checkbox.stateChanged.connect(
+                    partial(self.on_roi_deduplication_changed, roi_option)
+                )
+                roi_layout.addRow("Enable Results Deduplication:", dedup_checkbox)
+                
+                control_key = f"roi_dedup_{roi_option.get('Name', f'roi_{i}')}"
+                self.ui_controls[control_key] = (dedup_checkbox, 'checked', bool(roi_option['EnableResultsDeduplication']))
+            
+            # Pause Flag
+            if 'PauseFlag' in roi_option:
+                pause_checkbox = QCheckBox()
+                pause_checkbox.setChecked(bool(roi_option['PauseFlag']))
+                pause_checkbox.stateChanged.connect(
+                    partial(self.on_roi_pause_changed, roi_option)
+                )
+                roi_layout.addRow("Pause Flag:", pause_checkbox)
+                
+                control_key = f"roi_pause_{roi_option.get('Name', f'roi_{i}')}"
+                self.ui_controls[control_key] = (pause_checkbox, 'checked', bool(roi_option['PauseFlag']))
+            
+            # Task Setting Name Array
+            if 'TaskSettingNameArray' in roi_option:
+                task_list = QListWidget()
+                task_list.addItems(roi_option['TaskSettingNameArray'])
+                task_list.setMaximumHeight(100)
+                roi_layout.addRow("Task Settings:", task_list)
+                
+                control_key = f"roi_tasks_{roi_option.get('Name', f'roi_{i}')}"
+                self.ui_controls[control_key] = (task_list, 'items', roi_option['TaskSettingNameArray'])
+            
+            # Location settings (simplified - these are complex nested objects)
+            if 'Location' in roi_option:
+                location = roi_option['Location']
+                location_group = QGroupBox("Location Settings")
+                location_layout = QFormLayout()
+                
+                # Reference Object Type
+                if 'ReferenceObjectType' in location:
+                    ref_obj_combo = QComboBox()
+                    ref_obj_combo.addItems(['ROT_ATOMIC_OBJECT', 'ROT_LOCALIZED_TEXT_LINE', 'ROT_BARCODE', 'ROT_TEXT_ZONE'])
+                    ref_obj_combo.setCurrentText(location['ReferenceObjectType'])
+                    ref_obj_combo.currentTextChanged.connect(
+                        partial(self.on_roi_ref_object_changed, location)
+                    )
+                    location_layout.addRow("Reference Object Type:", ref_obj_combo)
+                    
+                    control_key = f"roi_ref_obj_{roi_option.get('Name', f'roi_{i}')}"
+                    self.ui_controls[control_key] = (ref_obj_combo, 'text', location['ReferenceObjectType'])
+                
+                # Measured By Percentage (in Offset)
+                if 'Offset' in location and 'MeasuredByPercentage' in location['Offset']:
+                    offset = location['Offset']
+                    measured_checkbox = QCheckBox()
+                    measured_checkbox.setChecked(bool(offset['MeasuredByPercentage']))
+                    measured_checkbox.stateChanged.connect(
+                        partial(self.on_roi_measured_changed, offset)
+                    )
+                    location_layout.addRow("Measured By Percentage:", measured_checkbox)
+                    
+                    control_key = f"roi_measured_{roi_option.get('Name', f'roi_{i}')}"
+                    self.ui_controls[control_key] = (measured_checkbox, 'checked', bool(offset['MeasuredByPercentage']))
+                
+                location_group.setLayout(location_layout)
+                roi_layout.addRow(location_group)
+            
+            roi_group.setLayout(roi_layout)
+            scroll_layout.addWidget(roi_group)
+        
+        scroll_area.setWidget(scroll_widget)
+        scroll_area.setWidgetResizable(True)
+        
+        layout.addWidget(scroll_area)
+        tab.setLayout(layout)
+        self.param_tabs.addTab(tab, "Target ROI")
         
     def create_capture_vision_template_tab(self):
         """Create capture vision template controls"""
@@ -1362,13 +2549,745 @@ class ParameterAdjustmentTool(QMainWindow):
                     break
         self.update_settings()
         
+    # New parameter callback methods
+    def on_all_module_deviation_changed(self, spec: Dict, value: int):
+        """Handle all module deviation changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['AllModuleDeviation'] = value
+                    break
+        self.update_settings()
+        
+    def on_aus_post_encoding_changed(self, spec: Dict, value: str):
+        """Handle Australian Post encoding table changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['AustralianPostEncodingTable'] = value
+                    break
+        self.update_settings()
+        
+    def on_barcode_regex_changed(self, spec: Dict, value: str):
+        """Handle barcode text regex pattern changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['BarcodeTextRegExPattern'] = value
+                    break
+        self.update_settings()
+        
+    def on_border_distance_changed(self, spec: Dict, value: int):
+        """Handle barcode zone min distance to borders changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['BarcodeZoneMinDistanceToImageBorders'] = value
+                    break
+        self.update_settings()
+        
+    def on_code128_subset_changed(self, spec: Dict, value: str):
+        """Handle Code 128 subset changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['Code128Subset'] = value
+                    break
+        self.update_settings()
+        
+    def on_dm_isotropic_changed(self, spec: Dict, state: int):
+        """Handle DataMatrix module isotropic changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['DataMatrixModuleIsotropic'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_addon_code_changed(self, spec: Dict, state: int):
+        """Handle enable add-on code changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['EnableAddOnCode'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_dm_ecc_changed(self, spec: Dict, state: int):
+        """Handle DataMatrix ECC000-140 changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['EnableDataMatrixECC000-140'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_qr_model1_changed(self, spec: Dict, state: int):
+        """Handle QR Code Model 1 changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['EnableQRCodeModel1'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_head_ratio_changed(self, spec: Dict, value: str):
+        """Handle head module ratio changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['HeadModuleRatio'] = value
+                    break
+        self.update_settings()
+        
+    def on_tail_ratio_changed(self, spec: Dict, value: str):
+        """Handle tail module ratio changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['TailModuleRatio'] = value
+                    break
+        self.update_settings()
+        
+    def on_ai01_changed(self, spec: Dict, state: int):
+        """Handle include implied AI 01 changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['IncludeImpliedAI01'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_check_digit_changed(self, spec: Dict, state: int):
+        """Handle include trailing check digit changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['IncludeTrailingCheckDigit'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_msi_calc_changed(self, spec: Dict, value: str):
+        """Handle MSI check digit calculation changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['MSICodeCheckDigitCalculation'] = value
+                    break
+        self.update_settings()
+        
+    def on_width_height_ratio_changed(self, spec: Dict, value: float):
+        """Handle min ratio of barcode zone width to height changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['MinRatioOfBarcodeZoneWidthToHeight'] = value
+                    break
+        self.update_settings()
+        
+    def on_startstop_changed(self, spec: Dict, state: int):
+        """Handle require start/stop characters changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['RequireStartStopChars'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_partial_value_changed(self, spec: Dict, state: int):
+        """Handle return partial barcode value changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['ReturnPartialBarcodeValue'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_std_format_changed(self, spec: Dict, value: str):
+        """Handle standard format changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['StandardFormat'] = value
+                    break
+        self.update_settings()
+        
+    def on_verify_digit_changed(self, spec: Dict, state: int):
+        """Handle verify check digit changes"""
+        if 'BarcodeFormatSpecificationOptions' in self.current_settings:
+            for current_spec in self.current_settings['BarcodeFormatSpecificationOptions']:
+                if current_spec.get('Name') == spec.get('Name'):
+                    current_spec['VerifyCheckDigit'] = 1 if state == Qt.CheckState.Checked.value else 0
+                    break
+        self.update_settings()
+        
+    def on_dpm_format_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle DPM code reading mode barcode format changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'DPMCodeReadingModes' in current_task and mode_index < len(current_task['DPMCodeReadingModes']):
+                        current_task['DPMCodeReadingModes'][mode_index]['BarcodeFormat'] = value
+                    break
+        self.update_settings()
+        
+    def on_dpm_mode_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle DPM code reading mode changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'DPMCodeReadingModes' in current_task and mode_index < len(current_task['DPMCodeReadingModes']):
+                        current_task['DPMCodeReadingModes'][mode_index]['Mode'] = value
+                    break
+        self.update_settings()
+        
+    def on_text_order_changed(self, task: Dict, order_index: int, value: str):
+        """Handle text result order mode changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'TextResultOrderModes' in current_task and order_index < len(current_task['TextResultOrderModes']):
+                        current_task['TextResultOrderModes'][order_index]['Mode'] = value
+                    break
+        self.update_settings()
+        
+    def on_region_mode_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle region predetection mode changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if 'RegionPredetectionModes' in stage and mode_index < len(stage['RegionPredetectionModes']):
+                                        stage['RegionPredetectionModes'][mode_index]['Mode'] = value
+                                        break
+                    break
+        self.update_settings()
+        
+    def on_region_sensitivity_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle region predetection sensitivity changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if 'RegionPredetectionModes' in stage and mode_index < len(stage['RegionPredetectionModes']):
+                                        stage['RegionPredetectionModes'][mode_index]['Sensitivity'] = value
+                                        break
+                    break
+        self.update_settings()
+        
+    def on_region_min_dim_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle region predetection min image dimension changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if 'RegionPredetectionModes' in stage and mode_index < len(stage['RegionPredetectionModes']):
+                                        stage['RegionPredetectionModes'][mode_index]['MinImageDimension'] = value
+                                        break
+                    break
+        self.update_settings()
+        
+    def on_region_block_size_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle region predetection spatial index block size changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if 'RegionPredetectionModes' in stage and mode_index < len(stage['RegionPredetectionModes']):
+                                        stage['RegionPredetectionModes'][mode_index]['SpatialIndexBlockSize'] = value
+                                        break
+                    break
+        self.update_settings()
+        
+    def on_region_accurate_changed(self, task: Dict, mode_index: int, state: int):
+        """Handle region predetection find accurate boundary changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if 'RegionPredetectionModes' in stage and mode_index < len(stage['RegionPredetectionModes']):
+                                        stage['RegionPredetectionModes'][mode_index]['FindAccurateBoundary'] = 1 if state == Qt.CheckState.Checked.value else 0
+                                        break
+                    break
+        self.update_settings()
+        
+    def on_region_percentage_changed(self, task: Dict, mode_index: int, state: int):
+        """Handle region predetection measured by percentage changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if 'RegionPredetectionModes' in stage and mode_index < len(stage['RegionPredetectionModes']):
+                                        stage['RegionPredetectionModes'][mode_index]['MeasuredByPercentage'] = 1 if state == Qt.CheckState.Checked.value else 0
+                                        break
+                    break
+        self.update_settings()
+        
+    def on_region_model_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle region predetection model name changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if 'RegionPredetectionModes' in stage and mode_index < len(stage['RegionPredetectionModes']):
+                                        stage['RegionPredetectionModes'][mode_index]['DetectionModelName'] = value
+                                        break
+                    break
+        self.update_settings()
+        
+    def on_localization_stacked_changed(self, task: Dict, mode_index: int, mode_text: str, state: int):
+        """Handle localization mode IsOneDStacked changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_LOCALIZATION':
+                                for stage in section.get('StageArray', []):
+                                    if 'LocalizationModes' in stage:
+                                        for mode in stage['LocalizationModes']:
+                                            if mode.get('Mode') == mode_text:
+                                                mode['IsOneDStacked'] = 1 if state == Qt.CheckState.Checked.value else 0
+                                                break
+                    break
+        self.update_settings()
+        
+    def on_localization_module_size_changed(self, task: Dict, mode_index: int, mode_text: str, value: int):
+        """Handle localization mode module size changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_LOCALIZATION':
+                                for stage in section.get('StageArray', []):
+                                    if 'LocalizationModes' in stage:
+                                        for mode in stage['LocalizationModes']:
+                                            if mode.get('Mode') == mode_text:
+                                                mode['ModuleSize'] = value
+                                                break
+                    break
+        self.update_settings()
+        
+    def on_localization_scan_direction_changed(self, task: Dict, mode_index: int, mode_text: str, value: int):
+        """Handle localization mode scan direction changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_LOCALIZATION':
+                                for stage in section.get('StageArray', []):
+                                    if 'LocalizationModes' in stage:
+                                        for mode in stage['LocalizationModes']:
+                                            if mode.get('Mode') == mode_text:
+                                                mode['ScanDirection'] = value
+                                                break
+                    break
+        self.update_settings()
+        
+    def on_localization_scan_stride_changed(self, task: Dict, mode_index: int, mode_text: str, value: int):
+        """Handle localization mode scan stride changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_LOCALIZATION':
+                                for stage in section.get('StageArray', []):
+                                    if 'LocalizationModes' in stage:
+                                        for mode in stage['LocalizationModes']:
+                                            if mode.get('Mode') == mode_text:
+                                                mode['ScanStride'] = value
+                                                break
+                    break
+        self.update_settings()
+        
+    def on_deform_mode_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle deformation resisting mode changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']):
+                                            stage['DeformationResistingModes'][mode_index]['Mode'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_level_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle deformation resisting level changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']):
+                                            stage['DeformationResistingModes'][mode_index]['Level'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_bin_mode_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle deformation resisting binarization mode changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']) and 'BinarizationMode' in stage['DeformationResistingModes'][mode_index]:
+                                            stage['DeformationResistingModes'][mode_index]['BinarizationMode']['Mode'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_bin_threshold_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle deformation resisting binarization threshold changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']) and 'BinarizationMode' in stage['DeformationResistingModes'][mode_index]:
+                                            stage['DeformationResistingModes'][mode_index]['BinarizationMode']['BinarizationThreshold'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_bin_block_x_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle deformation resisting binarization block X changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']) and 'BinarizationMode' in stage['DeformationResistingModes'][mode_index]:
+                                            stage['DeformationResistingModes'][mode_index]['BinarizationMode']['BlockSizeX'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_bin_block_y_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle deformation resisting binarization block Y changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']) and 'BinarizationMode' in stage['DeformationResistingModes'][mode_index]:
+                                            stage['DeformationResistingModes'][mode_index]['BinarizationMode']['BlockSizeY'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_bin_fill_changed(self, task: Dict, mode_index: int, state: int):
+        """Handle deformation resisting binarization fill vacancy changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']) and 'BinarizationMode' in stage['DeformationResistingModes'][mode_index]:
+                                            stage['DeformationResistingModes'][mode_index]['BinarizationMode']['EnableFillBinaryVacancy'] = 1 if state == Qt.CheckState.Checked.value else 0
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_bin_compensation_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle deformation resisting binarization threshold compensation changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']) and 'BinarizationMode' in stage['DeformationResistingModes'][mode_index]:
+                                            stage['DeformationResistingModes'][mode_index]['BinarizationMode']['ThresholdCompensation'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_gray_mode_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle deformation resisting grayscale enhancement mode changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']) and 'GrayscaleEnhancementMode' in stage['DeformationResistingModes'][mode_index]:
+                                            stage['DeformationResistingModes'][mode_index]['GrayscaleEnhancementMode']['Mode'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_deform_gray_sensitivity_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle deformation resisting grayscale enhancement sensitivity changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_RESIST_DEFORMATION' and 'DeformationResistingModes' in stage:
+                                        if mode_index < len(stage['DeformationResistingModes']) and 'GrayscaleEnhancementMode' in stage['DeformationResistingModes'][mode_index]:
+                                            stage['DeformationResistingModes'][mode_index]['GrayscaleEnhancementMode']['Sensitivity'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_complement_mode_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle barcode complement mode changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_COMPLEMENT_BARCODE' and 'BarcodeComplementModes' in stage:
+                                        if mode_index < len(stage['BarcodeComplementModes']):
+                                            stage['BarcodeComplementModes'][mode_index]['Mode'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_scale_mode_changed(self, task: Dict, mode_index: int, value: str):
+        """Handle barcode scale mode changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_SCALE_BARCODE_IMAGE' and 'BarcodeScaleModes' in stage:
+                                        if mode_index < len(stage['BarcodeScaleModes']):
+                                            stage['BarcodeScaleModes'][mode_index]['Mode'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_scale_angle_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle barcode scale acute angle threshold changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_SCALE_BARCODE_IMAGE' and 'BarcodeScaleModes' in stage:
+                                        if mode_index < len(stage['BarcodeScaleModes']):
+                                            stage['BarcodeScaleModes'][mode_index]['AcuteAngleWithXThreshold'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_scale_module_threshold_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle barcode scale module size threshold changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_SCALE_BARCODE_IMAGE' and 'BarcodeScaleModes' in stage:
+                                        if mode_index < len(stage['BarcodeScaleModes']):
+                                            stage['BarcodeScaleModes'][mode_index]['ModuleSizeThreshold'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_scale_target_size_changed(self, task: Dict, mode_index: int, value: int):
+        """Handle barcode scale target module size changes"""
+        if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+            for current_task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                if current_task.get('Name') == task.get('Name'):
+                    if 'SectionArray' in current_task:
+                        for section in current_task['SectionArray']:
+                            if section.get('Section') == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_SCALE_BARCODE_IMAGE' and 'BarcodeScaleModes' in stage:
+                                        if mode_index < len(stage['BarcodeScaleModes']):
+                                            stage['BarcodeScaleModes'][mode_index]['TargetModuleSize'] = value
+                                            break
+                    break
+        self.update_settings()
+        
+    def on_max_dimension_changed(self, value: int):
+        """Handle global parameter MaxTotalImageDimension changes"""
+        if 'GlobalParameter' not in self.current_settings:
+            self.current_settings['GlobalParameter'] = {}
+        self.current_settings['GlobalParameter']['MaxTotalImageDimension'] = value
+        self.update_settings()
+        
+    def on_color_weight_changed(self, mode_dict: Dict, weight_key: str, value: int):
+        """Handle colour conversion weight changes"""
+        mode_dict[weight_key] = value
+        self.update_settings()
+        
+    def on_color_ref_changed(self, mode_dict: Dict, value: str):
+        """Handle colour conversion reference channel changes"""
+        mode_dict['ReferChannel'] = value
+        self.update_settings()
+        
+    def on_enhance_sensitivity_changed(self, mode_dict: Dict, value: int):
+        """Handle grayscale enhancement sensitivity changes"""
+        mode_dict['Sensitivity'] = value
+        self.update_settings()
+        
+    def on_enhance_block_changed(self, mode_dict: Dict, block_key: str, value: int):
+        """Handle grayscale enhancement block size changes"""
+        mode_dict[block_key] = value
+        self.update_settings()
+        
+    def on_texture_sensitivity_changed(self, mode_dict: Dict, value: int):
+        """Handle texture detection sensitivity changes"""
+        mode_dict['Sensitivity'] = value
+        self.update_settings()
+        
+    def on_shortline_sensitivity_changed(self, mode_dict: Dict, value: int):
+        """Handle shortline detection sensitivity changes"""
+        mode_dict['Sensitivity'] = value
+        self.update_settings()
+        
+    def on_assembly_sensitivity_changed(self, mode_dict: Dict, value: int):
+        """Handle line assembly sensitivity changes"""
+        mode_dict['Sensitivity'] = value
+        self.update_settings()
+        
+    def on_edge_threshold_changed(self, setting_dict: Dict, value: int):
+        """Handle edge length threshold changes"""
+        setting_dict['EdgeLengthThreshold'] = value
+        self.update_settings()
+        
+    def on_ref_edge_changed(self, setting_dict: Dict, value: str):
+        """Handle reference edge changes"""
+        setting_dict['ReferenceEdge'] = value
+        self.update_settings()
+        
+    def on_scale_type_changed(self, setting_dict: Dict, value: str):
+        """Handle scale type changes"""
+        setting_dict['ScaleType'] = value
+        self.update_settings()
+        
+    def on_roi_deduplication_changed(self, roi_option: Dict, state: int):
+        """Handle ROI results deduplication changes"""
+        roi_option['EnableResultsDeduplication'] = bool(state == Qt.CheckState.Checked.value)
+        self.update_settings()
+        
+    def on_roi_pause_changed(self, roi_option: Dict, state: int):
+        """Handle ROI pause flag changes"""
+        roi_option['PauseFlag'] = bool(state == Qt.CheckState.Checked.value)
+        self.update_settings()
+        
+    def on_roi_ref_object_changed(self, location_dict: Dict, value: str):
+        """Handle ROI reference object type changes"""
+        location_dict['ReferenceObjectType'] = value
+        self.update_settings()
+        
+    def on_roi_measured_changed(self, offset_dict: Dict, state: int):
+        """Handle ROI measured by percentage changes"""
+        offset_dict['MeasuredByPercentage'] = bool(state == Qt.CheckState.Checked.value)
+        self.update_settings()
+        
     def update_settings(self):
         """Update current settings and notify about changes"""
         # Settings are updated in-place through the parameter controls
         # This method can be used to perform additional validation or processing
         print("Updating settings and UI controls...")
+        
+        # Validate current settings structure
+        self.validate_settings_structure()
+        
+        # Update UI and display
         self.update_ui_from_settings()
         self.update_parameters_display()
+        
+    def validate_settings_structure(self):
+        """Validate and fix any issues with the current settings structure"""
+        try:
+            # Ensure all top-level sections exist
+            required_sections = [
+                'BarcodeFormatSpecificationOptions',
+                'BarcodeReaderTaskSettingOptions', 
+                'ImageParameterOptions',
+                'CaptureVisionTemplates',
+                'TargetROIDefOptions'
+            ]
+            
+            for section in required_sections:
+                if section not in self.current_settings:
+                    print(f"Warning: Missing section {section} in current settings")
+                    # Initialize with empty array or object as appropriate
+                    if section in ['BarcodeFormatSpecificationOptions', 'BarcodeReaderTaskSettingOptions', 
+                                   'ImageParameterOptions', 'CaptureVisionTemplates', 'TargetROIDefOptions']:
+                        self.current_settings[section] = []
+                    else:
+                        self.current_settings[section] = {}
+            
+            # Ensure GlobalParameter exists
+            if 'GlobalParameter' not in self.current_settings:
+                self.current_settings['GlobalParameter'] = {'MaxTotalImageDimension': 0}
+            
+            # Validate JSON serializability
+            json_test = json.dumps(self.current_settings)
+            print(f"Settings validation passed - JSON size: {len(json_test)} characters")
+            
+        except Exception as e:
+            print(f"Settings validation error: {e}")
+            # If validation fails, reset to default settings
+            self.current_settings = copy.deepcopy(self.default_settings)
         
     def update_ui_from_settings(self):
         """Update UI controls to reflect current settings values"""
@@ -1622,85 +3541,214 @@ class ParameterAdjustmentTool(QMainWindow):
             self.auto_adjust_btn.setText("Auto Adjust")
             self.auto_adjustment_timer.stop()
             self.status_bar.showMessage("Auto-adjustment stopped")
+    
+    def on_auto_adjust_mode_changed(self):
+        """Handle auto adjustment mode change"""
+        mode_text = self.auto_adjust_mode.currentText()
+        is_custom = "Custom" in mode_text
+        
+        if is_custom:
+            # Show custom iterations dialog
+            dialog = CustomIterationsDialog(self.custom_iterations_value, self)
+            if dialog.exec() == 1:  # QDialog.Accepted value is 1
+                self.custom_iterations_value = dialog.get_iterations()
+                self.status_bar.showMessage(f"Custom mode selected - will test {self.custom_iterations_value} parameter combinations")
+            else:
+                # User cancelled, revert to previous selection
+                self.auto_adjust_mode.setCurrentIndex(1)  # Back to Standard
+                self.status_bar.showMessage("Custom mode cancelled - reverted to Standard mode")
+        else:
+            iterations = 20 if "Quick" in mode_text else 40 if "Standard" in mode_text else 60 if "Comprehensive" in mode_text else 100
+            self.status_bar.showMessage(f"{mode_text} selected - will test {iterations} parameter combinations")
             
     def prepare_auto_adjustment_params(self):
-        """Prepare different parameter combinations for auto-adjustment"""
-        print("Preparing auto-adjustment parameters...")
+        """Prepare different parameter combinations for auto-adjustment based on selected mode"""
+        
+        # Get the selected mode
+        mode_text = self.auto_adjust_mode.currentText()
+        if "Quick" in mode_text:
+            max_combinations = 20
+            mode_name = "Quick"
+        elif "Standard" in mode_text:
+            max_combinations = 40  
+            mode_name = "Standard"
+        elif "Comprehensive" in mode_text:
+            max_combinations = 60
+            mode_name = "Comprehensive"
+        elif "Deep" in mode_text:
+            max_combinations = 100
+            mode_name = "Deep Scan"
+        elif "Custom" in mode_text:
+            max_combinations = self.custom_iterations_value
+            mode_name = f"Custom ({max_combinations})"
+        else:
+            max_combinations = 40
+            mode_name = "Standard"
+        
+        print(f"Preparing {mode_name} auto-adjustment parameters (max {max_combinations} combinations)...")
         self.auto_adjustment_params = []
         
         # Different localization mode combinations (ordered by effectiveness)
         localization_modes = [
             # Single modes first
-            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60}],
-            [{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60}],
-            [{"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60}],
-            [{"Mode": "LM_LINES", "ConfidenceThreshold": 60}],
+            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
+            [{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
+            [{"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
+            [{"Mode": "LM_LINES", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
             
-            # Effective combinations
-            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60}, 
-             {"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60}],
-            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60}, 
-             {"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60}],
-            [{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60}, 
-             {"Mode": "LM_LINES", "ConfidenceThreshold": 60}],
+            # Effective combinations with enhanced parameters
+            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}, 
+             {"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
+            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 3, "ScanStride": 0}, 
+             {"Mode": "LM_STATISTICS", "ConfidenceThreshold": 50, "ModuleSize": 0, "ScanStride": 0}],
+            [{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 40, "ModuleSize": 0, "ScanStride": 4}, 
+             {"Mode": "LM_LINES", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
              
             # More comprehensive combinations
-            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60}, 
-             {"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60},
-             {"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60}],
+            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}, 
+             {"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0},
+             {"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
         ]
         
-        # Different binarization block sizes (ordered by common effectiveness)
-        block_sizes = [
-            {"BlockSizeX": 0, "BlockSizeY": 0},  # Auto block size - try first
-            {"BlockSizeX": 71, "BlockSizeY": 71},  # Default
-            {"BlockSizeX": 51, "BlockSizeY": 51},  # Smaller blocks
-            {"BlockSizeX": 31, "BlockSizeY": 31},  # Even smaller
-            {"BlockSizeX": 21, "BlockSizeY": 21},  # Fine detail
-            {"BlockSizeX": 15, "BlockSizeY": 15},  # Very fine
-            {"BlockSizeX": 101, "BlockSizeY": 101}, # Larger blocks
-            {"BlockSizeX": 151, "BlockSizeY": 151}, # Very large
+        # Enhanced binarization configurations
+        binarization_configs = [
+            {"BlockSizeX": 0, "BlockSizeY": 0, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 10},  # Auto - best first
+            {"BlockSizeX": 71, "BlockSizeY": 71, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 10},  # Default
+            {"BlockSizeX": 51, "BlockSizeY": 51, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 15},  # Enhanced
+            {"BlockSizeX": 31, "BlockSizeY": 31, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 20},  # Fine detail
+            {"BlockSizeX": 0, "BlockSizeY": 0, "Mode": "BM_AUTO", "ThresholdCompensation": 10},  # Auto mode
+            {"BlockSizeX": 101, "BlockSizeY": 101, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 5},  # Large blocks
         ]
         
-        # Different expected barcode counts
-        expected_counts = [0, 1, 5]  # Most common scenarios
+        # Region predetection configurations for difficult cases
+        region_predetection_configs = [
+            {"Mode": "RPM_GENERAL", "Sensitivity": 1, "MinImageDimension": 262144},  # Default
+            {"Mode": "RPM_GENERAL", "Sensitivity": 3, "MinImageDimension": 131072},  # More sensitive
+            {"Mode": "RPM_GENERAL", "Sensitivity": 5, "MinImageDimension": 65536},   # High sensitivity
+            {"Mode": "RPM_GENERAL", "Sensitivity": 7, "MinImageDimension": 32768},   # Very high sensitivity
+        ]
         
-        # Different confidence thresholds for localization
-        confidence_levels = [60, 40, 80, 30]
+        # Deformation resisting configurations for damaged barcodes
+        deformation_configs = [
+            {"Level": 1, "Mode": "DRM_SKIP"},  # Disabled
+            {"Level": 3, "Mode": "DRM_AUTO"},  # Light correction
+            {"Level": 5, "Mode": "DRM_AUTO"},  # Medium correction
+            {"Level": 7, "Mode": "DRM_AUTO"},  # Strong correction
+        ]
         
-        # Create combinations - prioritize most likely to succeed
+        # Scale configurations for small/large barcodes
+        scale_configs = [
+            {"Mode": "BSM_SKIP"},  # Disabled
+            {"Mode": "BSM_AUTO", "AcuteAngleWithXThreshold": -1, "ModuleSizeThreshold": 0, "TargetModuleSize": 0},
+            {"Mode": "BSM_AUTO", "AcuteAngleWithXThreshold": 20, "ModuleSizeThreshold": 2, "TargetModuleSize": 6},
+            {"Mode": "BSM_AUTO", "AcuteAngleWithXThreshold": 45, "ModuleSizeThreshold": 4, "TargetModuleSize": 8},
+        ]
+        
+        # Text result ordering for multiple barcodes
+        text_order_configs = [
+            [{"Mode": "TROM_CONFIDENCE"}],  # By confidence only
+            [{"Mode": "TROM_CONFIDENCE"}, {"Mode": "TROM_POSITION"}],  # Confidence then position
+            [{"Mode": "TROM_POSITION"}, {"Mode": "TROM_CONFIDENCE"}],  # Position then confidence
+        ]
+        
+        # Expected barcode counts with intelligent defaults
+        expected_counts = [0, 1, 3, 5]  # Extended range
+        
+        # Create intelligent combinations based on mode - prioritize most effective
         combination_count = 0
-        max_combinations = 40  # Restore original limit
         
-        for expected_count in expected_counts:
-            for loc_modes in localization_modes:
-                for block_size in block_sizes:
-                    for confidence in confidence_levels:
+        # Phase 1: Essential combinations (always included in all modes)
+        essential_combinations = []
+        for expected_count in [0, 1]:  # Most common cases
+            for loc_modes in localization_modes[:2]:  # Best single modes
+                for bin_config in binarization_configs[:2]:  # Auto and default
+                    essential_combinations.append({
+                        'expected_count': expected_count,
+                        'localization_modes': loc_modes,
+                        'binarization_config': bin_config,
+                        'region_predetection': region_predetection_configs[0],
+                        'deformation_config': deformation_configs[0],
+                        'scale_config': scale_configs[0],
+                        'text_order': text_order_configs[0]
+                    })
+        
+        # Add essential combinations
+        for combo in essential_combinations:
+            if combination_count >= max_combinations:
+                break
+            self.auto_adjustment_params.append(combo)
+            combination_count += 1
+        
+        # Phase 2: Enhanced combinations (for Standard mode and above)
+        if combination_count < max_combinations and max_combinations >= 40:
+            for expected_count in expected_counts:
+                for loc_modes in localization_modes[2:]:  # Additional localization modes
+                    for region_config in region_predetection_configs[1:2]:  # Enhanced sensitivity
                         if combination_count >= max_combinations:
                             break
                             
-                        # Update confidence in localization modes
-                        updated_loc_modes = []
-                        for mode in loc_modes:
-                            updated_mode = mode.copy()
-                            updated_mode['ConfidenceThreshold'] = confidence
-                            updated_loc_modes.append(updated_mode)
-                        
-                        param_combination = {
+                        self.auto_adjustment_params.append({
                             'expected_count': expected_count,
-                            'localization_modes': updated_loc_modes,
-                            'block_size': block_size,
-                            'confidence': confidence
-                        }
-                        self.auto_adjustment_params.append(param_combination)
+                            'localization_modes': loc_modes,
+                            'binarization_config': binarization_configs[1],
+                            'region_predetection': region_config,
+                            'deformation_config': deformation_configs[1],
+                            'scale_config': scale_configs[1],
+                            'text_order': text_order_configs[1]
+                        })
                         combination_count += 1
-                    
-                    if combination_count >= max_combinations:
-                        break
-                if combination_count >= max_combinations:
-                    break
-            if combination_count >= max_combinations:
-                break
+                        
+        # Phase 3: Comprehensive combinations (for Comprehensive mode and above)
+        if combination_count < max_combinations and max_combinations >= 60:
+            for expected_count in [0, 3, 5]:
+                for bin_config in binarization_configs[2:]:  # Fine tuning
+                    for region_config in region_predetection_configs[2:]:  # High sensitivity
+                        if combination_count >= max_combinations:
+                            break
+                            
+                        self.auto_adjustment_params.append({
+                            'expected_count': expected_count,
+                            'localization_modes': localization_modes[1],  # Scan directly
+                            'binarization_config': bin_config,
+                            'region_predetection': region_config,
+                            'deformation_config': deformation_configs[2],  # Medium correction
+                            'scale_config': scale_configs[2],  # Enhanced scaling
+                            'text_order': text_order_configs[2]
+                        })
+                        combination_count += 1
+                        
+        # Phase 4: Deep scan combinations (for Deep mode only)
+        if combination_count < max_combinations and max_combinations >= 100:
+            # Advanced deformation and scaling combinations
+            for expected_count in expected_counts:
+                for deform_config in deformation_configs[2:]:  # Strong correction
+                    for scale_config in scale_configs[2:]:  # Advanced scaling
+                        for loc_modes in localization_modes[4:]:  # Multi-mode combinations
+                            if combination_count >= max_combinations:
+                                break
+                                
+                            self.auto_adjustment_params.append({
+                                'expected_count': expected_count,
+                                'localization_modes': loc_modes,
+                                'binarization_config': binarization_configs[3],  # Fine detail
+                                'region_predetection': region_predetection_configs[3],  # Very high sensitivity
+                                'deformation_config': deform_config,
+                                'scale_config': scale_config,
+                                'text_order': text_order_configs[2]
+                            })
+                                
+        print(f"*** Prepared {len(self.auto_adjustment_params)} {mode_name.lower()} parameter combinations")
+        if len(self.auto_adjustment_params) > 0:
+            print(f"*** Mode coverage: {mode_name}")
+            print(f"*** First combination preview: {self.auto_adjustment_params[0]['localization_modes'][0]['Mode']}")
+            
+            # Show mode-specific features
+            if max_combinations >= 40:
+                print("*** Includes enhanced region predetection and deformation resistance")
+            if max_combinations >= 60:
+                print("*** Includes comprehensive binarization fine-tuning")
+            if max_combinations >= 100:
+                print("🚀 Includes deep scan with advanced scaling and multi-mode localization")
                 
         print(f"Prepared {len(self.auto_adjustment_params)} parameter combinations for auto-adjustment")
         if len(self.auto_adjustment_params) > 0:
@@ -1727,11 +3775,36 @@ class ParameterAdjustmentTool(QMainWindow):
         # Get current parameter combination
         params = self.auto_adjustment_params[self.auto_adjustment_index]
         
-        # Create descriptive status message
+        # Create comprehensive descriptive status message
         loc_modes = [mode['Mode'].replace('LM_', '') for mode in params['localization_modes']]
-        status_msg = f"Testing combination {self.auto_adjustment_index + 1}/{len(self.auto_adjustment_params)}: {', '.join(loc_modes)}"
+        status_components = []
+        
+        # Add localization info
+        status_components.append(f"Loc: {','.join(loc_modes)}")
+        
+        # Add binarization info
+        if 'binarization_config' in params:
+            bin_config = params['binarization_config']
+            if bin_config['BlockSizeX'] == 0:
+                status_components.append(f"Bin: {bin_config['Mode'][:3]}(Auto)")
+            else:
+                status_components.append(f"Bin: {bin_config['Mode'][:3]}({bin_config['BlockSizeX']})")
+        
+        # Add special processing info
+        special_features = []
+        if 'region_predetection' in params and params['region_predetection']['Sensitivity'] > 1:
+            special_features.append(f"RegSens:{params['region_predetection']['Sensitivity']}")
+        if 'deformation_config' in params and params['deformation_config']['Mode'] != 'DRM_SKIP':
+            special_features.append(f"DefRes:{params['deformation_config']['Level']}")
+        if 'scale_config' in params and params['scale_config']['Mode'] != 'BSM_SKIP':
+            special_features.append("Scale")
+        
+        if special_features:
+            status_components.append(f"[{','.join(special_features)}]")
+        
+        status_msg = f"Test {self.auto_adjustment_index + 1}/{len(self.auto_adjustment_params)}: {' | '.join(status_components)}"
         self.status_bar.showMessage(status_msg)
-        print(f"Testing parameters: {params}")
+        print(f"Testing enhanced parameters: {params}")
         
         # Apply parameter combination to settings
         self.apply_auto_adjustment_params(params)
@@ -1743,57 +3816,115 @@ class ParameterAdjustmentTool(QMainWindow):
         self.auto_adjustment_index += 1
         
     def apply_auto_adjustment_params(self, params):
-        """Apply parameter combination to current settings"""
-        print(f"Applying auto-adjustment params: {params}")
+        """Apply comprehensive parameter combination to current settings"""
+        print(f"Applying enhanced auto-adjustment params: {params}")
         try:
             # Update expected barcode count in all tasks
             if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
                 for task in self.current_settings['BarcodeReaderTaskSettingOptions']:
                     task['ExpectedBarcodesCount'] = params['expected_count']
+                    
+                    # Update text result order modes
+                    if 'text_order' in params:
+                        task['TextResultOrderModes'] = params['text_order']
             
-            # Update localization modes in all applicable sections
+            # Update parameters in task sections
             if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
                 for task in self.current_settings['BarcodeReaderTaskSettingOptions']:
                     if 'SectionArray' in task:
                         for section in task['SectionArray']:
-                            if section.get('Section') == 'ST_BARCODE_LOCALIZATION':
+                            section_type = section.get('Section')
+                            
+                            # Update Region Predetection parameters
+                            if section_type == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_PREDETECT_REGIONS' and 'RegionPredetectionModes' in stage:
+                                        if 'region_predetection' in params:
+                                            # Update existing or create new mode
+                                            if stage['RegionPredetectionModes']:
+                                                stage['RegionPredetectionModes'][0].update(params['region_predetection'])
+                                            else:
+                                                stage['RegionPredetectionModes'] = [params['region_predetection']]
+                            
+                            # Update Localization parameters
+                            elif section_type == 'ST_BARCODE_LOCALIZATION':
                                 for stage in section.get('StageArray', []):
                                     if stage.get('Stage') == 'SST_LOCALIZE_CANDIDATE_BARCODES':
-                                        # Update localization modes with confidence thresholds
                                         stage['LocalizationModes'] = params['localization_modes']
+                            
+                            # Update Decoding parameters
+                            elif section_type == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    stage_type = stage.get('Stage')
+                                    
+                                    # Update Deformation Resisting
+                                    if stage_type == 'SST_RESIST_DEFORMATION' and 'deformation_config' in params:
+                                        if 'DeformationResistingModes' in stage:
+                                            if stage['DeformationResistingModes']:
+                                                stage['DeformationResistingModes'][0]['Level'] = params['deformation_config']['Level']
+                                                stage['DeformationResistingModes'][0]['Mode'] = params['deformation_config']['Mode']
+                                    
+                                    # Update Barcode Scaling
+                                    elif stage_type == 'SST_SCALE_BARCODE_IMAGE' and 'scale_config' in params:
+                                        if 'BarcodeScaleModes' in stage:
+                                            if stage['BarcodeScaleModes']:
+                                                stage['BarcodeScaleModes'][0].update(params['scale_config'])
+                                            else:
+                                                stage['BarcodeScaleModes'] = [params['scale_config']]
             
-            # Update block sizes in image parameters
-            if 'ImageParameterOptions' in self.current_settings:
+            # Update Binarization in Image Parameters
+            if 'ImageParameterOptions' in self.current_settings and 'binarization_config' in params:
                 for param in self.current_settings['ImageParameterOptions']:
                     if 'ApplicableStages' in param:
                         for stage in param['ApplicableStages']:
                             if 'BinarizationModes' in stage:
                                 for bin_mode in stage['BinarizationModes']:
-                                    if 'Mode' in bin_mode and bin_mode['Mode'] == 'BM_LOCAL_BLOCK':
-                                        bin_mode.update(params['block_size'])
+                                    bin_mode.update(params['binarization_config'])
             
             # Update settings and refresh display
             self.update_settings()
             self.update_parameters_display()
             
-            # Show current parameter combination in the result text
-            param_info = f"Testing parameters (Combination {self.auto_adjustment_index + 1}/{len(self.auto_adjustment_params)}):\n\n"
-            param_info += f"🔍 Expected Count: {params['expected_count']} barcode(s)\n"
-            param_info += f"📍 Localization Modes: {[mode['Mode'].replace('LM_', '') for mode in params['localization_modes']]}\n"
-            param_info += f"🎯 Confidence Threshold: {params['confidence']}%\n"
+            # Create comprehensive parameter information display
+            param_info = f"🔬 Testing Enhanced Parameters (Combination {self.auto_adjustment_index + 1}/{len(self.auto_adjustment_params)}):\n\n"
             
-            if params['block_size']['BlockSizeX'] == 0:
-                param_info += f"📦 Block Size: Auto\n"
-            else:
-                param_info += f"📦 Block Size: {params['block_size']['BlockSizeX']}×{params['block_size']['BlockSizeY']}\n"
+            param_info += f"� Expected Count: {params['expected_count']} barcode(s)\n"
+            
+            loc_modes = [mode['Mode'].replace('LM_', '') for mode in params['localization_modes']]
+            param_info += f"🎯 Localization: {', '.join(loc_modes)}\n"
+            
+            if 'binarization_config' in params:
+                bin_config = params['binarization_config']
+                if bin_config['BlockSizeX'] == 0:
+                    param_info += f"🔲 Binarization: {bin_config['Mode']} (Auto Size)\n"
+                else:
+                    param_info += f"🔲 Binarization: {bin_config['Mode']} ({bin_config['BlockSizeX']}×{bin_config['BlockSizeY']})\n"
+            
+            if 'region_predetection' in params:
+                pred_config = params['region_predetection']
+                param_info += f"� Region Detection: {pred_config['Mode']} (Sensitivity: {pred_config['Sensitivity']})\n"
+            
+            if 'deformation_config' in params:
+                deform_config = params['deformation_config']
+                if deform_config['Mode'] != 'DRM_SKIP':
+                    param_info += f"� Deformation Resist: Level {deform_config['Level']}\n"
+            
+            if 'scale_config' in params:
+                scale_config = params['scale_config']
+                if scale_config['Mode'] != 'BSM_SKIP':
+                    param_info += f"📏 Barcode Scaling: {scale_config['Mode']}\n"
+            
+            if 'text_order' in params:
+                order_modes = [mode['Mode'].replace('TROM_', '') for mode in params['text_order']]
+                param_info += f"*** Result Ordering: {', '.join(order_modes)}\n"
             
             param_info += f"\n⏱️ Running detection...\n"
             
             self.result_text.setPlainText(param_info)
                                         
         except Exception as e:
-            print(f"Error applying auto-adjustment parameters: {e}")
-            error_msg = f"Error in parameter combination {self.auto_adjustment_index + 1}: {str(e)}\n"
+            print(f"Error applying enhanced auto-adjustment parameters: {e}")
+            error_msg = f"❌ Error in combination {self.auto_adjustment_index + 1}: {str(e)}\n"
             error_msg += "Skipping to next combination..."
             self.result_text.setPlainText(error_msg)
             
@@ -1807,7 +3938,19 @@ class ParameterAdjustmentTool(QMainWindow):
                 if prop_type == 'checked':
                     control.setChecked(default_value)
                 elif prop_type == 'text':
-                    control.setCurrentText(default_value)
+                    # Handle different control types for text property
+                    if hasattr(control, 'setCurrentText'):
+                        # QComboBox and similar controls
+                        control.setCurrentText(default_value)
+                    elif hasattr(control, 'setText'):
+                        # QLineEdit and similar controls
+                        control.setText(str(default_value))
+                    else:
+                        # Fallback - try both methods
+                        try:
+                            control.setCurrentText(default_value)
+                        except:
+                            control.setText(str(default_value))
                 elif prop_type == 'value':
                     control.setValue(default_value)
             except Exception as e:
