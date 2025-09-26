@@ -1,5 +1,5 @@
 # Flet Chat App with Google AI and Dynamsoft Barcode Reader
-The project demonstrates how to integrate [Dynamsoft Barcode Reader](https://pypi.org/project/dbr/) and [Gemini APIs](https://ai.google.dev/tutorials/python_quickstart) into a Flet chat app.
+The project demonstrates how to integrate [Dynamsoft Barcode Reader](https://pypi.org/project/dynamsoft-barcode-reader-bundle/) and [Gemini APIs](https://ai.google.dev/tutorials/python_quickstart) into a Flet chat app.
 
 https://github.com/user-attachments/assets/b0f8efd2-ec66-4b02-95c8-e9df437410a7
 

@@ -1,12 +1,15 @@
-from dbr import *
+from dynamsoft_capture_vision_bundle import *
 import flet as ft
 import pathlib
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
 
-license_key = "LICENSE-KEY"
-BarcodeReader.init_license(license_key)
-reader = BarcodeReader()
+license_key = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
+cvr_instance = CaptureVisionRouter()
+error_code, error_message = LicenseManager.init_license(license_key)
+if error_code != EnumErrorCode.EC_OK and error_code != EnumErrorCode.EC_LICENSE_CACHE_USED:
+    print("License initialization failed: ErrorCode:",
+            error_code, ", ErrorString:", error_message)
 
 # https://ai.google.dev/tutorials/python_quickstart
 genai.configure(api_key='API_KEY')
@@ -99,26 +102,24 @@ def main(page: ft.Page):
             page.pubsub.send_all(
                 Message("Me", image_path, message_type="chat_message", is_image=True))
 
-            text_results = None
-            try:
-                text_results = reader.decode_file(image_path)
+            result = cvr_instance.capture(image_path, EnumPresetTemplate.PT_READ_BARCODES.value)
 
-                # if text_results != None:
-                #     for text_result in text_results:
-                #         print("Barcode Format : ")
-                #         print(text_result.barcode_format_string)
-                #         print("Barcode Text : ")
-                #         print(text_result.barcode_text)
-                #         print("Localization Points : ")
-                #         print(text_result.localization_result.localization_points)
-                #         print("Exception : ")
-                #         print(text_result.exception)
-                #         print("-------------")
-            except BarcodeReaderError as bre:
-                print(bre)
+            if result.get_error_code() != EnumErrorCode.EC_OK:
+                print("Error:", result.get_error_code(),
+                      result.get_error_string())
+            else:
+                items = result.get_items()
+                barcode_text = ""
+                for item in items:
+                    format_type = item.get_format_string()
+                    text = item.get_text()
+                    print("Barcode Format:", format_type)
+                    print("Barcode Text:", text)
+                    barcode_text += text + " "
 
-            if text_results != None:
-                barcode_text = text_results[0].barcode_text
+                if barcode_text == "":
+                    barcode_text = "No barcode found"
+
                 page.pubsub.send_all(
                     Message("DBR", barcode_text, message_type="chat_message"))
 
