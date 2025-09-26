@@ -12,6 +12,7 @@ import numpy as np
 import copy
 import threading
 import time
+import random
 from functools import partial
 from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
@@ -3579,7 +3580,7 @@ class ParameterAdjustmentTool(QMainWindow):
             self.status_bar.showMessage(f"{mode_text} selected - will test {iterations} parameter combinations")
             
     def prepare_auto_adjustment_params(self):
-        """Prepare different parameter combinations for auto-adjustment based on selected mode"""
+        """Prepare smart random parameter combinations following Dynamsoft's best practices"""
         
         # Get the selected mode
         mode_text = self.auto_adjust_mode.currentText()
@@ -3603,173 +3604,247 @@ class ParameterAdjustmentTool(QMainWindow):
             mode_name = "Standard"
         
         print(f"Preparing {mode_name} auto-adjustment parameters (max {max_combinations} combinations)...")
+        print("🎯 Using smart random strategy with Dynamsoft optimized weights...")
         self.auto_adjustment_params = []
         
-        # Different localization mode combinations (ordered by effectiveness)
-        localization_modes = [
-            # Single modes first
-            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
-            [{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
-            [{"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
-            [{"Mode": "LM_LINES", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
+        # Set time-based random seed for varied results each run
+        import time
+        seed = int(time.time() * 1000) % 100000  # Use current time as seed
+        random.seed(seed)
+        print(f"🎲 Random seed: {seed} (ensures different results each run)")
+        
+        # WEIGHTED LOCALIZATION MODES (Following Dynamsoft recommendations)
+        # Higher weights for more effective modes
+        localization_configs = [
+            # Tier 1: Primary modes (highest weight)
+            ([{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}], 25),
+            ([{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}], 25),
             
-            # Effective combinations with enhanced parameters
-            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}, 
-             {"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
-            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 3, "ScanStride": 0}, 
-             {"Mode": "LM_STATISTICS", "ConfidenceThreshold": 50, "ModuleSize": 0, "ScanStride": 0}],
-            [{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 40, "ModuleSize": 0, "ScanStride": 4}, 
-             {"Mode": "LM_LINES", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
-             
-            # More comprehensive combinations
-            [{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}, 
-             {"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0},
-             {"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}],
+            # Tier 2: Effective dual combinations (good weight)
+            ([{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 50, "ModuleSize": 0, "ScanStride": 0}, 
+              {"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}], 20),
+            
+            # Tier 3: Supplementary modes (medium weight)
+            ([{"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}, 
+              {"Mode": "LM_LINES", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}], 12),
+            ([{"Mode": "LM_LINES", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}], 8),
+            
+            # Tier 4: Special cases (lower weight but sometimes needed)
+            ([{"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}], 5),
+            ([{"Mode": "LM_SCAN_DIRECTLY", "ConfidenceThreshold": 40, "ModuleSize": 0, "ScanStride": 4}, 
+              {"Mode": "LM_CONNECTED_BLOCKS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0},
+              {"Mode": "LM_STATISTICS", "ConfidenceThreshold": 60, "ModuleSize": 0, "ScanStride": 0}], 5),
         ]
         
-        # Enhanced binarization configurations
+        # WEIGHTED BINARIZATION (Priority: BM_LOCAL_BLOCK for varying illumination)
         binarization_configs = [
-            {"BlockSizeX": 0, "BlockSizeY": 0, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 10},  # Auto - best first
-            {"BlockSizeX": 71, "BlockSizeY": 71, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 10},  # Default
-            {"BlockSizeX": 51, "BlockSizeY": 51, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 15},  # Enhanced
-            {"BlockSizeX": 31, "BlockSizeY": 31, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 20},  # Fine detail
-            {"BlockSizeX": 0, "BlockSizeY": 0, "Mode": "BM_AUTO", "ThresholdCompensation": 10},  # Auto mode
-            {"BlockSizeX": 101, "BlockSizeY": 101, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 5},  # Large blocks
-        ]
-        
-        # Region predetection configurations for difficult cases
-        region_predetection_configs = [
-            {"Mode": "RPM_GENERAL", "Sensitivity": 1, "MinImageDimension": 262144},  # Default
-            {"Mode": "RPM_GENERAL", "Sensitivity": 3, "MinImageDimension": 131072},  # More sensitive
-            {"Mode": "RPM_GENERAL", "Sensitivity": 5, "MinImageDimension": 65536},   # High sensitivity
-            {"Mode": "RPM_GENERAL", "Sensitivity": 7, "MinImageDimension": 32768},   # Very high sensitivity
-        ]
-        
-        # Deformation resisting configurations for damaged barcodes
-        deformation_configs = [
-            {"Level": 1, "Mode": "DRM_SKIP"},  # Disabled
-            {"Level": 3, "Mode": "DRM_AUTO"},  # Light correction
-            {"Level": 5, "Mode": "DRM_AUTO"},  # Medium correction
-            {"Level": 7, "Mode": "DRM_AUTO"},  # Strong correction
-        ]
-        
-        # Scale configurations for small/large barcodes
-        scale_configs = [
-            {"Mode": "BSM_SKIP"},  # Disabled
-            {"Mode": "BSM_AUTO", "AcuteAngleWithXThreshold": -1, "ModuleSizeThreshold": 0, "TargetModuleSize": 0},
-            {"Mode": "BSM_AUTO", "AcuteAngleWithXThreshold": 20, "ModuleSizeThreshold": 2, "TargetModuleSize": 6},
-            {"Mode": "BSM_AUTO", "AcuteAngleWithXThreshold": 45, "ModuleSizeThreshold": 4, "TargetModuleSize": 8},
-        ]
-        
-        # Text result ordering for multiple barcodes
-        text_order_configs = [
-            [{"Mode": "TROM_CONFIDENCE"}],  # By confidence only
-            [{"Mode": "TROM_CONFIDENCE"}, {"Mode": "TROM_POSITION"}],  # Confidence then position
-            [{"Mode": "TROM_POSITION"}, {"Mode": "TROM_CONFIDENCE"}],  # Position then confidence
-        ]
-        
-        # Expected barcode counts with intelligent defaults
-        expected_counts = [0, 1, 3, 5]  # Extended range
-        
-        # Create intelligent combinations based on mode - prioritize most effective
-        combination_count = 0
-        
-        # Phase 1: Essential combinations (always included in all modes)
-        essential_combinations = []
-        for expected_count in [0, 1]:  # Most common cases
-            for loc_modes in localization_modes[:2]:  # Best single modes
-                for bin_config in binarization_configs[:2]:  # Auto and default
-                    essential_combinations.append({
-                        'expected_count': expected_count,
-                        'localization_modes': loc_modes,
-                        'binarization_config': bin_config,
-                        'region_predetection': region_predetection_configs[0],
-                        'deformation_config': deformation_configs[0],
-                        'scale_config': scale_configs[0],
-                        'text_order': text_order_configs[0]
-                    })
-        
-        # Add essential combinations
-        for combo in essential_combinations:
-            if combination_count >= max_combinations:
-                break
-            self.auto_adjustment_params.append(combo)
-            combination_count += 1
-        
-        # Phase 2: Enhanced combinations (for Standard mode and above)
-        if combination_count < max_combinations and max_combinations >= 40:
-            for expected_count in expected_counts:
-                for loc_modes in localization_modes[2:]:  # Additional localization modes
-                    for region_config in region_predetection_configs[1:2]:  # Enhanced sensitivity
-                        if combination_count >= max_combinations:
-                            break
-                            
-                        self.auto_adjustment_params.append({
-                            'expected_count': expected_count,
-                            'localization_modes': loc_modes,
-                            'binarization_config': binarization_configs[1],
-                            'region_predetection': region_config,
-                            'deformation_config': deformation_configs[1],
-                            'scale_config': scale_configs[1],
-                            'text_order': text_order_configs[1]
-                        })
-                        combination_count += 1
-                        
-        # Phase 3: Comprehensive combinations (for Comprehensive mode and above)
-        if combination_count < max_combinations and max_combinations >= 60:
-            for expected_count in [0, 3, 5]:
-                for bin_config in binarization_configs[2:]:  # Fine tuning
-                    for region_config in region_predetection_configs[2:]:  # High sensitivity
-                        if combination_count >= max_combinations:
-                            break
-                            
-                        self.auto_adjustment_params.append({
-                            'expected_count': expected_count,
-                            'localization_modes': localization_modes[1],  # Scan directly
-                            'binarization_config': bin_config,
-                            'region_predetection': region_config,
-                            'deformation_config': deformation_configs[2],  # Medium correction
-                            'scale_config': scale_configs[2],  # Enhanced scaling
-                            'text_order': text_order_configs[2]
-                        })
-                        combination_count += 1
-                        
-        # Phase 4: Deep scan combinations (for Deep mode only)
-        if combination_count < max_combinations and max_combinations >= 100:
-            # Advanced deformation and scaling combinations
-            for expected_count in expected_counts:
-                for deform_config in deformation_configs[2:]:  # Strong correction
-                    for scale_config in scale_configs[2:]:  # Advanced scaling
-                        for loc_modes in localization_modes[4:]:  # Multi-mode combinations
-                            if combination_count >= max_combinations:
-                                break
-                                
-                            self.auto_adjustment_params.append({
-                                'expected_count': expected_count,
-                                'localization_modes': loc_modes,
-                                'binarization_config': binarization_configs[3],  # Fine detail
-                                'region_predetection': region_predetection_configs[3],  # Very high sensitivity
-                                'deformation_config': deform_config,
-                                'scale_config': scale_config,
-                                'text_order': text_order_configs[2]
-                            })
-                                
-        print(f"*** Prepared {len(self.auto_adjustment_params)} {mode_name.lower()} parameter combinations")
-        if len(self.auto_adjustment_params) > 0:
-            print(f"*** Mode coverage: {mode_name}")
-            print(f"*** First combination preview: {self.auto_adjustment_params[0]['localization_modes'][0]['Mode']}")
+            # Tier 1: Auto-adaptive (highest weight)
+            ({"BlockSizeX": 0, "BlockSizeY": 0, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 10, 
+              "EnableFillBinaryVacancy": 1}, 30),  # Auto with fill enabled
             
-            # Show mode-specific features
-            if max_combinations >= 40:
-                print("*** Includes enhanced region predetection and deformation resistance")
-            if max_combinations >= 60:
-                print("*** Includes comprehensive binarization fine-tuning")
-            if max_combinations >= 100:
-                print("🚀 Includes deep scan with advanced scaling and multi-mode localization")
+            # Tier 2: Optimized block sizes (good weights)
+            ({"BlockSizeX": 15, "BlockSizeY": 15, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 15, 
+              "EnableFillBinaryVacancy": 1}, 20),  # Small modules
+            ({"BlockSizeX": 31, "BlockSizeY": 31, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 10, 
+              "EnableFillBinaryVacancy": 1}, 20),  # Medium modules  
+            ({"BlockSizeX": 63, "BlockSizeY": 63, "Mode": "BM_LOCAL_BLOCK", "ThresholdCompensation": 10, 
+              "EnableFillBinaryVacancy": 1}, 15),  # Large modules
+             
+            # Tier 3: Global threshold for high contrast images (lower weight)
+            ({"BlockSizeX": 0, "BlockSizeY": 0, "Mode": "BM_THRESHOLD", "BinarizationThreshold": 128}, 10),
+            ({"BlockSizeX": 0, "BlockSizeY": 0, "Mode": "BM_THRESHOLD", "BinarizationThreshold": 100}, 5),
+        ]
+        
+        # WEIGHTED GRAYSCALE TRANSFORMATION
+        grayscale_transform_configs = [
+            ([{"Mode": "GTM_ORIGINAL"}, {"Mode": "GTM_INVERTED"}], 40),  # Both orientations (best)
+            ([{"Mode": "GTM_ORIGINAL"}], 35),  # Normal only (common)
+            ([{"Mode": "GTM_INVERTED"}], 25),  # Inverted only (less common but important)
+        ]
+        
+        # WEIGHTED DEBLUR MODES (Balanced by effectiveness vs speed)
+        deblur_configs = [
+            # Tier 1: Efficient modes for clear images (higher weight)
+            ([{"Mode": "DM_BASED_ON_LOC_BIN"}], 25),
+            ([{"Mode": "DM_THRESHOLD_BINARIZATION"}], 20),
+            
+            # Tier 2: Adaptive modes for varying conditions (good weight)
+            ([{"Mode": "DM_DIRECT_BINARIZATION"}], 18),
+            ([{"Mode": "DM_BASED_ON_LOC_BIN"}, {"Mode": "DM_THRESHOLD_BINARIZATION"}], 12),
+            
+            # Tier 3: Enhancement modes for difficult images (medium weight)
+            ([{"Mode": "DM_GRAY_EQUALIZATION"}], 8),  # Low contrast
+            ([{"Mode": "DM_SMOOTHING"}], 6),  # Noise/texture
+            ([{"Mode": "DM_SHARPENING"}], 4),  # Blurred boundaries
+            ([{"Mode": "DM_SHARPENING_SMOOTHING"}], 3),  # Complex blur
+            ([{"Mode": "DM_MORPHING"}], 2),  # Damaged barcodes
+            
+            # Tier 4: Last resort (low weight but sometimes crucial)
+            ([{"Mode": "DM_DEEP_ANALYSIS"}], 2),
+        ]
+        
+        # WEIGHTED GRAYSCALE ENHANCEMENT
+        enhancement_configs = [
+            ([{"Mode": "GEM_SKIP"}], 40),  # No enhancement (best for clear images)
+            ([{"Mode": "GEM_GRAY_EQUALIZE"}], 25),  # Low contrast
+            ([{"Mode": "GEM_GRAY_SMOOTH"}], 15),  # Noise/texture
+            ([{"Mode": "GEM_SHARPEN_SMOOTH"}], 12),  # Blurred boundaries
+            ([{"Mode": "GEM_GRAY_EQUALIZE"}, {"Mode": "GEM_GRAY_SMOOTH"}], 8),  # Combined enhancement
+        ]
+        
+        # WEIGHTED REGION PREDETECTION
+        region_predetection_configs = [
+            ({"Mode": "RPM_GENERAL", "Sensitivity": 1, "MinImageDimension": 262144}, 40),  # Default (most common)
+            ({"Mode": "RPM_GENERAL", "Sensitivity": 3, "MinImageDimension": 131072}, 30),  # More sensitive
+            ({"Mode": "RPM_GENERAL", "Sensitivity": 5, "MinImageDimension": 65536}, 20),   # High sensitivity
+            ({"Mode": "RPM_GENERAL", "Sensitivity": 7, "MinImageDimension": 32768}, 10),   # Maximum sensitivity
+        ]
+        
+        # WEIGHTED SCALE & DEFORMATION
+        scale_configs = [
+            ({"Mode": "BSM_SKIP"}, 70),  # No scaling (most common)
+            ({"Mode": "BSM_AUTO", "ModuleSizeThreshold": 2, "TargetModuleSize": 6}, 20),  # Small modules
+            ({"Mode": "BSM_LINEAR_INTERPOLATION", "ModuleSizeThreshold": 3, "TargetModuleSize": 8}, 10),  # Enhanced
+        ]
+        
+        deformation_configs = [
+            ({"Level": 1, "Mode": "DRM_SKIP"}, 60),  # No correction (most common)
+            ({"Level": 3, "Mode": "DRM_GENERAL"}, 25),  # Light correction
+            ({"Level": 5, "Mode": "DRM_GENERAL"}, 15),  # Medium correction
+        ]
+        
+        # Expected barcode counts with weights
+        expected_count_configs = [
+            (0, 50),  # Unknown count (most common)
+            (1, 30),  # Single barcode (common)
+            (3, 12),  # Multiple barcodes
+            (5, 5),   # Many barcodes
+            (10, 3),  # Very many barcodes
+        ]
+        
+        # Helper function to randomly select based on weights
+        def weighted_random_choice(options_with_weights):
+            options, weights = zip(*options_with_weights)
+            return random.choices(options, weights=weights, k=1)[0]
+        
+        # Helper function to create a hashable representation of a combination for duplicate detection
+        def combination_to_hash(combo):
+            """Convert combination to a hashable string for duplicate detection"""
+            # Create a sorted string representation of all parameters
+            hash_parts = []
+            hash_parts.append(f"expected_count:{combo['expected_count']}")
+            
+            # Localization modes
+            loc_modes = sorted([mode['Mode'] for mode in combo['localization_modes']])
+            hash_parts.append(f"localization:{','.join(loc_modes)}")
+            
+            # Binarization config
+            bin_config = combo['binarization_config']
+            bin_hash = f"bin_mode:{bin_config['Mode']}"
+            if 'BinarizationThreshold' in bin_config:
+                bin_hash += f",threshold:{bin_config['BinarizationThreshold']}"
+            if 'BlockSizeX' in bin_config:
+                bin_hash += f",blockX:{bin_config['BlockSizeX']},blockY:{bin_config['BlockSizeY']}"
+            hash_parts.append(bin_hash)
+            
+            # Grayscale transform modes
+            gt_modes = sorted([mode['Mode'] for mode in combo['grayscale_transform_modes']])
+            hash_parts.append(f"grayscale_transform:{','.join(gt_modes)}")
+            
+            # Deblur modes
+            deblur_modes = sorted([mode['Mode'] for mode in combo['deblur_modes']])
+            hash_parts.append(f"deblur:{','.join(deblur_modes)}")
+            
+            # Enhancement modes
+            enh_modes = sorted([mode['Mode'] for mode in combo['enhancement_modes']])
+            hash_parts.append(f"enhancement:{','.join(enh_modes)}")
+            
+            # Region predetection
+            rpd = combo['region_predetection']
+            rpd_hash = f"region:{rpd['Mode']},sens:{rpd['Sensitivity']},min_dim:{rpd['MinImageDimension']}"
+            hash_parts.append(rpd_hash)
+            
+            # Scale and deformation configs
+            scale_hash = f"scale:{combo['scale_config']['Mode']}"
+            if 'ModuleSizeThreshold' in combo['scale_config']:
+                scale_hash += f",threshold:{combo['scale_config']['ModuleSizeThreshold']}"
+            hash_parts.append(scale_hash)
+            
+            deform_hash = f"deform:level{combo['deformation_config']['Level']},{combo['deformation_config']['Mode']}"
+            hash_parts.append(deform_hash)
+            
+            return '|'.join(sorted(hash_parts))
+        
+        # Generate unique random parameter combinations with weighted selection
+        tested_combinations = set()  # Track combinations to prevent duplicates
+        attempts = 0
+        max_attempts = max_combinations * 3  # Limit attempts to avoid infinite loop
+        
+        print(f"🔄 Generating {max_combinations} unique parameter combinations (max attempts: {max_attempts})...")
+        
+        while len(self.auto_adjustment_params) < max_combinations and attempts < max_attempts:
+            attempts += 1
+            try:
+                # Use weighted random selection for each parameter category
+                combination = {
+                    'expected_count': weighted_random_choice(expected_count_configs),
+                    'localization_modes': weighted_random_choice(localization_configs),
+                    'binarization_config': weighted_random_choice(binarization_configs),
+                    'grayscale_transform_modes': weighted_random_choice(grayscale_transform_configs),
+                    'deblur_modes': weighted_random_choice(deblur_configs),
+                    'enhancement_modes': weighted_random_choice(enhancement_configs),
+                    'region_predetection': weighted_random_choice(region_predetection_configs),
+                    'scale_config': weighted_random_choice(scale_configs),
+                    'deformation_config': weighted_random_choice(deformation_configs),
+                    'combination_index': len(self.auto_adjustment_params) + 1,
+                }
                 
+                # Check if this combination is unique
+                combo_hash = combination_to_hash(combination)
+                if combo_hash not in tested_combinations:
+                    tested_combinations.add(combo_hash)
+                    self.auto_adjustment_params.append(combination)
+                else:
+                    # Duplicate found, continue to generate a new one
+                    if attempts % 10 == 0:  # Log every 10 duplicate attempts
+                        print(f"   Found duplicate combination (attempt {attempts}), generating new one...")
+                
+            except Exception as e:
+                print(f"Error generating combination (attempt {attempts}): {e}")
+                continue
+        
+        print(f"🎯 Generated {len(self.auto_adjustment_params)} unique {mode_name.lower()} random parameter combinations")
+        print(f"🎲 Strategy: Smart weighted randomization with duplicate prevention")
+        print(f"📊 Total attempts: {attempts} (duplicates avoided: {attempts - len(self.auto_adjustment_params)})")
+        
+        if len(self.auto_adjustment_params) > 0:
+            # Count distribution by localization mode
+            loc_mode_counts = {}
+            for combo in self.auto_adjustment_params:
+                first_mode = combo['localization_modes'][0]['Mode']
+                loc_mode_counts[first_mode] = loc_mode_counts.get(first_mode, 0) + 1
+            
+            print("📊 Localization mode distribution:")
+            for mode, count in sorted(loc_mode_counts.items()):
+                percentage = (count / len(self.auto_adjustment_params)) * 100
+                print(f"   • {mode}: {count} ({percentage:.1f}%)")
+            
+            print(f"🎯 First combination: {self.auto_adjustment_params[0]['localization_modes'][0]['Mode']} localization")
+            
+            # Show strategy features
+            print("✨ Enhanced features:")
+            print("   • Smart weighted randomization favoring effective modes")
+            print("   • Duplicate prevention ensures no wasted testing")
+            print("   • Dynamsoft-optimized localization priority weighting")
+            print("   • Balanced grayscale transformation (GTM_ORIGINAL + GTM_INVERTED)")
+            print("   • Progressive deblur modes with efficiency/effectiveness balance")
+            print("   • Time-based random seed for varied results each run")
+        else:
+            print("⚠️  Warning: Could not generate enough unique combinations. Consider increasing max_attempts or adjusting weights.")
+            
         print(f"Prepared {len(self.auto_adjustment_params)} parameter combinations for auto-adjustment")
         if len(self.auto_adjustment_params) > 0:
-            print(f"First combination: {self.auto_adjustment_params[0]}")
+            print(f"First combination uses: {self.auto_adjustment_params[0]['localization_modes'][0]['Mode']} localization")
             
     def auto_adjust_step(self):
         """Perform one step of auto adjustment"""
@@ -3822,7 +3897,7 @@ class ParameterAdjustmentTool(QMainWindow):
         
         status_msg = f"Test {self.auto_adjustment_index + 1}/{len(self.auto_adjustment_params)}: {' | '.join(status_components)}"
         self.status_bar.showMessage(status_msg)
-        print(f"Testing enhanced parameters: {params}")
+        print(f"Testing smart random parameters: {params}")
         
         # Apply parameter combination to settings
         self.apply_auto_adjustment_params(params)
@@ -3834,17 +3909,85 @@ class ParameterAdjustmentTool(QMainWindow):
         self.auto_adjustment_index += 1
         
     def apply_auto_adjustment_params(self, params):
-        """Apply comprehensive parameter combination to current settings"""
-        print(f"Applying enhanced auto-adjustment params: {params}")
+        """Apply smart random parameter combination to current settings with all new modes"""
+        print(f"Applying smart random auto-adjustment params: {params}")
         try:
             # Update expected barcode count in all tasks
             if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
                 for task in self.current_settings['BarcodeReaderTaskSettingOptions']:
                     task['ExpectedBarcodesCount'] = params['expected_count']
-                    
-                    # Update text result order modes
-                    if 'text_order' in params:
-                        task['TextResultOrderModes'] = params['text_order']
+            
+            # Update parameters in task sections
+            if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
+                for task in self.current_settings['BarcodeReaderTaskSettingOptions']:
+                    if 'SectionArray' in task:
+                        for section in task['SectionArray']:
+                            section_type = section.get('Section')
+                            
+                            # Update Region Predetection parameters
+                            if section_type == 'ST_REGION_PREDETECTION':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_PREDETECT_REGIONS':
+                                        if 'RegionPredetectionModes' in stage and 'region_predetection' in params:
+                                            # Update existing or create new mode
+                                            if stage['RegionPredetectionModes']:
+                                                stage['RegionPredetectionModes'][0].update(params['region_predetection'])
+                                            else:
+                                                stage['RegionPredetectionModes'] = [params['region_predetection']]
+                            
+                            # Update Localization parameters
+                            elif section_type == 'ST_BARCODE_LOCALIZATION':
+                                for stage in section.get('StageArray', []):
+                                    if stage.get('Stage') == 'SST_LOCALIZE_CANDIDATE_BARCODES':
+                                        stage['LocalizationModes'] = params['localization_modes']
+                            
+                            # Update Decoding parameters  
+                            elif section_type == 'ST_BARCODE_DECODING':
+                                for stage in section.get('StageArray', []):
+                                    stage_type = stage.get('Stage')
+                                    
+                                    # Update Deblur Modes (NEW)
+                                    if stage_type == 'SST_DECODE_BARCODE' and 'deblur_modes' in params:
+                                        stage['DeblurModes'] = params['deblur_modes']
+                                    
+                                    # Update Deformation Resisting
+                                    elif stage_type == 'SST_RESIST_DEFORMATION' and 'deformation_config' in params:
+                                        if 'DeformationResistingModes' in stage:
+                                            if stage['DeformationResistingModes']:
+                                                stage['DeformationResistingModes'][0]['Level'] = params['deformation_config']['Level']
+                                                stage['DeformationResistingModes'][0]['Mode'] = params['deformation_config']['Mode']
+                                    
+                                    # Update Barcode Scaling
+                                    elif stage_type == 'SST_SCALE_BARCODE_IMAGE' and 'scale_config' in params:
+                                        if 'BarcodeScaleModes' in stage:
+                                            if stage['BarcodeScaleModes']:
+                                                stage['BarcodeScaleModes'][0].update(params['scale_config'])
+                                            else:
+                                                stage['BarcodeScaleModes'] = [params['scale_config']]
+            
+            # Update Image Processing Parameters
+            if 'ImageParameterOptions' in self.current_settings:
+                for param in self.current_settings['ImageParameterOptions']:
+                    if 'ApplicableStages' in param:
+                        for stage in param['ApplicableStages']:
+                            
+                            # Update Binarization
+                            if 'BinarizationModes' in stage and 'binarization_config' in params:
+                                for bin_mode in stage['BinarizationModes']:
+                                    bin_mode.update(params['binarization_config'])
+                            
+                            # Update Grayscale Transformation Modes (NEW - CRITICAL)
+                            if 'GrayscaleTransformationModes' in stage and 'grayscale_transform_modes' in params:
+                                stage['GrayscaleTransformationModes'] = params['grayscale_transform_modes']
+                            
+                            # Update Grayscale Enhancement Modes (NEW)
+                            if 'GrayscaleEnhancementModes' in stage and 'enhancement_modes' in params:
+                                # Only update if enhancement modes are specified (not empty array)
+                                if params['enhancement_modes']:
+                                    stage['GrayscaleEnhancementModes'] = params['enhancement_modes']
+                                else:
+                                    # For empty enhancement, use default skip mode
+                                    stage['GrayscaleEnhancementModes'] = [{"Mode": "GEM_SKIP"}]
             
             # Update parameters in task sections
             if 'BarcodeReaderTaskSettingOptions' in self.current_settings:
