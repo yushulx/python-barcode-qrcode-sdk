@@ -1,3 +1,0 @@
-dbr
-opencv-python
-pillow
