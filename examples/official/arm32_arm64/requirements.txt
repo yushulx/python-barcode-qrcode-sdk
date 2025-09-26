@@ -1,0 +1,3 @@
+dynamsoft-barcode-reader-bundle
+opencv-python
+pillow
