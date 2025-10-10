@@ -1,0 +1,133 @@
+{
+  "BarcodeFormatSpecificationOptions": [
+    {
+      "BarcodeFormatIds": [
+        "BF_DEFAULT",
+        "BF_NONSTANDARD_BARCODE"
+      ],
+      "HeadModuleRatio": "131111313",
+      "Name": "bfs_0",
+      "StandardFormat": "BF_CODE_39",
+      "TailModuleRatio": "131111313"
+    }
+  ],
+  "BarcodeReaderTaskSettingOptions": [
+    {
+      "BarcodeFormatIds": [
+        "BF_DEFAULT",
+        "BF_NONSTANDARD_BARCODE"
+      ],
+      "BarcodeFormatSpecificationNameArray": [
+        "bfs_0"
+      ],
+      "Name": "dbr_task_0",
+      "SectionArray": [
+        {
+          "ImageParameterName": "IP_0",
+          "Section": "ST_REGION_PREDETECTION",
+          "StageArray": [
+            {
+              "Stage": "SST_PREDETECT_REGIONS"
+            }
+          ]
+        },
+        {
+          "ImageParameterName": "IP_0",
+          "Section": "ST_BARCODE_LOCALIZATION",
+          "StageArray": [
+            {
+              "Stage": "SST_LOCALIZE_CANDIDATE_BARCODES"
+            },
+            {
+              "Stage": "SST_LOCALIZE_BARCODES"
+            }
+          ]
+        },
+        {
+          "ImageParameterName": "IP_0",
+          "Section": "ST_BARCODE_DECODING",
+          "StageArray": [
+            {
+              "Stage": "SST_RESIST_DEFORMATION"
+            },
+            {
+              "Stage": "SST_COMPLEMENT_BARCODE"
+            },
+            {
+              "Stage": "SST_SCALE_BARCODE_IMAGE"
+            },
+            {
+              "Stage": "SST_DECODE_BARCODES"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "CaptureVisionTemplates": [
+    {
+      "ImageROIProcessingNameArray": [
+        "roi_default"
+      ],
+      "Name": "CV_0",
+      "Timeout": 1000000
+    }
+  ],
+  "ImageParameterOptions": [
+    {
+      "ApplicableStages": [
+        {
+          "Stage": "SST_INPUT_COLOR_IMAGE"
+        },
+        {
+          "Stage": "SST_SCALE_IMAGE"
+        },
+        {
+          "Stage": "SST_CONVERT_TO_GRAYSCALE"
+        },
+        {
+          "Stage": "SST_TRANSFORM_GRAYSCALE"
+        },
+        {
+          "Stage": "SST_ENHANCE_GRAYSCALE"
+        },
+        {
+          "Stage": "SST_BINARIZE_IMAGE"
+        },
+        {
+          "Stage": "SST_DETECT_TEXTURE"
+        },
+        {
+          "Stage": "SST_REMOVE_TEXTURE_FROM_GRAYSCALE"
+        },
+        {
+          "Stage": "SST_BINARIZE_TEXTURE_REMOVED_GRAYSCALE"
+        },
+        {
+          "Stage": "SST_FIND_CONTOURS"
+        },
+        {
+          "Stage": "SST_DETECT_SHORTLINES"
+        },
+        {
+          "Stage": "SST_ASSEMBLE_LINES"
+        },
+        {
+          "Stage": "SST_DETECT_TEXT_ZONES"
+        },
+        {
+          "Stage": "SST_REMOVE_TEXT_ZONES_FROM_BINARY"
+        }
+      ],
+      "Name": "IP_0"
+    }
+  ],
+  "TargetROIDefOptions": [
+    {
+      "Name": "roi_default",
+      "TaskSettingNameArray": [
+        "dbr_task_0"
+      ]
+    }
+  ]
+}
