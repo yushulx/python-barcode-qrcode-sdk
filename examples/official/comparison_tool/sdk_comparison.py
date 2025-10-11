@@ -1487,7 +1487,7 @@ from dynamsoft_capture_vision_bundle import *
 LICENSE_KEY = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
 
 def process_image(image_path):
-    start_time = time.time()
+    
     
     # Initialize license
     error_code, error_message = LicenseManager.init_license(LICENSE_KEY)
@@ -1496,8 +1496,12 @@ def process_image(image_path):
     
     # Process image
     cvr = CaptureVisionRouter()
+    cvr.capture(image_path, EnumPresetTemplate.PT_READ_BARCODES.value) # Trigger model loading the first time
+
+    start_time = time.time()
     result = cvr.capture(image_path, EnumPresetTemplate.PT_READ_BARCODES.value)
-    
+    processing_time = time.time() - start_time
+
     if result.get_error_code() != EnumErrorCode.EC_OK:
         return {{"success": False, "error": f"Capture error: {{result.get_error_code()}}"}}
     
@@ -1531,7 +1535,7 @@ def process_image(image_path):
     
     return {{
         "success": True,
-        "processing_time": time.time() - start_time,
+        "processing_time": processing_time,
         "barcodes": barcodes
     }}
 
