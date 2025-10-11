@@ -47,6 +47,8 @@ This repository provides samples demonstrating how to detect QR codes using **YO
 
 #### QR Reading with Dynamsoft Barcode Reader
 
+![QR code detection with YOLO and Dynamsoft Barcode Reader](https://www.dynamsoft.com/codepool/img/2020/11/python-qr-code-scan.png)
+
 Below is a sample code snippet for reading QR codes with the Dynamsoft Barcode Reader:
 
 ```py
