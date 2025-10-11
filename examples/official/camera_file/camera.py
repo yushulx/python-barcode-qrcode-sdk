@@ -75,8 +75,9 @@ if __name__ == '__main__':
                         y3 = location.points[2].y
                         x4 = location.points[3].x
                         y4 = location.points[3].y
+                        pts = np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], np.int32).reshape((-1, 1, 2))
                         cv2.drawContours(
-                            frame, [np.intp([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
+                            frame, [pts], 0, (0, 255, 0), 2)
 
                         cv2.putText(frame, text, (x1, y1),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)

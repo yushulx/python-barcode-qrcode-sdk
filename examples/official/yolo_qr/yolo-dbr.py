@@ -1,42 +1,27 @@
 import cv2 as cv
 import numpy as np
 import time
-from dbr import *
+from dynamsoft_capture_vision_bundle import *
 
-license_key = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
-BarcodeReader.init_license(license_key)
-reader = BarcodeReader()
+errorCode, errorMsg = LicenseManager.init_license(
+        "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+if errorCode != EnumErrorCode.EC_OK and errorCode != EnumErrorCode.EC_LICENSE_CACHE_USED:
+    print("License initialization failed: ErrorCode:",
+            errorCode, ", ErrorString:", errorMsg)
+
+cvr_instance = CaptureVisionRouter()  
 
 
 def decodeframe(frame, left, top, right, bottom):
-    settings = reader.reset_runtime_settings()
-    settings = reader.get_runtime_settings()
-    settings.region_bottom = bottom
-    settings.region_left = left
-    settings.region_right = right
-    settings.region_top = top
-    settings.barcode_format_ids = EnumBarcodeFormat.BF_QR_CODE
-    settings.expected_barcodes_count = 1
-    reader.update_runtime_settings(settings)
+    error_code, error_msg, settings = cvr_instance.get_simplified_settings(EnumPresetTemplate.PT_READ_BARCODES.value)
+    quad = Quadrilateral()
+    quad.points = [Point(left, top), Point(right, top), Point(right, bottom), Point(left, bottom)]
+    settings.roi = quad
+    settings.roi_measured_in_percentage = False
+    cvr_instance.update_settings(EnumPresetTemplate.PT_READ_BARCODES.value, settings)
 
-    try:
-        text_results = reader.decode_buffer(frame)
-
-        if text_results != None:
-            return text_results[0]
-            # for text_result in text_results:
-            #     print("Barcode Format :")
-            #     print(text_result.barcode_format_string)
-            #     print("Barcode Text :")
-            #     print(text_result.barcode_text)
-            #     print("Localization Points : ")
-            #     print(text_result.localization_result.localization_points)
-            #     print("-------------")
-    except BarcodeReaderError as bre:
-        print(bre)
-
-    return None
-
+    result = cvr_instance.capture(frame, EnumPresetTemplate.PT_READ_BARCODES.value)
+    return result
 
 # Load an image
 frame = cv.imread("416x416.jpg")
@@ -98,9 +83,10 @@ def postprocess(frame, outs):
                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0))
 
             result = decodeframe(frame, left, top, left + width, top + height)
+            items = result.get_items()
             # Draw barcode results
-            if not result is None:
-                label = '%s' % (result.barcode_text)
+            if len(items) > 0:
+                label = '%s' % (items[0].get_text())
                 cv.putText(frame, label, (left, top - 5),
                            cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0))
 

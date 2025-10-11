@@ -67,8 +67,9 @@ if __name__ == '__main__':
                     print("({}, {})".format(x4, y4))
                     print("-------------------------------------------------")
 
+                    pts = np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], np.int32).reshape((-1, 1, 2))
                     cv2.drawContours(
-                        cv_image, [np.intp([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
+                        cv_image, [pts], 0, (0, 255, 0), 2)
 
                     cv2.putText(cv_image, text, (x1, y1 - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)

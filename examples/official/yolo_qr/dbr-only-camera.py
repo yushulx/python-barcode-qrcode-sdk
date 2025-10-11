@@ -4,43 +4,48 @@ import numpy as np
 import time
 from threading import Thread
 import queue
-from dbr import *
+from dynamsoft_capture_vision_bundle import *
 
-license_key = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
-BarcodeReader.init_license(license_key)
-reader = BarcodeReader()
+errorCode, errorMsg = LicenseManager.init_license(
+        "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
+if errorCode != EnumErrorCode.EC_OK and errorCode != EnumErrorCode.EC_LICENSE_CACHE_USED:
+    print("License initialization failed: ErrorCode:",
+            errorCode, ", ErrorString:", errorMsg)
+
+cvr_instance = CaptureVisionRouter()    
+
 color = (0, 0, 255)
 thickness = 2
 
 
 def decodeframe(frame):
 
-    try:
-        outs = reader.decode_buffer(frame)
-        if outs != None:
-            return outs
-    except BarcodeReaderError as bre:
-        print(bre)
-
-    return None
+    result = cvr_instance.capture(frame, EnumPresetTemplate.PT_READ_BARCODES.value)
+    return result
 
 
 winName = 'QR Detection'
 
 
-def postprocess(frame, outs):
-    if outs == None:
-        return
+def postprocess(frame, result):
+    items = result.get_items()
+    for item in items:
+        location = item.get_location()
+        x1 = location.points[0].x
+        y1 = location.points[0].y
+        x2 = location.points[1].x
+        y2 = location.points[1].y
+        x3 = location.points[2].x
+        y3 = location.points[2].y
+        x4 = location.points[3].x
+        y4 = location.points[3].y
 
-    for out in outs:
-        points = out.localization_result.localization_points
+        pts = np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], np.int32).reshape((-1, 1, 2))
+        cv.drawContours(
+            frame, [pts], 0, (0, 255, 0), 2)
 
-        cv.line(frame, points[0], points[1], color, thickness)
-        cv.line(frame, points[1], points[2], color, thickness)
-        cv.line(frame, points[2], points[3], color, thickness)
-        cv.line(frame, points[3], points[0], color, thickness)
-        cv.putText(frame, out.barcode_text, (min([point[0] for point in points]), min(
-            [point[1] for point in points])), cv.FONT_HERSHEY_SIMPLEX, 1, color, thickness)
+        cv.putText(frame, item.get_text(), (x1, y1 - 10),
+                    cv.FONT_HERSHEY_SIMPLEX, 0.5, color, thickness)
 
 
 cap = cv.VideoCapture(0)
@@ -52,8 +57,8 @@ class QueueFPS(queue.Queue):
         self.startTime = 0
         self.counter = 0
 
-    def put(self, v):
-        queue.Queue.put(self, v)
+    def put(self, item, block=True, timeout=None):
+        queue.Queue.put(self, item, block=block, timeout=timeout)
         self.counter += 1
         if self.counter == 1:
             self.startTime = time.time()
