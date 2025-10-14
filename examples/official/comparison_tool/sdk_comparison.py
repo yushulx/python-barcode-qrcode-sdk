@@ -1120,6 +1120,12 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         add_images_btn.clicked.connect(self.add_images)
         toolbar_layout.addWidget(add_images_btn)
         
+        # Process All button
+        process_all_btn = QPushButton("🔄 Reprocess All")
+        process_all_btn.clicked.connect(self.process_all_images)
+        process_all_btn.setToolTip("Reprocess all loaded images with current SDK versions")
+        toolbar_layout.addWidget(process_all_btn)
+        
         clear_btn = QPushButton("🗑️ Clear All")
         clear_btn.clicked.connect(self.clear_all)
         toolbar_layout.addWidget(clear_btn)
@@ -1290,11 +1296,12 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         # Update results table headers
         self.results_table.update_sdk_headers(sdk_versions)
         
-        # Process the currently selected image if we have one
+        # Process the currently selected image if we have one and images are loaded
         current_item = self.file_list.currentItem()
-        if current_item and len(sdk_versions) >= 2:
+        if (current_item and len(sdk_versions) >= 2 and 
+            len(self.image_files) > 0 and len(self.new_files) > 0):
             image_path = current_item.data(Qt.ItemDataRole.UserRole)
-            if image_path:
+            if image_path and image_path in self.image_files:
                 QTimer.singleShot(500, lambda: self.process_selected_image(image_path))
     
     def add_images(self):
@@ -1307,15 +1314,70 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             self.new_files = [str(f) for f in files]
             self.add_image_files(files)
     
+    def process_all_images(self):
+        """Process all loaded images"""
+        if not self.image_files:
+            QMessageBox.information(self, "No Images", "Please add images first.")
+            return
+            
+        if len(self.sdk_versions) < 2:
+            QMessageBox.information(self, "SDK Configuration Required", 
+                                  "Please configure at least 2 SDK versions first.")
+            return
+        
+        # Stop any existing processing
+        if self.processing_thread and self.processing_thread.isRunning():
+            self.processing_thread.terminate()
+            self.processing_thread.wait(1000)
+        
+        # Clear existing results for fresh processing
+        self.results.clear()
+        self.results_table.setRowCount(0)
+        
+        # Show progress
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setRange(0, len(self.sdk_versions) * len(self.image_files))
+        self.progress_bar.setValue(0)
+        
+        self.status_bar.showMessage(f"Reprocessing all {len(self.image_files)} images...")
+        
+        # Process all images
+        self.processing_thread = ProcessingThread(self.image_files, self.sdk_versions, self.current_detection_mode)
+        
+        # Connect signals
+        self.processing_thread.result_ready.connect(
+            self.on_batch_result_ready, Qt.ConnectionType.QueuedConnection
+        )
+        self.processing_thread.processing_complete.connect(
+            self.on_batch_processing_complete, Qt.ConnectionType.QueuedConnection
+        )
+        
+        self.processing_thread.start()
+    
+    def on_batch_result_ready(self, image_path: str, sdk_name: str, result: ProcessingResult):
+        """Handle batch processing result"""
+        # Same as single result but for batch processing
+        self.on_single_result_ready(image_path, sdk_name, result)
+    
+    def on_batch_processing_complete(self):
+        """Handle batch processing completion"""
+        self.progress_bar.setVisible(False)
+        self.status_bar.showMessage(f"✅ Reprocessing complete! Processed {len(self.image_files)} images")
+        
+        # Auto-select first image if none selected
+        if self.file_list.count() > 0 and not self.file_list.currentItem():
+            self.file_list.setCurrentRow(0)
+    
     def add_image_files(self, files: List[str]):
-        """Add image files to the list"""
+        """Add image files to the list and process them immediately"""
         new_files_added = 0
         last_added_item = None
+        newly_added_files = []
         
         for file_path in files:
-
             if file_path not in self.image_files:
                 self.image_files.append(str(file_path))
+                newly_added_files.append(str(file_path))
                 
                 # Create list item with image path stored as data
                 item = QListWidgetItem(os.path.basename(file_path))
@@ -1327,17 +1389,60 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         
         self.status_bar.showMessage(f"Added {new_files_added} images. Total: {len(self.image_files)}")
         
-        # Auto-select the last added image and process it
-        if last_added_item and len(self.sdk_versions) >= 2:
-            self.file_list.setCurrentItem(last_added_item)
-            # Processing will be triggered by the selection change event
+        # Process all newly added files immediately if we have SDK versions configured
+        if newly_added_files and len(self.sdk_versions) >= 2:
+            self.process_new_images(newly_added_files)
         elif last_added_item:
             # Select the item but show SDK configuration message
             self.file_list.setCurrentItem(last_added_item)
             QTimer.singleShot(100, lambda: QMessageBox.information(
                 self, "SDK Configuration Required", 
-                "Image selected! Please configure SDK versions first to enable processing."
+                "Images added! Please configure SDK versions first to enable processing."
             ))
+        elif last_added_item:
+            # Just select the last item if no processing needed
+            self.file_list.setCurrentItem(last_added_item)
+    
+    def process_new_images(self, image_files: List[str]):
+        """Process newly added images immediately"""
+        if not image_files or len(self.sdk_versions) < 2:
+            return
+        
+        # Stop any existing processing
+        if self.processing_thread and self.processing_thread.isRunning():
+            self.processing_thread.terminate()
+            self.processing_thread.wait(1000)
+        
+        # Show progress
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setRange(0, len(self.sdk_versions) * len(image_files))
+        self.progress_bar.setValue(0)
+        
+        self.status_bar.showMessage(f"Processing {len(image_files)} new images...")
+        
+        # Process the new images
+        self.processing_thread = ProcessingThread(image_files, self.sdk_versions, self.current_detection_mode)
+        
+        # Connect signals
+        self.processing_thread.result_ready.connect(
+            self.on_single_result_ready, Qt.ConnectionType.QueuedConnection
+        )
+        self.processing_thread.processing_complete.connect(
+            self.on_new_images_processing_complete, Qt.ConnectionType.QueuedConnection
+        )
+        
+        self.processing_thread.start()
+    
+    def on_new_images_processing_complete(self):
+        """Handle completion of new images processing"""
+        self.progress_bar.setVisible(False)
+        self.status_bar.showMessage(f"✅ Processing complete! Total images: {len(self.image_files)}")
+        
+        # Auto-select the last added image to show results
+        if self.file_list.count() > 0:
+            last_item = self.file_list.item(self.file_list.count() - 1)
+            if last_item:
+                self.file_list.setCurrentItem(last_item)
     
     def on_image_selected(self, current_item, previous_item):
         """Handle image selection from the file list"""
@@ -1359,8 +1464,15 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         
         # Check if we have SDK versions configured
         if len(self.sdk_versions) >= 2:
-            # Process the selected image
-            self.process_selected_image(image_path)
+            # Check if we already have results for this image
+            if (image_path in self.results and 
+                len(self.results[image_path]) == len(self.sdk_versions)):
+                # We already have results, just display them
+                self.update_single_image_display(image_path)
+                self.status_bar.showMessage(f"✅ Displaying results for {os.path.basename(image_path)}")
+            else:
+                # No results yet, process the image
+                self.process_selected_image(image_path)
         else:
             # Clear the comparison view and show message
             self.image_comparison.sdk1_scene.clear()
@@ -1374,6 +1486,16 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         """Process a single selected image"""
         if not image_path or not os.path.exists(image_path):
             self.status_bar.showMessage("❌ Image file not found")
+            return
+            
+        # Check if we have the necessary data (image files and SDK versions)
+        if not self.image_files or len(self.sdk_versions) < 2:
+            self.status_bar.showMessage("❌ No images loaded or insufficient SDK versions configured")
+            return
+            
+        # Verify the image is still in our current image list (might have been cleared by mode change)
+        if image_path not in self.image_files:
+            self.status_bar.showMessage("❌ Image no longer in current selection")
             return
             
         # Check if already processing this image
@@ -1394,7 +1516,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             
         # Show progress
         self.progress_bar.setVisible(True)
-        self.progress_bar.setRange(0, len(self.sdk_versions) * len(self.new_files))
+        self.progress_bar.setRange(0, len(self.sdk_versions))  # Only processing one image
         self.progress_bar.setValue(0)
         
         self.status_bar.showMessage(f"Processing {os.path.basename(image_path)}...")
@@ -1404,8 +1526,8 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             self.processing_thread.terminate()
             self.processing_thread.wait(1000)
         
-        # Start processing the selected image
-        self.processing_thread = ProcessingThread(self.new_files, self.sdk_versions, self.current_detection_mode)
+        # Start processing the selected image only (not all new_files)
+        self.processing_thread = ProcessingThread([image_path], self.sdk_versions, self.current_detection_mode)
         
         # Connect signals
         self.processing_thread.result_ready.connect(
@@ -1500,6 +1622,15 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         """Handle detection mode change"""
         self.current_detection_mode = mode
         self.status_bar.showMessage(f"Detection mode changed to: {mode}")
+        
+        # Stop any running processing threads first to prevent processing with old mode
+        if hasattr(self, 'processing_thread') and self.processing_thread and self.processing_thread.isRunning():
+            self.processing_thread.terminate()
+            self.processing_thread.wait(1000)
+            self.processing_thread = None
+        
+        # Hide progress bar
+        self.progress_bar.setVisible(False)
         
         # Clear existing results and image files when mode changes as they're no longer valid
         self.results.clear()
