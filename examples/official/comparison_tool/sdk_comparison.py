@@ -31,7 +31,7 @@ from PySide6.QtWidgets import (
     QPushButton, QLabel, QTextEdit, QListWidget, QFrame, QGroupBox, 
     QProgressBar, QFileDialog, QMessageBox, QListWidgetItem, QSplitter,
     QStatusBar, QTableWidget, QTableWidgetItem, QHeaderView, 
-    QGraphicsView, QGraphicsScene, QDialog
+    QGraphicsView, QGraphicsScene, QDialog, QComboBox
 )
 from PySide6.QtCore import Qt, QThread, Signal, QTimer, QMimeData, QUrl
 from PySide6.QtGui import (
@@ -63,33 +63,73 @@ def load_image_and_draw_overlays(image_path: str, results_dict: Optional[Dict[st
                 (150, 0, 255),    # Purple for fifth SDK
             ]
             
-            for i, (sdk_name, result) in enumerate(results_dict.items()):
+            for sdk_idx, (sdk_name, result) in enumerate(results_dict.items()):
                 img_copy = img_rgb.copy()
                 
-                # Draw barcode overlays directly on the image
-                if result.success and result.barcodes:
+                if result.success:
                     # Use different colors for different SDKs
-                    color = color_palette[i % len(color_palette)]
+                    color = color_palette[sdk_idx % len(color_palette)]
                     
-                    for i, barcode in enumerate(result.barcodes):
-                        if barcode.points and len(barcode.points) >= 4:
-                            # Convert points to numpy array
-                            points = np.array(barcode.points, dtype=np.int32)
-                            
-                            # Draw barcode outline
-                            cv2.polylines(img_copy, [points], True, color, 2)
-                            
-                            # Draw filled overlay with transparency
-                            overlay = img_copy.copy()
-                            cv2.fillPoly(overlay, [points], color)
-                            cv2.addWeighted(overlay, 0.2, img_copy, 0.8, 0, img_copy)
-                            
-                            # Add text label
-                            if points.size > 0:
-                                text_pos = (int(points[0][0]), int(points[0][1]) - 10)
-                                text = f"{i+1}: {barcode.text[:20]}"
-                                cv2.putText(img_copy, text, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 
-                                          0.5, color, 1, cv2.LINE_AA)
+                    # Draw barcode overlays
+                    if result.barcodes:
+                        for barcode_idx, barcode in enumerate(result.barcodes):
+                            if barcode.points and len(barcode.points) >= 4:
+                                # Convert points to numpy array
+                                points = np.array(barcode.points, dtype=np.int32)
+                                
+                                # Draw barcode outline
+                                cv2.polylines(img_copy, [points], True, color, 2)
+                                
+                                # Draw filled overlay with transparency
+                                overlay = img_copy.copy()
+                                cv2.fillPoly(overlay, [points], color)
+                                cv2.addWeighted(overlay, 0.2, img_copy, 0.8, 0, img_copy)
+                                
+                                # Add text label
+                                if points.size > 0:
+                                    text_pos = (int(points[0][0]), int(points[0][1]) - 10)
+                                    text = f"{barcode_idx+1}: {barcode.text[:20]}"
+                                    cv2.putText(img_copy, text, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 
+                                              0.5, color, 1, cv2.LINE_AA)
+                    
+                    # Draw MRZ overlays
+                    if result.mrz_results:
+                        for mrz_idx, mrz_result in enumerate(result.mrz_results):
+                            if mrz_result.points and len(mrz_result.points) >= 4:
+                                # Convert points to numpy array
+                                points = np.array(mrz_result.points, dtype=np.int32)
+                                
+                                # Draw MRZ outline
+                                cv2.polylines(img_copy, [points], True, color, 2)
+                                
+                                # Draw filled overlay with transparency
+                                overlay = img_copy.copy()
+                                cv2.fillPoly(overlay, [points], color)
+                                cv2.addWeighted(overlay, 0.2, img_copy, 0.8, 0, img_copy)
+                                
+                                # Add MRZ text label
+                                if points.size > 0:
+                                    text_pos = (int(points[0][0]), int(points[0][1]) - 10)
+                                    text = f"MRZ {mrz_idx+1}"
+                                    cv2.putText(img_copy, text, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 
+                                              0.5, color, 1, cv2.LINE_AA)
+                    
+                    # Draw document edge overlays
+                    if result.document_results:
+                        for doc_idx, doc_result in enumerate(result.document_results):
+                            if doc_result.points and len(doc_result.points) >= 4:
+                                # Convert points to numpy array
+                                points = np.array(doc_result.points, dtype=np.int32)
+                                
+                                # Draw document outline (edge detection) - use thicker line for visibility
+                                cv2.polylines(img_copy, [points], True, color, 3)
+                                
+                                # Add document label
+                                if points.size > 0:
+                                    text_pos = (int(points[0][0]), int(points[0][1]) - 10)
+                                    text = f"Document {doc_idx+1}"
+                                    cv2.putText(img_copy, text, text_pos, cv2.FONT_HERSHEY_SIMPLEX, 
+                                              0.5, color, 2, cv2.LINE_AA)
                 
                 # Convert to QPixmap
                 height, width, channel = img_copy.shape
@@ -233,12 +273,54 @@ class BarcodeResult:
     points: List[List[int]]
 
 @dataclass
+class MRZResult:
+    text: str
+    parsed_info: dict
+    points: List[List[int]]
+
+@dataclass
+class DocumentResult:
+    points: List[List[int]]
+    confidence: float = 0.0
+
+@dataclass
 class ProcessingResult:
     success: bool
     sdk_version: str
     processing_time: float
-    barcodes: List[BarcodeResult]
+    detection_mode: str = "Barcode"
+    barcodes: Optional[List[BarcodeResult]] = None
+    mrz_results: Optional[List[MRZResult]] = None
+    document_results: Optional[List[DocumentResult]] = None
     error: str = ""
+    
+    def __post_init__(self):
+        if self.barcodes is None:
+            self.barcodes = []
+        if self.mrz_results is None:
+            self.mrz_results = []
+        if self.document_results is None:
+            self.document_results = []
+    
+    def get_result_count(self) -> int:
+        """Get the count of detected items based on detection mode"""
+        if self.detection_mode == "Barcode":
+            return len(self.barcodes) if self.barcodes else 0
+        elif self.detection_mode == "MRZ":
+            return len(self.mrz_results) if self.mrz_results else 0
+        elif self.detection_mode == "Document":
+            return len(self.document_results) if self.document_results else 0
+        return 0
+    
+    def get_result_type_name(self) -> str:
+        """Get the name of the result type based on detection mode"""
+        if self.detection_mode == "Barcode":
+            return "barcodes"
+        elif self.detection_mode == "MRZ":
+            return "MRZ results"
+        elif self.detection_mode == "Document":
+            return "documents"
+        return "items"
 
 class SDKConfigDialog(QDialog):
     """Dialog for configuring SDK virtual environments"""
@@ -459,20 +541,20 @@ class ResultsTableWidget(QTableWidget):
                 "Image", 
                 sdk_versions[0].name, 
                 sdk_versions[1].name, 
-                "Barcodes Δ", 
+                "Results Δ", 
                 "Speed Δ", 
                 "Status"
             ]
         else:
             headers = [
-                "Image", "SDK v1", "SDK v2", "Barcodes Δ", "Speed Δ", "Status"
+                "Image", "SDK v1", "SDK v2", "Results Δ", "Speed Δ", "Status"
             ]
         self.setHorizontalHeaderLabels(headers)
     
     def setup_table(self):
         """Setup the results table"""
         headers = [
-            "Image", "SDK v1", "SDK v2", "Barcodes Δ", "Speed Δ", "Status"
+            "Image", "SDK v1", "SDK v2", "Results Δ", "Speed Δ", "Status"
         ]
         self.setColumnCount(len(headers))
         self.setHorizontalHeaderLabels(headers)
@@ -511,29 +593,29 @@ class ResultsTableWidget(QTableWidget):
             result2 = results[sdk_names[1]]  # Second SDK (comparison)
             
             # SDK 1 results
-            sdk1_text = f"{len(result1.barcodes)} barcodes, {result1.processing_time:.3f}s"
+            sdk1_text = f"{result1.get_result_count()} {result1.get_result_type_name()}, {result1.processing_time:.3f}s"
             self.setItem(row, 1, QTableWidgetItem(sdk1_text))
             
             # SDK 2 results  
-            sdk2_text = f"{len(result2.barcodes)} barcodes, {result2.processing_time:.3f}s"
+            sdk2_text = f"{result2.get_result_count()} {result2.get_result_type_name()}, {result2.processing_time:.3f}s"
             self.setItem(row, 2, QTableWidgetItem(sdk2_text))
             
-            # Barcode count difference (SDK2 - SDK1)
-            # Positive = SDK2 found more barcodes (improvement)
-            barcode_diff = len(result2.barcodes) - len(result1.barcodes)
-            if barcode_diff > 0:
-                barcode_item = QTableWidgetItem(f"+{barcode_diff}")
-                barcode_item.setBackground(QColor(200, 255, 200))  # Green for improvement
-                barcode_item.setToolTip(f"SDK2 found {barcode_diff} more barcode(s)")
-            elif barcode_diff < 0:
-                barcode_item = QTableWidgetItem(str(barcode_diff))
-                barcode_item.setBackground(QColor(255, 200, 200))  # Red for regression
-                barcode_item.setToolTip(f"SDK2 found {abs(barcode_diff)} fewer barcode(s)")
+            # Result count difference (SDK2 - SDK1)
+            # Positive = SDK2 found more results (improvement)
+            result_diff = result2.get_result_count() - result1.get_result_count()
+            if result_diff > 0:
+                result_item = QTableWidgetItem(f"+{result_diff}")
+                result_item.setBackground(QColor(200, 255, 200))  # Green for improvement
+                result_item.setToolTip(f"SDK2 found {result_diff} more {result2.get_result_type_name()}")
+            elif result_diff < 0:
+                result_item = QTableWidgetItem(str(result_diff))
+                result_item.setBackground(QColor(255, 200, 200))  # Red for regression
+                result_item.setToolTip(f"SDK2 found {abs(result_diff)} fewer {result2.get_result_type_name()}")
             else:
-                barcode_item = QTableWidgetItem("0")
-                barcode_item.setBackground(QColor(240, 240, 240))  # Gray for same
-                barcode_item.setToolTip("Same number of barcodes found")
-            self.setItem(row, 3, barcode_item)
+                result_item = QTableWidgetItem("0")
+                result_item.setBackground(QColor(240, 240, 240))  # Gray for same
+                result_item.setToolTip(f"Same number of {result2.get_result_type_name()} found")
+            self.setItem(row, 3, result_item)
             
             # Speed difference (SDK2 - SDK1)
             # Negative = SDK2 is faster (improvement)
@@ -554,9 +636,9 @@ class ResultsTableWidget(QTableWidget):
             
             # Overall status
             if result1.success and result2.success:
-                if barcode_diff > 0:
+                if result_diff > 0:
                     status = "✅ Improved"
-                elif barcode_diff < 0:
+                elif result_diff < 0:
                     status = "❌ Regressed"
                 else:
                     status = "➡️ Same"
@@ -587,27 +669,27 @@ class ResultsTableWidget(QTableWidget):
             result2 = results[sdk_names[1]]  # Second SDK (comparison)
             
             # Update SDK results
-            sdk1_text = f"{len(result1.barcodes)} barcodes, {result1.processing_time:.3f}s"
+            sdk1_text = f"{result1.get_result_count()} {result1.get_result_type_name()}, {result1.processing_time:.3f}s"
             self.setItem(row, 1, QTableWidgetItem(sdk1_text))
             
-            sdk2_text = f"{len(result2.barcodes)} barcodes, {result2.processing_time:.3f}s"
+            sdk2_text = f"{result2.get_result_count()} {result2.get_result_type_name()}, {result2.processing_time:.3f}s"
             self.setItem(row, 2, QTableWidgetItem(sdk2_text))
             
             # Update differences (same logic as add_comparison_result)
-            barcode_diff = len(result2.barcodes) - len(result1.barcodes)
-            if barcode_diff > 0:
-                barcode_item = QTableWidgetItem(f"+{barcode_diff}")
-                barcode_item.setBackground(QColor(200, 255, 200))
-                barcode_item.setToolTip(f"SDK2 found {barcode_diff} more barcode(s)")
-            elif barcode_diff < 0:
-                barcode_item = QTableWidgetItem(str(barcode_diff))
-                barcode_item.setBackground(QColor(255, 200, 200))
-                barcode_item.setToolTip(f"SDK2 found {abs(barcode_diff)} fewer barcode(s)")
+            result_diff = result2.get_result_count() - result1.get_result_count()
+            if result_diff > 0:
+                result_item = QTableWidgetItem(f"+{result_diff}")
+                result_item.setBackground(QColor(200, 255, 200))
+                result_item.setToolTip(f"SDK2 found {result_diff} more {result2.get_result_type_name()}")
+            elif result_diff < 0:
+                result_item = QTableWidgetItem(str(result_diff))
+                result_item.setBackground(QColor(255, 200, 200))
+                result_item.setToolTip(f"SDK2 found {abs(result_diff)} fewer {result2.get_result_type_name()}")
             else:
-                barcode_item = QTableWidgetItem("0")
-                barcode_item.setBackground(QColor(240, 240, 240))
-                barcode_item.setToolTip("Same number of barcodes found")
-            self.setItem(row, 3, barcode_item)
+                result_item = QTableWidgetItem("0")
+                result_item.setBackground(QColor(240, 240, 240))
+                result_item.setToolTip(f"Same number of {result2.get_result_type_name()} found")
+            self.setItem(row, 3, result_item)
             
             speed_diff = result2.processing_time - result1.processing_time
             if speed_diff < 0:
@@ -626,9 +708,9 @@ class ResultsTableWidget(QTableWidget):
             
             # Update status
             if result1.success and result2.success:
-                if barcode_diff > 0:
+                if result_diff > 0:
                     status = "✅ Improved"
-                elif barcode_diff < 0:
+                elif result_diff < 0:
                     status = "❌ Regressed"
                 else:
                     status = "➡️ Same"
@@ -737,15 +819,15 @@ class ImageComparisonWidget(QWidget):
         self.sdk1_view.setMinimumSize(400, 300)
         sdk1_container.addWidget(self.sdk1_view)
         
-        # SDK 1 barcode results text area
-        sdk1_results_label = QLabel("🔍 Barcode Results:")
+        # SDK 1 results text area
+        sdk1_results_label = QLabel("🔍 Results:")
         sdk1_results_label.setStyleSheet("font-weight: bold; color: #1976d2;")
         sdk1_container.addWidget(sdk1_results_label)
         
         self.sdk1_results_text = QTextEdit()
         self.sdk1_results_text.setMaximumHeight(120)
         self.sdk1_results_text.setReadOnly(True)
-        self.sdk1_results_text.setPlaceholderText("Barcode results will appear here...")
+        self.sdk1_results_text.setPlaceholderText("Results will appear here...")
         self.sdk1_results_text.setStyleSheet("font-family: monospace; font-size: 10pt; background-color: #f8f9fa;")
         sdk1_container.addWidget(self.sdk1_results_text)
         
@@ -762,15 +844,15 @@ class ImageComparisonWidget(QWidget):
         self.sdk2_view.setMinimumSize(400, 300)
         sdk2_container.addWidget(self.sdk2_view)
         
-        # SDK 2 barcode results text area
-        sdk2_results_label = QLabel("🔍 Barcode Results:")
+        # SDK 2 results text area
+        sdk2_results_label = QLabel("🔍 Results:")
         sdk2_results_label.setStyleSheet("font-weight: bold; color: #7b1fa2;")
         sdk2_container.addWidget(sdk2_results_label)
         
         self.sdk2_results_text = QTextEdit()
         self.sdk2_results_text.setMaximumHeight(120)
         self.sdk2_results_text.setReadOnly(True)
-        self.sdk2_results_text.setPlaceholderText("Barcode results will appear here...")
+        self.sdk2_results_text.setPlaceholderText("Results will appear here...")
         self.sdk2_results_text.setStyleSheet("font-family: monospace; font-size: 10pt; background-color: #f8f9fa;")
         sdk2_container.addWidget(self.sdk2_results_text)
         
@@ -860,8 +942,8 @@ class ImageComparisonWidget(QWidget):
             result1 = results[sdk_names[0]]
             result2 = results[sdk_names[1]]
             summary = (f"📊 {os.path.basename(image_path)} | "
-                      f"{sdk1_display_name}: {len(result1.barcodes)} barcodes ({result1.processing_time:.3f}s) | "
-                      f"{sdk2_display_name}: {len(result2.barcodes)} barcodes ({result2.processing_time:.3f}s)")
+                      f"{sdk1_display_name}: {result1.get_result_count()} {result1.get_result_type_name()} ({result1.processing_time:.3f}s) | "
+                      f"{sdk2_display_name}: {result2.get_result_count()} {result2.get_result_type_name()} ({result2.processing_time:.3f}s)")
             self.summary_label.setText(summary)
         elif len(sdk_names) == 1:
             # Only one SDK result available
@@ -881,13 +963,13 @@ class ImageComparisonWidget(QWidget):
             self.sdk2_label.setText("📊 No comparison data")
             
             # Update text areas
-            self.update_barcode_text_area(self.sdk1_results_text, results[sdk_names[0]])
+            self.update_results_text_area(self.sdk1_results_text, results[sdk_names[0]])
             self.sdk2_results_text.clear()
             self.sdk2_results_text.setPlaceholderText("No comparison data available")
             
             result1 = results[sdk_names[0]]
             summary = (f"📊 {os.path.basename(image_path)} | "
-                      f"{sdk1_display_name}: {len(result1.barcodes)} barcodes ({result1.processing_time:.3f}s)")
+                      f"{sdk1_display_name}: {result1.get_result_count()} {result1.get_result_type_name()} ({result1.processing_time:.3f}s)")
             self.summary_label.setText(summary)
         else:
             # No results, just show the base image
@@ -912,39 +994,81 @@ class ImageComparisonWidget(QWidget):
         # Force view updates
         self.sdk1_view.update()
         self.sdk2_view.update()
-    def update_barcode_text_area(self, text_area: QTextEdit, result: ProcessingResult):
-        """Update barcode results text area with formatted barcode data"""
+    def update_results_text_area(self, text_area: QTextEdit, result: ProcessingResult):
+        """Update results text area with formatted detection data based on detection mode"""
         text_area.clear()
         
         if not result.success:
             text_area.setPlainText(f"❌ Error: {result.error}")
             return
         
-        if not result.barcodes:
-            text_area.setPlainText("ℹ️ No barcodes detected")
-            return
-        
-        # Format barcode results
         results_text = []
-        results_text.append(f"✅ Found {len(result.barcodes)} barcode(s) in {result.processing_time:.3f}s\n")
+        detection_mode = result.detection_mode
         
-        for i, barcode in enumerate(result.barcodes, 1):
-            results_text.append(f"🏷️ Barcode #{i}:")
-            results_text.append(f"   Text: {barcode.text}")
-            results_text.append(f"   Format: {barcode.format}")
-            if barcode.confidence > 0:
-                results_text.append(f"   Confidence: {barcode.confidence:.2f}")
-            if barcode.points:
-                points_str = " → ".join([f"({p[0]},{p[1]})" for p in barcode.points])
-                results_text.append(f"   Points: {points_str}")
-            results_text.append("")
+        if detection_mode == "Barcode":
+            if not result.barcodes:
+                text_area.setPlainText("ℹ️ No barcodes detected")
+                return
+            
+            results_text.append(f"✅ Found {len(result.barcodes)} barcode(s) in {result.processing_time:.3f}s\n")
+            
+            for i, barcode in enumerate(result.barcodes, 1):
+                results_text.append(f"🏷️ Barcode #{i}:")
+                results_text.append(f"   Text: {barcode.text}")
+                results_text.append(f"   Format: {barcode.format}")
+                if barcode.confidence > 0:
+                    results_text.append(f"   Confidence: {barcode.confidence:.2f}")
+                if barcode.points:
+                    points_str = " → ".join([f"({p[0]},{p[1]})" for p in barcode.points])
+                    results_text.append(f"   Points: {points_str}")
+                results_text.append("")
         
-        text_area.setPlainText("\n".join(results_text))
+        elif detection_mode == "MRZ":
+            if not result.mrz_results:
+                text_area.setPlainText("ℹ️ No MRZ data detected")
+                return
+            
+            results_text.append(f"✅ Found {len(result.mrz_results)} MRZ result(s) in {result.processing_time:.3f}s\n")
+            
+            for i, mrz in enumerate(result.mrz_results, 1):
+                results_text.append(f"📄 MRZ #{i}:")
+                results_text.append(f"   Text: {mrz.text}")
+                if mrz.parsed_info:
+                    results_text.append(f"   Parsed Info: {mrz.parsed_info}")
+                if mrz.points:
+                    points_str = " → ".join([f"({p[0]},{p[1]})" for p in mrz.points])
+                    results_text.append(f"   Points: {points_str}")
+                results_text.append("")
+        
+        elif detection_mode == "Document":
+            if not result.document_results:
+                text_area.setPlainText("ℹ️ No document edges detected")
+                return
+            
+            results_text.append(f"✅ Found {len(result.document_results)} document(s) in {result.processing_time:.3f}s\n")
+            
+            for i, doc in enumerate(result.document_results, 1):
+                results_text.append(f"📋 Document #{i}:")
+                results_text.append(f"   Confidence: {doc.confidence:.2f}")
+                if doc.points:
+                    points_str = " → ".join([f"({p[0]},{p[1]})" for p in doc.points])
+                    results_text.append(f"   Edge Points: {points_str}")
+                results_text.append("")
+        
+        if results_text:
+            text_area.setPlainText("\n".join(results_text))
+        else:
+            text_area.setPlainText(f"ℹ️ No {detection_mode.lower()} data detected")
         
         # Move cursor to beginning for easier reading
         cursor = text_area.textCursor()
         cursor.movePosition(cursor.MoveOperation.Start)
         text_area.setTextCursor(cursor)
+    
+    # Keep old method name for backward compatibility
+    def update_barcode_text_area(self, text_area: QTextEdit, result: ProcessingResult):
+        """Legacy method - redirects to update_results_text_area"""
+        self.update_results_text_area(text_area, result)
 
 class EnhancedDualSDKComparisonTool(QMainWindow):
     """Enhanced main application with improved UI"""
@@ -960,6 +1084,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.results = {}  # {image_path: {sdk_name: ProcessingResult}}
         self.processing_thread = None  # Initialize to None
         self._updating_selection = False  # Flag to prevent selection loops
+        self.current_detection_mode = "Barcode"  # Current detection mode
         
         # Setup UI
         self.setup_ui()
@@ -999,6 +1124,16 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         clear_btn = QPushButton("🗑️ Clear All")
         clear_btn.clicked.connect(self.clear_all)
         toolbar_layout.addWidget(clear_btn)
+        
+        # Detection mode dropdown
+        mode_label = QLabel("Detection Mode:")
+        toolbar_layout.addWidget(mode_label)
+        
+        self.detection_mode_combo = QComboBox()
+        self.detection_mode_combo.addItems(["Barcode", "MRZ", "Document"])
+        self.detection_mode_combo.setCurrentText("Barcode")
+        self.detection_mode_combo.currentTextChanged.connect(self.on_detection_mode_changed)
+        toolbar_layout.addWidget(self.detection_mode_combo)
         
         toolbar_layout.addStretch()
         
@@ -1273,7 +1408,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
             self.processing_thread.wait(1000)
         
         # Start processing the selected image
-        self.processing_thread = ProcessingThread(self.new_files, self.sdk_versions)
+        self.processing_thread = ProcessingThread(self.new_files, self.sdk_versions, self.current_detection_mode)
         
         # Connect signals
         self.processing_thread.result_ready.connect(
@@ -1297,8 +1432,8 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.progress_bar.setValue(current_value)
         
         # Update status
-        barcodes_found = len(result.barcodes) if result.success else 0
-        status_msg = f"Processed with {sdk_name}: {barcodes_found} barcodes found"
+        items_found = result.get_result_count() if result.success else 0
+        status_msg = f"Processed with {sdk_name}: {items_found} {result.get_result_type_name()} found"
         self.status_bar.showMessage(status_msg)
         
         # If we have results from all SDKs, update the display
@@ -1352,6 +1487,28 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.image_comparison.sdk2_results_text.clear()
         self.status_bar.showMessage("Cleared all data")
     
+    def on_detection_mode_changed(self, mode: str):
+        """Handle detection mode change"""
+        self.current_detection_mode = mode
+        self.status_bar.showMessage(f"Detection mode changed to: {mode}")
+        
+        # Clear existing results when mode changes as they're no longer valid
+        self.results.clear()
+        self.results_table.setRowCount(0)
+        self.image_comparison.sdk1_scene.clear()
+        self.image_comparison.sdk2_scene.clear()
+        self.image_comparison.summary_label.setText(f"Detection mode: {mode} - Add images to begin comparison")
+        self.image_comparison.sdk1_results_text.clear()
+        self.image_comparison.sdk2_results_text.clear()
+        
+        # Update table headers based on detection mode
+        if mode == "Barcode":
+            self.results_table.setHorizontalHeaderLabels(["Image", "SDK 1", "SDK 2", "Barcode Δ", "Speed Δ"])
+        elif mode == "MRZ":
+            self.results_table.setHorizontalHeaderLabels(["Image", "SDK 1", "SDK 2", "MRZ Δ", "Speed Δ"])
+        elif mode == "Document":
+            self.results_table.setHorizontalHeaderLabels(["Image", "SDK 1", "SDK 2", "Document Δ", "Speed Δ"])
+    
     def on_results_table_selection(self, image_path: str):
         """Handle selection from results table - synchronize with file list"""
         if self._updating_selection:
@@ -1389,7 +1546,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
                     cell_item = self.results_table.item(row, col)
                     if cell_item:
                         # Don't override the difference column colors, just make them brighter
-                        if col == 3:  # Barcode Δ column - keep original logic but brighter
+                        if col == 3:  # Result Δ column - keep original logic but brighter
                             text = cell_item.text()
                             if text.startswith('+') and text != '+0':
                                 cell_item.setBackground(QColor(100, 255, 100))  # Brighter green
@@ -1425,7 +1582,7 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
                 item = self.results_table.item(row, col)
                 if item:
                     # Check if this is a difference column that should keep its color
-                    if col == 3:  # Barcode Δ column
+                    if col == 3:  # Result Δ column
                         text = item.text()
                         if text.startswith('+') and text != '+0':
                             item.setBackground(QColor(200, 255, 200))  # Green for improvement
@@ -1455,10 +1612,11 @@ class ProcessingThread(QThread):
     result_ready = Signal(str, str, ProcessingResult)
     processing_complete = Signal()
     
-    def __init__(self, image_files: List[str], sdk_versions: List[SDKVersion]):
+    def __init__(self, image_files: List[str], sdk_versions: List[SDKVersion], detection_mode: str = "Barcode"):
         super().__init__()
         self.image_files = image_files
         self.sdk_versions = sdk_versions
+        self.detection_mode = detection_mode
     
     def run(self):
         """Run processing in background"""
@@ -1486,30 +1644,58 @@ from dynamsoft_capture_vision_bundle import *
 
 LICENSE_KEY = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
 
-def process_image(image_path):
+def process_image(image_path, detection_mode):
     
     
     # Initialize license
     error_code, error_message = LicenseManager.init_license(LICENSE_KEY)
     if error_code not in [EnumErrorCode.EC_OK, EnumErrorCode.EC_LICENSE_CACHE_USED]:
-        return {{"success": False, "error": f"License error: {{error_message}}"}}
+        return {{"success": False, "error": f"License error: {{error_message}}", "detection_mode": detection_mode}}
     
     # Process image
     cvr = CaptureVisionRouter()
-    cvr.capture(image_path, EnumPresetTemplate.PT_READ_BARCODES.value) # Trigger model loading the first time
+    
+    # Select template based on detection mode
+    if detection_mode == "Barcode":
+        template = EnumPresetTemplate.PT_READ_BARCODES.value
+    elif detection_mode == "Document":
+        template = EnumPresetTemplate.PT_DETECT_AND_NORMALIZE_DOCUMENT.value
+    elif detection_mode == "MRZ":
+        template = "ReadPassportAndId"
+    else:
+        template = EnumPresetTemplate.PT_READ_BARCODES.value  # Default
+    
+    try:
+        cvr.capture(image_path, template) # Trigger model loading the first time
+    except Exception as e:
+        pass  # Ignore first capture errors for model loading
 
     start_time = time.time()
-    result = cvr.capture(image_path, EnumPresetTemplate.PT_READ_BARCODES.value)
+    result = cvr.capture(image_path, template)
     processing_time = time.time() - start_time
 
-    if result.get_error_code() != EnumErrorCode.EC_OK:
-        return {{"success": False, "error": f"Capture error: {{result.get_error_code()}}"}}
-    
-    # Extract barcodes
-    barcodes = []
+    error_code = result.get_error_code()
     items = result.get_items()
+    
+    # Error -10005 often just means "no results found" for any detection mode
+    # This is not necessarily a failure, just empty results
+    if error_code != EnumErrorCode.EC_OK:
+        if error_code == -10005:
+            # No results found - return empty results but success
+            pass  # Continue with empty items list
+        else:
+            return {{"success": False, "error": f"Capture error: {{error_code}}", "detection_mode": detection_mode}}
+    
+    # Initialize result containers
+    barcodes = []
+    mrz_results = []
+    document_results = []
+    
+    # Process items based on detection mode  
     for item in items:
-        if item.get_type() == 2:  # Barcode item
+        item_type = item.get_type()
+        
+        if detection_mode == "Barcode" and item_type == 2:  # Barcode item (CRIT_BARCODE = 2)
             barcode_data = {{
                 "text": item.get_text(),
                 "format": item.get_format_string(),
@@ -1532,15 +1718,65 @@ def process_image(image_path):
                 barcode_data["points"] = []
             
             barcodes.append(barcode_data)
+            
+        elif detection_mode == "MRZ" and item_type == 4:  # Text line item (CRIT_TEXT_LINE = 4)
+            text = item.get_text()
+            mrz_data = {{
+                "text": text,
+                "parsed_info": {{}},  # Could be expanded to parse MRZ fields
+                "points": []
+            }}
+            
+            # Get location points
+            try:
+                location = item.get_location()
+                if location and hasattr(location, 'points'):
+                    mrz_data["points"] = [
+                        [int(location.points[0].x), int(location.points[0].y)],
+                        [int(location.points[1].x), int(location.points[1].y)],
+                        [int(location.points[2].x), int(location.points[2].y)],
+                        [int(location.points[3].x), int(location.points[3].y)]
+                    ]
+            except:
+                mrz_data["points"] = []
+            
+            mrz_results.append(mrz_data)
+            
+        elif detection_mode == "Document" and item_type == 16:  # CRIT_DESKEWED_IMAGE = 16
+            doc_data = {{
+                "points": [],
+                "confidence": 1.0  # Document detection doesn't usually provide confidence
+            }}
+            
+            # Get document boundary points using get_source_deskew_quad
+            try:
+                if hasattr(item, 'get_source_deskew_quad'):
+                    location = item.get_source_deskew_quad()
+                    if location and hasattr(location, 'points'):
+                        # Extract points similar to main.py reference code
+                        points = [(int(point.x), int(point.y)) for point in location.points]
+                        doc_data["points"] = points
+                    else:
+                        doc_data["points"] = []
+                else:
+                    doc_data["points"] = []
+            except Exception as e:
+                doc_data["points"] = []
+            
+            document_results.append(doc_data)
     
     return {{
         "success": True,
+        "detection_mode": detection_mode,
         "processing_time": processing_time,
-        "barcodes": barcodes
+        "barcodes": barcodes,
+        "mrz_results": mrz_results,
+        "document_results": document_results
     }}
 
 if __name__ == "__main__":
-    result = process_image(sys.argv[1])
+    detection_mode = sys.argv[2] if len(sys.argv) > 2 else "Barcode"
+    result = process_image(sys.argv[1], detection_mode)
     print(json.dumps(result))
 '''
             
@@ -1549,35 +1785,92 @@ if __name__ == "__main__":
             
             # Run processor with shorter timeout
             result = subprocess.run([
-                sdk_version.python_path, str(script_path), image_path
+                sdk_version.python_path, str(script_path), image_path, self.detection_mode
             ], capture_output=True, text=True, timeout=30)  # Reduced timeout
             
             # Clean up
             shutil.rmtree(temp_dir)
             
-            if result.returncode == 0:
+            # Debug output
+            if result.returncode != 0:
+                print(f"Subprocess failed with return code: {result.returncode}")
+                print(f"stdout: {result.stdout}")
+                print(f"stderr: {result.stderr}")
+                return ProcessingResult(
+                    detection_mode=self.detection_mode,
+                    processing_time=0.0,
+                    success=False,
+                    sdk_version=sdk_version.unique_id,
+                    error=f"Subprocess failed: {result.stderr}"
+                )
+            
+            if not result.stdout.strip():
+                print(f"Empty output from subprocess")
+                return ProcessingResult(
+                    detection_mode=self.detection_mode,
+                    processing_time=0.0,
+                    success=False,
+                    sdk_version=sdk_version.unique_id,
+                    error="No output from subprocess"
+                )
+            
+            try:
                 data = json.loads(result.stdout)
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                print(f"Raw output: '{result.stdout}'")
+                return ProcessingResult(
+                    detection_mode=self.detection_mode,
+                    processing_time=0.0,
+                    success=False,
+                    sdk_version=sdk_version.unique_id,
+                    error=f"JSON parse error: {str(e)}"
+                )
+            
+            if result.returncode == 0:
                 if data["success"]:
+                    # Parse barcodes
                     barcodes = [
                         BarcodeResult(
                             text=b["text"],
                             format=b["format"], 
                             confidence=b["confidence"],
                             points=b["points"]
-                        ) for b in data["barcodes"]
+                        ) for b in data.get("barcodes", [])
                     ]
+                    
+                    # Parse MRZ results
+                    mrz_results = [
+                        MRZResult(
+                            text=m["text"],
+                            parsed_info=m["parsed_info"],
+                            points=m["points"]
+                        ) for m in data.get("mrz_results", [])
+                    ]
+                    
+                    # Parse document results
+                    document_results = [
+                        DocumentResult(
+                            points=d["points"],
+                            confidence=d["confidence"]
+                        ) for d in data.get("document_results", [])
+                    ]
+                    
                     return ProcessingResult(
                         success=True,
                         sdk_version=sdk_version.version,
                         processing_time=data["processing_time"],
-                        barcodes=barcodes
+                        detection_mode=data.get("detection_mode", self.detection_mode),
+                        barcodes=barcodes,
+                        mrz_results=mrz_results,
+                        document_results=document_results
                     )
                 else:
                     return ProcessingResult(
                         success=False,
                         sdk_version=sdk_version.version,
                         processing_time=0.0,
-                        barcodes=[],
+                        detection_mode=data.get("detection_mode", self.detection_mode),
                         error=data.get("error", "Unknown error")
                     )
             else:
@@ -1585,7 +1878,7 @@ if __name__ == "__main__":
                     success=False,
                     sdk_version=sdk_version.version,
                     processing_time=0.0,
-                    barcodes=[],
+                    detection_mode=self.detection_mode,
                     error=f"Process failed: {result.stderr}"
                 )
                 
@@ -1599,7 +1892,7 @@ if __name__ == "__main__":
                 success=False,
                 sdk_version=sdk_version.version,
                 processing_time=0.0,
-                barcodes=[],
+                detection_mode=self.detection_mode,
                 error="Processing timeout"
             )
         except Exception as e:
@@ -1612,7 +1905,7 @@ if __name__ == "__main__":
                 success=False,
                 sdk_version=sdk_version.version,
                 processing_time=0.0,
-                barcodes=[],
+                detection_mode=self.detection_mode,
                 error=str(e)
             )
 
