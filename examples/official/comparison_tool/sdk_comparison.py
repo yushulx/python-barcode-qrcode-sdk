@@ -146,8 +146,7 @@ def load_image_and_draw_overlays(image_path: str, results_dict: Optional[Dict[st
         return pixmaps
         
     except Exception as e:
-        print(f"Error loading image with OpenCV: {e}")
-        # Fallback to QPixmap
+        # Fallback to QPixmap if OpenCV fails
         return {"image": QPixmap(image_path)}
 
 @dataclass
@@ -1254,16 +1253,14 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         """Handle drop events"""
         urls = event.mimeData().urls()
         new_files = []
-        folder_dropped = False
         
         for url in urls:
             path = url.toLocalFile()
             if os.path.isfile(path) and path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
                 new_files.append(path)
             elif os.path.isdir(path):
-                folder_dropped = True
                 # Add all images in directory
-                for ext in ['*.png', '*.jpg', '*.jpeg', '*.bmp', '*.tiff']:
+                for ext in ['*.png', '*.jpg', '*.jpeg', '.bmp', '*.tiff']:
                     new_files.extend(Path(path).glob(ext))
                     new_files.extend(Path(path).glob(ext.upper()))
 
@@ -1453,8 +1450,20 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
                 if len(self.results[image_path]) == len(self.sdk_versions):
                     self.update_single_image_display(image_path)
                 
-                total_barcodes = sum(len(result.barcodes) for result in self.results[image_path].values())
-                self.status_bar.showMessage(f"✅ Processing complete! Found {total_barcodes} total barcodes.")
+                # Count results based on detection mode
+                total_results = 0
+                result_type = "items"
+                if self.current_detection_mode == "Barcode":
+                    total_results = sum(len(result.barcodes) for result in self.results[image_path].values())
+                    result_type = "barcodes"
+                elif self.current_detection_mode == "MRZ":
+                    total_results = sum(len(result.mrz_results) for result in self.results[image_path].values())
+                    result_type = "MRZ results"
+                elif self.current_detection_mode == "Document":
+                    total_results = sum(len(result.document_results) for result in self.results[image_path].values())
+                    result_type = "documents"
+                
+                self.status_bar.showMessage(f"✅ Processing complete! Found {total_results} total {result_type}.")
         
         # Clean up thread
         if self.processing_thread:
@@ -1492,9 +1501,12 @@ class EnhancedDualSDKComparisonTool(QMainWindow):
         self.current_detection_mode = mode
         self.status_bar.showMessage(f"Detection mode changed to: {mode}")
         
-        # Clear existing results when mode changes as they're no longer valid
+        # Clear existing results and image files when mode changes as they're no longer valid
         self.results.clear()
         self.results_table.setRowCount(0)
+        self.image_files.clear()
+        self.file_list.clear()
+        self.new_files = []
         self.image_comparison.sdk1_scene.clear()
         self.image_comparison.sdk2_scene.clear()
         self.image_comparison.summary_label.setText(f"Detection mode: {mode} - Add images to begin comparison")
@@ -1791,11 +1803,7 @@ if __name__ == "__main__":
             # Clean up
             shutil.rmtree(temp_dir)
             
-            # Debug output
             if result.returncode != 0:
-                print(f"Subprocess failed with return code: {result.returncode}")
-                print(f"stdout: {result.stdout}")
-                print(f"stderr: {result.stderr}")
                 return ProcessingResult(
                     detection_mode=self.detection_mode,
                     processing_time=0.0,
@@ -1805,7 +1813,6 @@ if __name__ == "__main__":
                 )
             
             if not result.stdout.strip():
-                print(f"Empty output from subprocess")
                 return ProcessingResult(
                     detection_mode=self.detection_mode,
                     processing_time=0.0,
@@ -1817,8 +1824,6 @@ if __name__ == "__main__":
             try:
                 data = json.loads(result.stdout)
             except json.JSONDecodeError as e:
-                print(f"JSON decode error: {e}")
-                print(f"Raw output: '{result.stdout}'")
                 return ProcessingResult(
                     detection_mode=self.detection_mode,
                     processing_time=0.0,
