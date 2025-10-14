@@ -15,7 +15,7 @@ from design import Ui_MainWindow
 from barcode_manager import *
 import os
 import cv2
-from dbr import EnumBarcodeFormat, EnumBarcodeFormat_2
+import numpy as np
 
 from PySide6.QtCore import QObject, QThread, Signal, Qt
 import SnippingTool
@@ -112,8 +112,8 @@ class MainWindow(QMainWindow):
         self.ui.label.mousePressEvent = self.labelMousePressEvent
         self.ui.label.mouseReleaseEvent = self.labelMouseReleaseEvent
         self._pixmap = None
-        self.x = 0
-        self.y = 0
+        self.mouse_x = 0
+        self.mouse_y = 0
         self.endx = 0
         self.endy = 0
         self.clicked = False
@@ -121,7 +121,7 @@ class MainWindow(QMainWindow):
         self.worker = None
 
     def onSnippingCompleted(self, frame):
-        self.setWindowState(Qt.WindowMaximized)
+        self.setWindowState(Qt.WindowState.WindowMaximized)
         if frame is None:
             return 
 
@@ -129,11 +129,11 @@ class MainWindow(QMainWindow):
         self.showResults(frame, self._results)
 
     def snipArea(self):
-        self.setWindowState(Qt.WindowMinimized)
+        self.setWindowState(Qt.WindowState.WindowMinimized)
         self.snippingWidget.start()    
 
     def snipFull(self):
-        self.setWindowState(Qt.WindowMinimized)
+        self.setWindowState(Qt.WindowState.WindowMinimized)
         self.snippingWidget.fullscreen()    
 
     def dragEnterEvent(self, event):
@@ -152,19 +152,19 @@ class MainWindow(QMainWindow):
     # https://realpython.com/python-pyqt-qthread/
     def runLongTask(self):
         # Step 2: Create a QThread object
-        self.thread = QThread()
+        self._thread = QThread()
         # Step 3: Create a worker object
         self.worker = Worker(self._barcodeManager, self._cap)
         # Step 4: Move worker to the thread
-        self.worker.moveToThread(self.thread)
+        self.worker.moveToThread(self._thread)
         # Step 5: Connect signals and slots
-        self.thread.started.connect(self.worker.run)
-        self.worker.finished.connect(self.thread.quit)
+        self._thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self._thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
+        self._thread.finished.connect(self._thread.deleteLater)
         self.worker.progress.connect(self.reportProgress)
         # Step 6: Start the thread
-        self.thread.start()
+        self._thread.start()
 
     def paintEvent(self, event):
         if self._pixmap is not None:
@@ -179,24 +179,24 @@ class MainWindow(QMainWindow):
             # painter.drawRect(self.x, self.y - yshift / 2, self.endx - self.x, self.endy - self.y)
             # painter.end()
 
-    def labelMouseReleaseEvent(self, event):
+    def labelMouseReleaseEvent(self, ev):
         self.clicked = False
 
-    def labelMousePressEvent(self, event):
+    def labelMousePressEvent(self, ev):
         self.clicked = True
-        self.x = event.position().x()
-        self.y = event.position().y()
-        self.endx = self.x
-        self.endy = self.y
+        self.mouse_x = ev.position().x()
+        self.mouse_y = ev.position().y()
+        self.endx = self.mouse_x
+        self.endy = self.mouse_y
 
-    def labelMouseMoveEvent(self, event):
+    def labelMouseMoveEvent(self, ev):
         if self.clicked:
-            self.endx = event.position().x()
-            self.endy = event.position().y()
+            self.endx = ev.position().x()
+            self.endy = ev.position().y()
 
     def resetCoordinates(self):
-        self.endx = self.x
-        self.endy = self.y
+        self.endx = self.mouse_x
+        self.endy = self.mouse_y
 
     def openCamera(self):
         self.resetCoordinates()
@@ -233,7 +233,7 @@ class MainWindow(QMainWindow):
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.nextFrameUpdate)
-        self.timer.start(1000./24)
+        self.timer.start(int(1000./24))
 
     def stopCamera(self):
 
@@ -257,6 +257,9 @@ class MainWindow(QMainWindow):
         self._results = None
 
     def nextFrameUpdate(self):
+        if self._cap is None:
+            return
+            
         ret, frame = self._cap.read()
 
         if not ret:
@@ -308,7 +311,6 @@ class MainWindow(QMainWindow):
 
         # Get barcode types
         types = 0
-        types2 = 0
         if (self.ui.checkBox_code39.isChecked()):
             types |= EnumBarcodeFormat.BF_CODE_39
         if (self.ui.checkBox_code93.isChecked()):
@@ -344,12 +346,11 @@ class MainWindow(QMainWindow):
         if (self.ui.checkBox_patchcode.isChecked()):
             types |= EnumBarcodeFormat.BF_PATCHCODE
         if (self.ui.checkBox_dotcode.isChecked()):
-            types2 |= EnumBarcodeFormat_2.BF2_DOTCODE
+            types |= EnumBarcodeFormat.BF_DOTCODE
         if (self.ui.checkBox_postalcode.isChecked()):
-            types2 |= EnumBarcodeFormat_2.BF2_POSTALCODE
+            types |= EnumBarcodeFormat.BF_POSTALCODE
 
         self._barcodeManager.set_barcode_types(types)
-        self._barcodeManager.set_barcode_types_2(types2)
 
     def decodeFile(self, filename):
         self.resetCoordinates()
@@ -381,7 +382,7 @@ class MainWindow(QMainWindow):
 
     def openFolder(self):
         dir = QFileDialog.getExistingDirectory(self, 'Open Folder',
-                                               self._path, QFileDialog.ShowDirsOnly)
+                                               self._path, QFileDialog.Option.ShowDirsOnly)
         if dir == '':
             # self.showMessageBox('Open Folder...', "No folder selected")
             return
@@ -400,7 +401,7 @@ class MainWindow(QMainWindow):
         key = QInputDialog.getText(self, 'License', 'Enter license key')
         if key[1]:
             error = self._barcodeManager.set_license(key[0])
-            if error[0] != EnumErrorCode.DBR_OK:
+            if error[0] != EnumErrorCode.EC_OK:
                 self.showMessageBox('Error', error[1])
             else:
                 self.ui.statusbar.showMessage(
@@ -414,9 +415,12 @@ class MainWindow(QMainWindow):
             return
 
         filename = filename[0]
-        json = self._barcodeManager.get_template()
+        template_result = self._barcodeManager.get_template()
         with open(filename, 'w') as f:
-            f.write(json)
+            if isinstance(template_result, tuple) and len(template_result) >= 3:
+                f.write(template_result[1])  # Assuming the JSON is in the second element
+            else:
+                f.write(str(template_result))
 
         self.ui.statusbar.showMessage('File saved to ' + filename)
 
@@ -441,38 +445,65 @@ class MainWindow(QMainWindow):
             return pixmap
 
     def showResults(self, frame, results):
+        thickness = 2
+        color = (0, 255, 0)
         out = ''
         index = 0
 
         if results is not None and results[0] is not None:
-            if self.ui.checkBox_autostop.isChecked():
+            items_data = results[0]
+            hasResults = False
+            if isinstance(items_data, list):
+                
+                for item_data in items_data:
+                    hasResults = True
+                    out += "Index: " + str(index) + "\n"
+                    out += "Barcode format: " + item_data['format_string'] + '\n'
+                    out += "Barcode value: " + item_data['text'] + '\n'
+                    out += '-----------------------------------\n'
+                    index += 1
+
+                    points = item_data['points']
+                    pts = np.array(points, np.int32).reshape((-1, 1, 2))
+                    cv2.drawContours(frame, [pts], 0, (0, 255, 0), 2)
+                    cv2.putText(frame, item_data['text'], (points[0][0], points[0][1] - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, thickness)
+                    
+            else:
+                result = results[0]
+                items = result.get_items()
+                for item in items:
+                    hasResults = True
+                    location = item.get_location()
+                    x1 = location.points[0].x
+                    y1 = location.points[0].y
+                    x2 = location.points[1].x
+                    y2 = location.points[1].y
+                    x3 = location.points[2].x
+                    y3 = location.points[2].y
+                    x4 = location.points[3].x
+                    y4 = location.points[3].y
+
+                    out += "Index: " + str(index) + "\n"
+                    out += "Barcode format: " + item.get_format_string() + '\n'
+                    out += "Barcode value: " + item.get_text() + '\n'
+                    out += '-----------------------------------\n'
+                    index += 1
+
+                    pts = np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], np.int32).reshape((-1, 1, 2))
+                    cv2.drawContours(frame, [pts], 0, (0, 255, 0), 2)
+                    cv2.putText(frame, item.get_text(), (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, thickness)
+            
+            if hasResults and self.ui.checkBox_autostop.isChecked():
                 self.stopCamera()
 
-            thickness = 2
-            color = (0, 255, 0)
-            out = 'Elapsed time: ' + "{:.2f}".format(results[1]) + 'ms\n\n'
-            for result in results[0]:
-                points = result.localization_result.localization_points
-                out += "Index: " + str(index) + "\n"
-                out += "Barcode format: " + result.barcode_format_string + '\n'
-                out += "Barcode value: " + result.barcode_text + '\n'
-                out += "Bounding box: " + \
-                    str(points[0]) + ' ' + str(points[1]) + ' ' + \
-                    str(points[2]) + ' ' + str(points[3]) + '\n'
-                out += '-----------------------------------\n'
-                index += 1
-
-                cv2.line(frame, points[0], points[1], color, thickness)
-                cv2.line(frame, points[1], points[2], color, thickness)
-                cv2.line(frame, points[2], points[3], color, thickness)
-                cv2.line(frame, points[3], points[0], color, thickness)
-                cv2.putText(frame, result.barcode_text, points[0], cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255))
         else:
             out = 'No barcode found'
             
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image = QImage(
-            frame, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)
+            frame, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format.Format_RGB888)
         pixmap = QPixmap.fromImage(image)
         self._pixmap = self.resizeImage(pixmap)
         self.ui.label.setPixmap(self._pixmap)
@@ -492,9 +523,9 @@ class MainWindow(QMainWindow):
 
         msg = "Close the app?"
         reply = QMessageBox.question(self, 'Message',
-                                     msg, QMessageBox.Yes, QMessageBox.No)
+                                     msg, QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No)
 
-        if reply == QMessageBox.Yes:
+        if reply == QMessageBox.StandardButton.Yes:
             # self._painter.end()
             self.stopCamera()
 
@@ -507,10 +538,10 @@ def main():
     try:
         with open(sys.argv[1]) as f:
             license = f.read()
-            BarcodeReader.init_license(
+            LicenseManager.init_license(
                 license)
     except:
-        BarcodeReader.init_license(
+        LicenseManager.init_license(
             "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
 
     app = QApplication(sys.argv)

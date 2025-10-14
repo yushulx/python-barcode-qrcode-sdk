@@ -18,7 +18,7 @@ This is a cross-platform GUI barcode reader application built with `Python 3`, `
 - **Dynamsoft Barcode Reader**
 
     ```
-    python3 -m pip install dbr
+    python3 -m pip install dynamsoft-capture-vision-bundle
     ```
 
 - [Dynamsoft Barcode SDK License](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform)
