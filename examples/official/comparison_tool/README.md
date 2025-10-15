@@ -2,7 +2,16 @@
 
 This comprehensive comparison tool allows you to compare detection performance between different versions of the Dynamsoft Capture Vision SDK across multiple detection modes. The tool provides an intuitive graphical interface with side-by-side visual comparisons, detailed results analysis, and performance metrics for **Barcode**, **MRZ (Machine Readable Zone)**, and **Document** detection.
 
-https://github.com/user-attachments/assets/b69ab922-1cf4-4385-b61f-3988c1147296
+## Demo Video
+- Detect blurred 1D barcodes (Dataset: http://users.soe.ucsc.edu/~orazio/Data/Barcodes200909.zip)
+  
+   https://github.com/user-attachments/assets/d2f0a75d-6c56-4e7b-802f-6f2317976228
+
+- Localize and recognize MRZ (Dataset: http://l3i-share.univ-lr.fr/)
+
+  https://github.com/user-attachments/assets/7617ae99-4471-4b2c-a73d-b50943bb8ba9
+
+
 
 ## Features
 
