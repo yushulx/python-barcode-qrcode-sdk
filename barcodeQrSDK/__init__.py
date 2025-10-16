@@ -35,6 +35,8 @@ from dynamsoft_capture_vision_bundle import (
     BarcodeReaderModule
 )
 import time
+from typing import List, Tuple, Callable, Union, Optional, Any
+import numpy as np
 
 __version__ = BarcodeReaderModule.get_version()
 
@@ -55,7 +57,7 @@ class FrameFetcher(ImageSourceAdapter):
         """
         return True
 
-    def add_frame(self, imageData):
+    def add_frame(self, imageData: ImageData) -> None:
         """
         Adds a new image frame to the processing buffer.
         
@@ -74,7 +76,7 @@ class MyCapturedResultReceiver(CapturedResultReceiver):
     to BarcodeResult objects before passing to the user-defined listener.
     """
     
-    def __init__(self, listener):
+    def __init__(self, listener: Callable[[List['BarcodeResult']], None]) -> None:
         """
         Initialize the result receiver with a callback listener.
         
@@ -86,7 +88,7 @@ class MyCapturedResultReceiver(CapturedResultReceiver):
         super().__init__()
         self.listener = listener
     
-    def on_captured_result_received(self, result):
+    def on_captured_result_received(self, result: Any) -> None:
         """
         Called when barcode detection results are received.
         
@@ -97,7 +99,7 @@ class MyCapturedResultReceiver(CapturedResultReceiver):
             result: The captured result from the SDK containing detected items.
         """
         items = result.get_items()
-        output = []
+        output: List['BarcodeResult'] = []
         for item in items:
             barcode = BarcodeResult(item)
             output.append(barcode)
@@ -118,15 +120,15 @@ class BarcodeResult:
                                                 location as four corner points
     """
     
-    def __init__(self, item):
+    def __init__(self, item: Any) -> None:
         """
         Initialize a BarcodeResult from an SDK barcode item.
         
         Args:
             item: The barcode item from the SDK containing detection results.
         """
-        self.text = item.get_text()
-        self.format = item.get_format_string()
+        self.text: str = item.get_text()
+        self.format: str = item.get_format_string()
 
         # Extract location coordinates (four corner points)
         location = item.get_location()
@@ -139,14 +141,14 @@ class BarcodeResult:
         x4 = location.points[3].x
         y4 = location.points[3].y
 
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
-        self.x3 = x3
-        self.y3 = y3
-        self.x4 = x4
-        self.y4 = y4
+        self.x1: float = x1
+        self.y1: float = y1
+        self.x2: float = x2
+        self.y2: float = y2
+        self.x3: float = x3
+        self.y3: float = y3
+        self.x4: float = x4
+        self.y4: float = y4
 
 class BarcodeReader:
     """
@@ -163,7 +165,7 @@ class BarcodeReader:
             print(f"Found: {barcode.text} ({barcode.format})")
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the barcode reader with default settings.
         
@@ -173,12 +175,12 @@ class BarcodeReader:
         cvr_instance = CaptureVisionRouter()
         error_code, settings, error_message = cvr_instance.output_settings(EnumPresetTemplate.PT_READ_BARCODES.value)
         cvr_instance.init_settings(settings)
-        self.fetcher = FrameFetcher()
+        self.fetcher: FrameFetcher = FrameFetcher()
         cvr_instance.set_input(self.fetcher)
-        self.cvr_instance = cvr_instance
-        self.receiver = None
+        self.cvr_instance: CaptureVisionRouter = cvr_instance
+        self.receiver: Optional[MyCapturedResultReceiver] = None
     
-    def getParameters(self):
+    def getParameters(self) -> str:
         """
         Get the current detection parameters/settings.
         
@@ -189,7 +191,7 @@ class BarcodeReader:
         error_code, settings, error_message = self.cvr_instance.output_settings(EnumPresetTemplate.PT_READ_BARCODES.value)
         return settings
     
-    def setParameters(self, params):
+    def setParameters(self, params: str) -> Tuple[int, str]:
         """
         Set custom detection parameters/settings.
         
@@ -203,7 +205,7 @@ class BarcodeReader:
         error_code, error_message = self.cvr_instance.init_settings(params)
         return error_code, error_message
 
-    def addAsyncListener(self, listener):
+    def addAsyncListener(self, listener: Callable[[List[BarcodeResult]], None]) -> None:
         """
         Start asynchronous barcode detection with a callback listener.
         
@@ -226,7 +228,7 @@ class BarcodeReader:
         self.cvr_instance.add_result_receiver(self.receiver)
         error_code, error_message = self.cvr_instance.start_capturing('')
 
-    def clearAsyncListener(self):
+    def clearAsyncListener(self) -> None:
         """
         Stop asynchronous barcode detection and remove the listener.
         
@@ -238,7 +240,7 @@ class BarcodeReader:
             self.receiver = None
         self.cvr_instance.stop_capturing()
         
-    def decode(self, input):
+    def decode(self, input: Union[str, ImageData]) -> List[BarcodeResult]:
         """
         Core decode method that handles various input types.
         
@@ -252,7 +254,7 @@ class BarcodeReader:
         """
         result = self.cvr_instance.capture(input, '')
 
-        output = []
+        output: List[BarcodeResult] = []
 
         if result.get_error_code() != EnumErrorCode.EC_OK:
             print("Error:", result.get_error_code(),
@@ -265,7 +267,7 @@ class BarcodeReader:
         
         return output
     
-    def decodeFile(self, file_path: str):
+    def decodeFile(self, file_path: str) -> List[BarcodeResult]:
         """
         Decode barcodes from an image file.
         
@@ -283,7 +285,7 @@ class BarcodeReader:
         """
         return self.decode(file_path)
     
-    def decodeMat(self, mat):
+    def decodeMat(self, mat: np.ndarray) -> List[BarcodeResult]:
         """
         Decode barcodes from an OpenCV image matrix.
         
@@ -301,7 +303,7 @@ class BarcodeReader:
         """
         return self.decode(convertMat2ImageData(mat))
 
-    def decodeBytes(self, bytes, width, height, stride, pixel_format):
+    def decodeBytes(self, bytes: bytes, width: int, height: int, stride: int, pixel_format: EnumImagePixelFormat) -> List[BarcodeResult]:
         """
         Decode barcodes from raw image bytes.
         
@@ -325,7 +327,7 @@ class BarcodeReader:
         imagedata = ImageData(bytes, width, height, stride, pixel_format)
         return self.decode(imagedata)
 
-    def decodeMatAsync(self, mat):
+    def decodeMatAsync(self, mat: np.ndarray) -> None:
         """
         Add an OpenCV matrix to the async processing queue.
         
@@ -343,7 +345,7 @@ class BarcodeReader:
         """
         self.fetcher.add_frame(convertMat2ImageData(mat))
 
-    def decodeBytesAsync(self, bytes, width, height, stride, pixel_format):
+    def decodeBytesAsync(self, bytes: bytes, width: int, height: int, stride: int, pixel_format: EnumImagePixelFormat) -> None:
         """
         Add raw image bytes to the async processing queue.
         
@@ -361,7 +363,7 @@ class BarcodeReader:
         self.fetcher.add_frame(imagedata)
 
 
-def initLicense(licenseKey: str):
+def initLicense(licenseKey: str) -> Tuple[int, str]:
     """
     Initialize the Dynamsoft license for barcode detection.
     
@@ -382,7 +384,7 @@ def initLicense(licenseKey: str):
     errorCode, errorMsg = LicenseManager.init_license(licenseKey)
     return errorCode, errorMsg
 
-def createInstance():
+def createInstance() -> BarcodeReader:
     """
     Create a new BarcodeReader instance.
     
@@ -399,7 +401,7 @@ def createInstance():
     """
     return BarcodeReader()
 
-def convertMat2ImageData(mat):
+def convertMat2ImageData(mat: np.ndarray) -> ImageData:
     """
     Convert an OpenCV matrix to Dynamsoft ImageData format.
     
@@ -428,4 +430,31 @@ def convertMat2ImageData(mat):
 
     stride = width * channels
     imagedata = ImageData(mat.tobytes(), width, height, stride, pixel_format)
+    return imagedata
+
+def wrapImageData(width: int, height: int, stride: int, pixel_format: EnumImagePixelFormat, bytes: bytes) -> ImageData:
+    """
+    Create an ImageData object from raw image parameters.
+    
+    This utility function creates a properly formatted ImageData object
+    from raw image specifications and byte data.
+    
+    Args:
+        width (int): Image width in pixels
+        height (int): Image height in pixels
+        stride (int): Number of bytes per image row
+        pixel_format: EnumImagePixelFormat specifying the pixel layout
+        bytes: Raw image data as bytes
+    
+    Returns:
+        ImageData: Formatted image data ready for SDK processing.
+    
+    Example:
+        image_data = wrapImageData(
+            640, 480, 1920, 
+            EnumImagePixelFormat.IPF_RGB_888, 
+            raw_bytes
+        )
+    """
+    imagedata = ImageData(bytes, width, height, stride, pixel_format)
     return imagedata

@@ -1,5 +1,5 @@
 # Python 1D/2D Barcode SDK
-A Python wrapper for the [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/overview/), providing user-friendly APIs across **Windows**, **Linux**, and **macOS**. Compatible with desktop PCs, embedded devices, **Raspberry Pi**, and **Jetson Nano**.
+A Python wrapper for the [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.com/barcode-reader/overview/), providing simple and user-friendly APIs across **Windows**, **Linux**, and **macOS**. Compatible with desktop PCs, embedded devices, **Raspberry Pi**, and **Jetson Nano**.
 
 > **Note**: This is an unofficial, community-maintained wrapper. For official support and full feature coverage, consider the [Dynamsoft Capture Vision Bundle](https://pypi.org/project/dynamsoft-capture-vision-bundle/) on PyPI.
 
@@ -14,10 +14,11 @@ A Python wrapper for the [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.co
 | Feature | Community Wrapper | Official Dynamsoft SDK |
 |---------|------------------|------------------------|
 | **Support** | Community-driven | ✅ Official Dynamsoft support |
-| **Documentation** | Basic README | ✅ Comprehensive online docs |
-| **API Coverage** | Essential features | ✅ Complete API access |
-| **Updates** | May lag behind | ✅ Latest features first |
-| **Testing** | Limited environments | ✅ Thoroughly tested |
+| **Documentation** | Basic README and limited examples | ✅ Comprehensive online documentation |
+| **API Coverage** | Core features only | ✅ Full API coverage |
+| **Updates** | May lag behind | ✅ Always includes the latest features |
+| **Testing** | Tested in limited environments | ✅ Thoroughly tested |
+| **API Usage** | ✅ Simple and intuitive | More complex and verbose|
 
 ## 🔧 Installation
 
