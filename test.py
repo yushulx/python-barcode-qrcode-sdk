@@ -87,7 +87,7 @@ def callback(results):
 image = cv2.imread(file_path)
 reader.addAsyncListener(callback)
 
-for i in range(5):
+for i in range(2):
     print('decodeMatAsync: {}'.format(i))
     reader.decodeMatAsync(image)
 
@@ -95,4 +95,15 @@ for i in range(5):
 
 reader.clearAsyncListener()
 
+# asyncio test
+import asyncio
 
+async def async_decode_mat():
+    loop = asyncio.get_event_loop()
+    results = await loop.run_in_executor(None, reader.decodeMat, image)
+    print('Asyncio results:')
+    for result in results:
+        print(result.text)
+        print(result.format)
+
+asyncio.run(async_decode_mat())
