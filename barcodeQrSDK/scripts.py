@@ -45,7 +45,7 @@ def scanbarcode():
                 y4 = result.y4
                 
                 cv2.drawContours(image, [np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], dtype=np.int32)], 0, (0, 255, 0), 2)
-                cv2.putText(image, result.text, (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 2)
+                cv2.putText(image, result.text, (int(x1), int(y1)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 2)
             
             cv2.imshow("Scan Barcode & QR Code", image)
             cv2.waitKey(0)
