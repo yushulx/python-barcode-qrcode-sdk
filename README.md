@@ -71,7 +71,7 @@ results = reader.decodeFile("barcode_image.jpg")
 for barcode in results:
     print(f"Format: {barcode.format}")
     print(f"Text: {barcode.text}")
-    print(f"Location: ({barcode.x1}, {barcode.y1}) to ({barcode.x3}, {barcode.y3})")
+    print(f"Location: ({barcode.x1}, {barcode.y1}), ({barcode.x2}, {barcode.y2}), ({barcode.x3}, {barcode.y3}), ({barcode.x4}, {barcode.y4})")
 ```
 
 ### 🎥 Real-time Camera Processing
