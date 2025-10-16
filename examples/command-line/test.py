@@ -1,6 +1,9 @@
 import os
 import json
 import sys
+package_path = os.path.dirname(__file__) + '/../../'
+print(package_path)
+sys.path.append(package_path)
 import barcodeQrSDK
 
 # set license
@@ -11,7 +14,7 @@ reader = barcodeQrSDK.createInstance()
 
 def decodeFile(fileName):
     try:
-        results, elapsed_time = reader.decodeFile(fileName)
+        results = reader.decodeFile(fileName)
         for result in results:
             print("barcode format: " + result.format)
             print("barcode value: " + result.text)
@@ -30,16 +33,4 @@ if __name__ == "__main__":
     if not os.path.isfile(barcode_image):
         print("It is not a valid file.")
     else:
-        # Get default barcode params
-        params = reader.getParameters()
-        # Convert string to JSON object
-        json_obj = json.loads(params)
-        # Update JSON object
-        # DPM
-        json_obj['ImageParameter']['DPMCodeReadingModes'][0]['Mode'] = 'DPMCRM_GENERAL'
-        json_obj['ImageParameter']['LocalizationModes'][0]['Mode'] = 'LM_STATISTICS_MARKS'
-        # Convert JSON object to string
-        params = json.dumps(json_obj)
-        # Set parameters
-        ret = reader.setParameters(params)
         decodeFile(barcode_image)

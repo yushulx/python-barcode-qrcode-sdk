@@ -1,5 +1,6 @@
 import cv2
 import barcodeQrSDK
+from barcodeQrSDK import *
 from time import sleep
 
 file_path = "images/test.png"
@@ -20,8 +21,24 @@ ret = reader.setParameters(settings)
 print(ret)
 
 # decodeFile()
-results, elapsed_time = reader.decodeFile(file_path)
-print('Elapsed time: ' + str(elapsed_time) + 'ms')
+print('decodeFile()....')
+results = reader.decodeFile(file_path)
+for result in results:
+    print(result.format)
+    print(result.text)
+    print(result.x1)
+    print(result.y1)
+    print(result.x2)
+    print(result.y2)
+    print(result.x3)
+    print(result.y3)
+    print(result.x4)
+    print(result.y4)
+
+# decodeBytes()
+print('decodeBytes()....')
+image = cv2.imread(file_path)
+results = reader.decodeBytes(image.tobytes(), image.shape[1], image.shape[0], image.shape[2] * image.shape[1], EnumImagePixelFormat.IPF_BGR_888)
 for result in results:
     print(result.format)
     print(result.text)
@@ -35,9 +52,9 @@ for result in results:
     print(result.y4)
 
 # decodeMat()
+print('decodeMat()....')
 image = cv2.imread(file_path)
-results, elapsed_time = reader.decodeMat(image)
-print('Elapsed time: ' + str(elapsed_time) + 'ms')
+results = reader.decodeMat(image)
 for result in results:
     print(result.format)
     print(result.text)
@@ -51,12 +68,9 @@ for result in results:
     print(result.y4)
 
 # decodeMatAsync()
-print('')
-print('Test decodeMatAsync()')
+print('Test decodeMatAsync()....')
 
-
-def callback(results, elapsed_time):
-    print('Elapsed time: ' + str(elapsed_time) + 'ms')
+def callback(results):
     for result in results:
         print(result.format)
         print(result.text)
@@ -72,5 +86,13 @@ def callback(results, elapsed_time):
 
 image = cv2.imread(file_path)
 reader.addAsyncListener(callback)
-reader.decodeMatAsync(image)
-sleep(1)
+
+for i in range(5):
+    print('decodeMatAsync: {}'.format(i))
+    reader.decodeMatAsync(image)
+
+    sleep(1)
+
+reader.clearAsyncListener()
+
+

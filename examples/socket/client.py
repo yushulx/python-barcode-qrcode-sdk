@@ -1,6 +1,11 @@
 import cv2 as cv
 from simplesocket import SimpleSocket, DataType
 import json
+import os
+import sys
+
+package_path = os.path.join(os.path.dirname(__file__), '../../')
+sys.path.append(package_path)
 import barcodeQrSDK
 import numpy as np
 
@@ -18,16 +23,15 @@ if cap.isOpened() == False:
     print("Unable to read camera feed")
     exit()
 
-def callback(results, elapsed_time):
+def callback(results):
     global g_local_results
-    print("Local decoding time: " + str(elapsed_time) + " ms")
-    g_local_results = (results, elapsed_time)
+    g_local_results = results
 
 # Initialize Dynamsoft Barcode Reader
 barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
 reader = barcodeQrSDK.createInstance()
 print(barcodeQrSDK.__version__)
-reader.addAsyncListener(callback)
+# reader.addAsyncListener(callback)
     
 def readCb(data_type, data):
     global isDisconnected, g_remote_results, isReady
@@ -40,7 +44,7 @@ def readCb(data_type, data):
         
     if data_type == DataType.JSON:
         obj = json.loads(data)
-        g_remote_results = (obj['results'], obj['time'])
+        g_remote_results = obj['results']
         isReady = True
     
 # Data for sending
@@ -66,9 +70,9 @@ def run():
         rval, frame = cap.read()
         
         
-        if frame is not None:
-            # Decode the frame
-            reader.decodeMatAsync(frame)
+        # if frame is not None:
+        #     # Decode the frame
+        #     reader.decodeMatAsync(frame)
                 
         # Send data to server
         if isReady:
@@ -77,25 +81,23 @@ def run():
             msgQueue.append((DataType.WEBP, webp.tobytes()))
                 
         # Show local and remote results
-        # if g_local_results != None:
-        #     for result in g_local_results[0]:
-        #         text = result.text
-        #         x1 = result.x1
-        #         y1 = result.y1
-        #         x2 = result.x2
-        #         y2 = result.y2
-        #         x3 = result.x3
-        #         y3 = result.y3
-        #         x4 = result.x4
-        #         y4 = result.y4
-        #         cv.putText(frame, text, (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-        #         cv.drawContours(frame, [np.int0([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
+        if g_local_results != None:
+            for result in g_local_results:
+                text = result.text
+                x1 = result.x1
+                y1 = result.y1
+                x2 = result.x2
+                y2 = result.y2
+                x3 = result.x3
+                y3 = result.y3
+                x4 = result.x4
+                y4 = result.y4
+                cv.putText(frame, text, (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                cv.drawContours(frame, [np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], dtype=np.int32)], 0, (0, 255, 0), 2)
             
-        #     cv.putText(frame, "Local decoding time: " + str(g_local_results[1]) + " ms", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
         if g_remote_results != None:
-            print("Remote decoding time: " + str(int(g_remote_results[1])) + " ms")
-            for result in g_remote_results[0]:
+            for result in g_remote_results:
                 text = result['text']
                 x1 = result['x1']
                 y1 = result['y1']
@@ -106,9 +108,8 @@ def run():
                 x4 = result['x4']
                 y4 = result['y4']
                 cv.putText(frame, text, (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                cv.drawContours(frame, [np.int0([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
+                cv.drawContours(frame, [np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], dtype=np.int32)], 0, (0, 255, 0), 2)
             
-            cv.putText(frame, "Remote decoding time: " + str(int(g_remote_results[1])) + " ms", (10, 60), cv.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
             
         cv.imshow('client', frame)
         if cv.waitKey(10) == 27:

@@ -2,15 +2,20 @@ import cv2 as cv
 import numpy as np
 from simplesocket import SimpleSocket, DataType
 import json
+import os
+import sys
+
+package_path = os.path.join(os.path.dirname(__file__), '../../')
+sys.path.append(package_path)
 import barcodeQrSDK
-    
+
 g_results = None
 isDisconnected = False
 msgQueue = []
 
-def callback(results, elpased_time):
-    global g_results
-    g_results = (results, elpased_time)
+# def callback(results, elpased_time):
+#     global g_results
+#     g_results = (results, elpased_time)
     
 # Initialize Dynamsoft Barcode Reader
 barcodeQrSDK.initLicense("DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
@@ -39,13 +44,12 @@ def readCb(data_type, data):
             frame = cv.imdecode(np.frombuffer(data, np.uint8), cv.IMREAD_COLOR)
             
             if frame is not None:
-                # reader.decodeMatAsync(frame)
-                results, elpased_time = reader.decodeMat(frame)
-                g_results = (results, elpased_time)
+                results = reader.decodeMat(frame)
+                g_results = results
                 
             if g_results != None:
-                jsonData = {'results': [], 'time': g_results[1]}
-                for result in g_results[0]:
+                jsonData = {'results': []}
+                for result in g_results:
                     format = result.format
                     text = result.text
                     x1 = result.x1
@@ -62,15 +66,14 @@ def readCb(data_type, data):
                     # cv.putText(frame, text, (x1, y1), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                     # cv.drawContours(frame, [np.int0([(x1, y1), (x2, y2), (x3, y3), (x4, y4)])], 0, (0, 255, 0), 2)
                 
-                # print("Elapsed time: " + str(int(g_results[1])) + " ms")
                 msgQueue.append((DataType.JSON, json.dumps(jsonData).encode('utf-8')))
-            #     cv.putText(frame, "Elapsed time: " + str(g_results[1]) + " ms", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                     
             # cv.imshow('server', frame)
             # if cv.waitKey(10) == 27:
             #     isDisconnected = True
         except Exception as e:
             isDisconnected = True
+            print(e)
     
 # Data for sending
 def writeCb():

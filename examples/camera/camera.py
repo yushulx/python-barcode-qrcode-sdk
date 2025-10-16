@@ -1,5 +1,11 @@
+import os
 import cv2
+import sys
+package_path = os.path.dirname(__file__) + '/../../'
+print(package_path)
+sys.path.append(package_path)
 import barcodeQrSDK
+from barcodeQrSDK import *
 import time
 import numpy as np
 from multiprocessing.pool import ThreadPool
@@ -13,12 +19,12 @@ reader = barcodeQrSDK.createInstance()
 
 def process_frame(frame):
     try:
-        results, elapsed_time = reader.decodeMat(frame)
+        results = reader.decodeMat(frame)
     except Exception as e:
         print(e)
         return (None, 0)
     
-    return results, elapsed_time
+    return results
 
 def get_time():
     localtime = time.localtime()
@@ -42,9 +48,8 @@ def read_barcode():
     while True:
         rval, frame = vc.read()
         while len(barcodeTasks) > 0 and barcodeTasks[0].ready():
-            results, elapsed_time = barcodeTasks.popleft().get()
+            results = barcodeTasks.popleft().get()
             if results != None:
-                cv2.putText(frame, 'Elapsed time: ' + str(elapsed_time) + 'ms', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 for result in results:
                     print("Type: " + result.format)
                     print("Value: " + result.text + "\n")

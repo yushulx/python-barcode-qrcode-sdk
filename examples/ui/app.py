@@ -1,7 +1,6 @@
 
 from tkinter import *
 import os
-import json
 import sys
 
 package_path = os.path.join(os.path.dirname(__file__), '../../')
@@ -63,7 +62,7 @@ def showResults(results, barcode_image):
 
 def decodeFile(fileName):
     try:
-        results, elapsed_time = reader.decodeFile(fileName)
+        results = reader.decodeFile(fileName)
         return results
     except Exception as err:
         print(err)
@@ -73,17 +72,6 @@ def decodeFile(fileName):
 if __name__ == "__main__":
     import sys
     barcode_image = "../../images/test.png"
-    params = reader.getParameters()
-    # Convert string to JSON object
-    json_obj = json.loads(params)
-    # Update JSON object
-    # DPM
-    json_obj['ImageParameter']['DPMCodeReadingModes'][0]['Mode'] = 'DPMCRM_GENERAL'
-    json_obj['ImageParameter']['LocalizationModes'][0]['Mode'] = 'LM_STATISTICS_MARKS'
-    # Convert JSON object to string
-    params = json.dumps(json_obj)
-    # Set parameters
-    ret = reader.setParameters(params)
     results = decodeFile(barcode_image)
     if results is not None:
         showResults(results, barcode_image)

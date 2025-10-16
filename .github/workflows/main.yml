@@ -3,61 +3,54 @@ name: Build and upload to PyPI
 on: [push, pull_request]
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-        python-version: ['3.10']
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}       
-
-      - name: Run test.py in develop mode
-        run: |
-          python -m pip install opencv-python setuptools
-          python setup_setuptools.py develop
-          python --version
-          python test.py
-
-      - name: Set up QEMU
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.6.1
-        env:
-          CIBW_BUILD: "cp39-*"
-          CIBW_ARCHS_LINUX: auto, aarch64 
-      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
-          path: ./wheelhouse/*.whl
-          
-  build_sdist:
-    name: Build source distribution
+  build:
+    name: Build sdist + wheel (pure Python)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Build sdist
-        run: pipx run build --sdist
-
-      - uses: actions/upload-artifact@v4
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v5
         with:
-          path: dist/*.tar.gz
+          python-version: '3.12'
+          cache: pip
+      
+      - name: Run test.py 
+        run: |
+          python -m pip install opencv-python dynamsoft-capture-vision-bundle
+          python test.py
+
+      - name: Install build tooling
+        run: |
+          python -m pip install -U pip build twine
+
+      - name: Build distributions
+        run: |
+          python -m build  # creates dist/*.whl and dist/*.tar.gz
+
+      - name: Check metadata
+        run: |
+          python -m twine check dist/*
+
+      - name: Ensure universal wheel for pure Python
+        shell: bash
+        run: |
+          set -e
+          WHEEL="$(ls dist/*.whl | head -n1)"
+          echo "Built wheel: $WHEEL"
+          # Expect *-py3-none-any.whl for pure-Python universal wheels
+          if [[ "$WHEEL" != *"-py3-none-any.whl" ]]; then
+            echo "::warning::Wheel is not tagged 'py3-none-any'. Verify package is pure Python or build config."
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
           
   upload_pypi:
-    needs: [build_wheels, build_sdist]
+    needs: build
     runs-on: ubuntu-latest
     # upload to PyPI on every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -66,7 +59,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          name: dist
           path: dist
 
       - uses: pypa/gh-action-pypi-publish@v1.4.2

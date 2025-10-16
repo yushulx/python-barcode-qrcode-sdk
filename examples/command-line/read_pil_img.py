@@ -1,7 +1,11 @@
 import os
 import json
 import sys
+package_path = os.path.dirname(__file__) + '/../../'
+print(package_path)
+sys.path.append(package_path)
 import barcodeQrSDK
+from barcodeQrSDK import *
 import io
 from PIL import Image
 
@@ -16,7 +20,7 @@ with Image.open("test.png") as im:
     # print(dir(im))
 
     try:
-        results, elapsed_time = reader.decodeBytes(im.tobytes(), im.width, im.height, im.width * 3, barcodeQrSDK.ImagePixelFormat.IPF_RGB_888)
+        results = reader.decodeBytes(im.tobytes(), im.width, im.height, im.width * 3, EnumImagePixelFormat.IPF_BGR_888)
         for result in results:
             print("barcode format: " + result.format)
             print("barcode value: " + result.text)
