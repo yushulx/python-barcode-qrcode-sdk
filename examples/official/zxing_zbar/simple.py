@@ -153,8 +153,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--image", type=str,
                     help="path to input image")
-    ap.add_argument("-d", "--directory", type=str,
-                    help="directory of image folder")
+    ap.add_argument("-d", "--directory", type=str, default="existing_dataset",
+                    help="directory of image folder (default: existing_dataset)")
     args = vars(ap.parse_args())
 
     image = args["image"]
@@ -233,7 +233,7 @@ def main():
 
         cv2.waitKey(0)
 
-    if directory != None:
+    elif directory != None:
         dataset(directory, cvr_instance=cvr_instance)
 
 

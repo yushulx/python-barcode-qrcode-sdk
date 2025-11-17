@@ -1,5 +1,27 @@
-dynamsoft-capture-vision-bundle
-pyzbar
-zxing-cpp
 openpyxl
-opencv-python
+
+# Barcode Recognition and Benchmarking Requirements
+numpy>=1.21.0
+opencv-python>=4.5.0
+Pillow>=8.0.0
+matplotlib>=3.3.0
+seaborn>=0.11.0
+pandas>=1.3.0
+scikit-image>=0.18.0
+qrcode[pil]>=7.3.0
+pyzbar>=0.1.9
+zxing-cpp>=2.0.0
+python-barcode>=0.14.0
+reportlab>=3.5.0
+openpyxl>=3.0.0
+
+# Optional: If you have access to commercial libraries
+# Dynamsoft Barcode Reader SDK (requires license)
+dynamsoft-capture-vision-bundle>=3.2.1000
+
+# Development and Testing
+pytest>=6.0.0
+pytest-benchmark>=3.4.0
+black>=21.0.0
+flake8>=3.9.0
+
