@@ -1,0 +1,36 @@
+{
+  "test_id": "challenging_036",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_036.png",
+  "barcode_data": [
+    "CHALLENGE00036"
+  ],
+  "barcode_types": [
+    "CODE128"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "hard",
+  "degradations": {
+    "background_clutter": {
+      "blend_alpha": 0.18
+    },
+    "gaussian_blur": {
+      "kernel_size": 7
+    },
+    "occlusion": {
+      "rect": [
+        333,
+        399,
+        82,
+        33
+      ],
+      "color": 94
+    }
+  },
+  "degradations_list": [
+    "background_clutter",
+    "gaussian_blur",
+    "occlusion"
+  ]
+}

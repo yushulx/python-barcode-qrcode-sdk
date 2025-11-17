@@ -1,0 +1,27 @@
+{
+  "test_id": "challenging_007",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_007.png",
+  "barcode_data": [
+    "CHAL0007"
+  ],
+  "barcode_types": [
+    "CODE39"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "hard",
+  "degradations": {
+    "shadows": {
+      "type": "linear",
+      "darkness": 0.71
+    },
+    "reflections": {
+      "num_spots": 2
+    }
+  },
+  "degradations_list": [
+    "shadows",
+    "reflections"
+  ]
+}

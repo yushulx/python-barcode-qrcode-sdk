@@ -1,0 +1,23 @@
+{
+  "test_id": "multiple_057",
+  "image_path": "generated_dataset\\multiple_barcodes\\multiple_057_count5.png",
+  "barcode_data": [
+    "MULTI05700",
+    "MULTI5701",
+    "300000005702",
+    "3005703",
+    "https://example.com/multi/057/04"
+  ],
+  "barcode_types": [
+    "CODE128",
+    "CODE39",
+    "EAN13",
+    "EAN8",
+    "QR_CODE"
+  ],
+  "rotation_angle": 0,
+  "test_type": "multiple",
+  "difficulty": "hard",
+  "barcode_count": 5,
+  "focus_area": "multiple_barcode_performance"
+}

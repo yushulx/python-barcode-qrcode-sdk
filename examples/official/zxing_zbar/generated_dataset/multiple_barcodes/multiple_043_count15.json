@@ -1,0 +1,43 @@
+{
+  "test_id": "multiple_043",
+  "image_path": "generated_dataset\\multiple_barcodes\\multiple_043_count15.png",
+  "barcode_data": [
+    "MULTI04300",
+    "MULTI4301",
+    "300000004302",
+    "3004303",
+    "https://example.com/multi/043/04",
+    "MULTI04305",
+    "MULTI4306",
+    "300000004307",
+    "3004308",
+    "https://example.com/multi/043/09",
+    "MULTI04310",
+    "MULTI4311",
+    "300000004312",
+    "3004313",
+    "https://example.com/multi/043/14"
+  ],
+  "barcode_types": [
+    "CODE128",
+    "CODE39",
+    "EAN13",
+    "EAN8",
+    "QR_CODE",
+    "CODE128",
+    "CODE39",
+    "EAN13",
+    "EAN8",
+    "QR_CODE",
+    "CODE128",
+    "CODE39",
+    "EAN13",
+    "EAN8",
+    "QR_CODE"
+  ],
+  "rotation_angle": 0,
+  "test_type": "multiple",
+  "difficulty": "hard",
+  "barcode_count": 15,
+  "focus_area": "multiple_barcode_performance"
+}

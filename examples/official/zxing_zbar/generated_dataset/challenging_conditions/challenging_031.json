@@ -1,0 +1,31 @@
+{
+  "test_id": "challenging_031",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_031.png",
+  "barcode_data": [
+    "CHAL0031"
+  ],
+  "barcode_types": [
+    "CODE39"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "extreme",
+  "degradations": {
+    "reflections": {
+      "num_spots": 1
+    },
+    "partial_cutoff": {
+      "side": "bottom",
+      "fraction": 0.132
+    },
+    "high_brightness": {
+      "beta": 40.66
+    }
+  },
+  "degradations_list": [
+    "reflections",
+    "partial_cutoff",
+    "high_brightness"
+  ]
+}

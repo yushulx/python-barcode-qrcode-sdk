@@ -1,0 +1,17 @@
+{
+  "test_id": "multiple_000",
+  "image_path": "generated_dataset\\multiple_barcodes\\multiple_000_count2.png",
+  "barcode_data": [
+    "MULTI00000",
+    "MULTI0001"
+  ],
+  "barcode_types": [
+    "CODE128",
+    "CODE39"
+  ],
+  "rotation_angle": 0,
+  "test_type": "multiple",
+  "difficulty": "hard",
+  "barcode_count": 2,
+  "focus_area": "multiple_barcode_performance"
+}

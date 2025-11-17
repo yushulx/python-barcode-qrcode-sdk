@@ -1,0 +1,14 @@
+{
+  "test_id": "single_159",
+  "image_path": "generated_dataset\\single_barcode\\single_159_EAN8.png",
+  "barcode_data": [
+    "1234726"
+  ],
+  "barcode_types": [
+    "EAN8"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "single",
+  "difficulty": "easy"
+}

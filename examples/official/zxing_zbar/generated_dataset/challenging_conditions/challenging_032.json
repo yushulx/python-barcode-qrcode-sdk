@@ -1,0 +1,41 @@
+{
+  "test_id": "challenging_032",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_032.png",
+  "barcode_data": [
+    "9000000000032"
+  ],
+  "barcode_types": [
+    "EAN13"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "extreme",
+  "degradations": {
+    "color_inversion": {
+      "inverted": true
+    },
+    "background_clutter": {
+      "blend_alpha": 0.37
+    },
+    "high_brightness": {
+      "beta": 47.93
+    },
+    "channel_dropout": {
+      "dropped_channels": [
+        0
+      ]
+    },
+    "torn_edges": {
+      "edge": "top",
+      "tear_depth": 45
+    }
+  },
+  "degradations_list": [
+    "color_inversion",
+    "background_clutter",
+    "high_brightness",
+    "channel_dropout",
+    "torn_edges"
+  ]
+}

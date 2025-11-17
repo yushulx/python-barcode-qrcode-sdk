@@ -1,0 +1,26 @@
+{
+  "test_id": "challenging_015",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_015.png",
+  "barcode_data": [
+    "90000015"
+  ],
+  "barcode_types": [
+    "EAN8"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "hard",
+  "degradations": {
+    "high_brightness": {
+      "beta": 30.97
+    },
+    "salt_pepper_noise": {
+      "amount": 0.013
+    }
+  },
+  "degradations_list": [
+    "high_brightness",
+    "salt_pepper_noise"
+  ]
+}

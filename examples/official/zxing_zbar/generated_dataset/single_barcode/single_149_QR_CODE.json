@@ -1,0 +1,14 @@
+{
+  "test_id": "single_149",
+  "image_path": "generated_dataset\\single_barcode\\single_149_QR_CODE.png",
+  "barcode_data": [
+    "https://example.com/qr/000149"
+  ],
+  "barcode_types": [
+    "QR_CODE"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "single",
+  "difficulty": "easy"
+}

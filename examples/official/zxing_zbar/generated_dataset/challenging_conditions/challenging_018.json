@@ -1,0 +1,31 @@
+{
+  "test_id": "challenging_018",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_018.png",
+  "barcode_data": [
+    "CHALLENGE00018"
+  ],
+  "barcode_types": [
+    "CODE128"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "hard",
+  "degradations": {
+    "gaussian_noise": {
+      "std": 13.33
+    },
+    "high_brightness": {
+      "beta": 38.53
+    },
+    "shadows": {
+      "type": "radial",
+      "darkness": 0.72
+    }
+  },
+  "degradations_list": [
+    "gaussian_noise",
+    "high_brightness",
+    "shadows"
+  ]
+}

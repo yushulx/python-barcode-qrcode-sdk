@@ -1,0 +1,30 @@
+{
+  "test_id": "challenging_034",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_034.png",
+  "barcode_data": [
+    "90000000000034"
+  ],
+  "barcode_types": [
+    "ITF"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "hard",
+  "degradations": {
+    "low_resolution": {
+      "scale_down": 0.68
+    },
+    "gaussian_blur": {
+      "kernel_size": 5
+    },
+    "reflections": {
+      "num_spots": 2
+    }
+  },
+  "degradations_list": [
+    "low_resolution",
+    "gaussian_blur",
+    "reflections"
+  ]
+}

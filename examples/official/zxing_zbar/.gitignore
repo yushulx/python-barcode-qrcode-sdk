@@ -27,13 +27,6 @@ env/
 ENV/
 .venv
 
-# Test data and results
-test_data/
-results/
-test_results/
-test_results_fixed/
-generated_dataset/
-
 # IDE
 .vscode/
 .idea/

@@ -1,0 +1,15 @@
+{
+  "test_id": "angled_074",
+  "image_path": "generated_dataset\\angled_barcodes\\angled_074_angle75.png",
+  "barcode_data": [
+    "200000000074"
+  ],
+  "barcode_types": [
+    "EAN13"
+  ],
+  "rotation_angle": 75,
+  "barcode_count": 1,
+  "test_type": "angled",
+  "difficulty": "medium",
+  "focus_area": "angled_barcode_performance"
+}

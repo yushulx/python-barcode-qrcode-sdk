@@ -1,0 +1,36 @@
+{
+  "test_id": "challenging_004",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_004.png",
+  "barcode_data": [
+    "90000000000004"
+  ],
+  "barcode_types": [
+    "ITF"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "extreme",
+  "degradations": {
+    "partial_cutoff": {
+      "side": "top",
+      "fraction": 0.144
+    },
+    "gaussian_noise": {
+      "std": 24.5
+    },
+    "low_contrast": {
+      "alpha": 0.62,
+      "beta": -14.23
+    },
+    "perspective_warp": {
+      "distortion": true
+    }
+  },
+  "degradations_list": [
+    "partial_cutoff",
+    "gaussian_noise",
+    "low_contrast",
+    "perspective_warp"
+  ]
+}

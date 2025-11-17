@@ -1,0 +1,32 @@
+{
+  "test_id": "challenging_033",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_033.png",
+  "barcode_data": [
+    "90000033"
+  ],
+  "barcode_types": [
+    "EAN8"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "hard",
+  "degradations": {
+    "occlusion": {
+      "rect": [
+        132,
+        367,
+        52,
+        50
+      ],
+      "color": 176
+    },
+    "gaussian_noise": {
+      "std": 6.21
+    }
+  },
+  "degradations_list": [
+    "occlusion",
+    "gaussian_noise"
+  ]
+}

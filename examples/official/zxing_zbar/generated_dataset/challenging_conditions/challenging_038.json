@@ -1,0 +1,32 @@
+{
+  "test_id": "challenging_038",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_038.png",
+  "barcode_data": [
+    "9000000000038"
+  ],
+  "barcode_types": [
+    "EAN13"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "hard",
+  "degradations": {
+    "perspective_warp": {
+      "distortion": true
+    },
+    "low_contrast": {
+      "alpha": 0.71,
+      "beta": 7.46
+    },
+    "torn_edges": {
+      "edge": "bottom",
+      "tear_depth": 26
+    }
+  },
+  "degradations_list": [
+    "perspective_warp",
+    "low_contrast",
+    "torn_edges"
+  ]
+}

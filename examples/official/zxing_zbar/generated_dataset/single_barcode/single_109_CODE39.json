@@ -1,0 +1,14 @@
+{
+  "test_id": "single_109",
+  "image_path": "generated_dataset\\single_barcode\\single_109_CODE39.png",
+  "barcode_data": [
+    "CODE0109"
+  ],
+  "barcode_types": [
+    "CODE39"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "single",
+  "difficulty": "easy"
+}

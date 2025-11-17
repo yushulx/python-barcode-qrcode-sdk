@@ -1,0 +1,14 @@
+{
+  "test_id": "single_002",
+  "image_path": "generated_dataset\\single_barcode\\single_002_EAN13.png",
+  "barcode_data": [
+    "123456789014"
+  ],
+  "barcode_types": [
+    "EAN13"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "single",
+  "difficulty": "easy"
+}

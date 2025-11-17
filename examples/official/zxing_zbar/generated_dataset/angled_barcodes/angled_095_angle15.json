@@ -1,0 +1,15 @@
+{
+  "test_id": "angled_095",
+  "image_path": "generated_dataset\\angled_barcodes\\angled_095_angle15.png",
+  "barcode_data": [
+    "https://example.com/angled/15/0095"
+  ],
+  "barcode_types": [
+    "QR_CODE"
+  ],
+  "rotation_angle": 15,
+  "barcode_count": 1,
+  "test_type": "angled",
+  "difficulty": "medium",
+  "focus_area": "angled_barcode_performance"
+}

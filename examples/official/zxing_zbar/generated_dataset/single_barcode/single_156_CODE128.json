@@ -1,0 +1,14 @@
+{
+  "test_id": "single_156",
+  "image_path": "generated_dataset\\single_barcode\\single_156_CODE128.png",
+  "barcode_data": [
+    "BARCODE000156"
+  ],
+  "barcode_types": [
+    "CODE128"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "single",
+  "difficulty": "easy"
+}

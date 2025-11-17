@@ -1,0 +1,38 @@
+{
+  "test_id": "challenging_035",
+  "image_path": "generated_dataset\\challenging_conditions\\challenging_035.png",
+  "barcode_data": [
+    "https://example.com/challenging/00035"
+  ],
+  "barcode_types": [
+    "QR_CODE"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "challenging",
+  "difficulty": "hard",
+  "degradations": {
+    "channel_dropout": {
+      "dropped_channels": [
+        0
+      ]
+    },
+    "low_resolution": {
+      "scale_down": 0.5
+    },
+    "occlusion": {
+      "rect": [
+        278,
+        351,
+        48,
+        85
+      ],
+      "color": 201
+    }
+  },
+  "degradations_list": [
+    "channel_dropout",
+    "low_resolution",
+    "occlusion"
+  ]
+}

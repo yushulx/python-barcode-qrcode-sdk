@@ -1,0 +1,14 @@
+{
+  "test_id": "single_124",
+  "image_path": "generated_dataset\\single_barcode\\single_124_ITF.png",
+  "barcode_data": [
+    "12345678901358"
+  ],
+  "barcode_types": [
+    "ITF"
+  ],
+  "rotation_angle": 0,
+  "barcode_count": 1,
+  "test_type": "single",
+  "difficulty": "easy"
+}
