@@ -53,9 +53,6 @@ Thumbs.db
 *.bak
 *.old
 
-# Configuration (keep template)
-config/benchmark_config.json
-
 # Deprecated files
 scandit-*.txt
 test_fix.py

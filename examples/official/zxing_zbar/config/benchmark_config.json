@@ -1,0 +1,113 @@
+{
+    "benchmark_settings": {
+        "num_iterations": 100,
+        "warmup_iterations": 10,
+        "output_formats": [
+            "json",
+            "csv",
+            "html"
+        ],
+        "save_intermediate_results": true,
+        "enable_gpu_acceleration": false
+    },
+    "test_image_settings": {
+        "image_sizes": [
+            {
+                "width": 800,
+                "height": 600
+            },
+            {
+                "width": 1920,
+                "height": 1080
+            },
+            {
+                "width": 3840,
+                "height": 2160
+            }
+        ],
+        "dpi": 300,
+        "format": "PNG",
+        "rotation_angles": [
+            0,
+            15,
+            30,
+            45,
+            60,
+            75,
+            90
+        ],
+        "noise_levels": [
+            0,
+            5,
+            10,
+            15,
+            20
+        ],
+        "multiple_barcode_counts": [
+            2,
+            5,
+            10,
+            20
+        ]
+    },
+    "barcode_types": {
+        "supported_1d": [
+            "CODE_128",
+            "CODE_39",
+            "EAN_13",
+            "EAN_8",
+            "UPC_A",
+            "UPC_E",
+            "CODABAR",
+            "ITF"
+        ],
+        "supported_2d": [
+            "QR_CODE",
+            "DATA_MATRIX",
+            "PDF_417",
+            "AZTEC"
+        ]
+    },
+    "libraries": {
+        "zxing_cpp": {
+            "enabled": true,
+            "options": {
+                "try_harder": true,
+                "try_rotate": true
+            }
+        },
+        "pyzbar": {
+            "enabled": true,
+            "options": {
+                "decode_symbologies": [
+                    "QR_CODE",
+                    "CODE_128",
+                    "EAN_13",
+                    "CODE_39",
+                    "EAN_8",
+                    "ITF"
+                ]
+            }
+        },
+        "dynamsoft": {
+            "enabled": true,
+            "license": "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==",
+            "options": {
+                "try_harder": true,
+                "enable_inverse_detection": true,
+                "enable_quiet_zone_detection": true
+            }
+        }
+    },
+    "metrics": {
+        "track_performance": true,
+        "track_accuracy": true,
+        "track_success_rate": true
+    },
+    "output": {
+        "results_directory": "results/",
+        "test_images_directory": "test_data/",
+        "report_filename": "benchmark_report.html",
+        "detailed_results_filename": "detailed_results.json"
+    }
+}
