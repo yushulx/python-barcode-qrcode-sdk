@@ -4,7 +4,7 @@ A comprehensive experiment testing multiple AI coding agents' ability to generat
 
 ## Project Overview
 
-This project documents an experiment comparing six major AI coding agents using a single prompt:
+This project documents an experiment comparing five major AI coding agents using a single prompt:
 
 > **"Create a command line barcode scanner in Python using the Dynamsoft Barcode Reader SDK"**
 
@@ -14,14 +14,13 @@ This project documents an experiment comparing six major AI coding agents using 
 2. **Claude Sonnet 4.5** ✅ (Only agent with correct code initially)
 3. **Gemini 2.5 Pro**
 4. **GPT-5**
-5. **GPT-5 Codex**
-6. **Grok Code**
+5. **Grok Code**
 
 ## Key Findings
 
 ### The Problem
 
-Out of six AI agents tested, only **Claude Sonnet 4.5** generated code using the **latest version** of the Dynamsoft Barcode Reader SDK. The other five agents produced code based on the outdated `dbr` package instead of the current `dynamsoft-barcode-reader-bundle`.
+Out of five AI agents tested, only **Claude Sonnet 4.5** generated code using the **latest version** of the Dynamsoft Barcode Reader SDK. The other four agents produced code based on the outdated `dbr` package instead of the current `dynamsoft-barcode-reader-bundle`.
 
 ### The Solution
 
@@ -42,7 +41,6 @@ By creating a **custom agent definition** in `.github/agents/python-barcode-scan
 | Claude Sonnet 4.5 | `dynamsoft-barcode-reader-bundle` | ✅ Success |
 | Gemini 2.5 Pro | `dbr` (outdated) | ❌ Failed |
 | GPT-5 | `dbr` (outdated) | ❌ Failed |
-| GPT-5 Codex | `dbr` (outdated) | ❌ Failed |
 | Grok Code | `dbr` (outdated) | ❌ Failed |
 
 ### After Custom Agent
