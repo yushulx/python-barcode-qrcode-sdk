@@ -3,6 +3,8 @@ Comprehensive benchmarking framework to compare barcode reader SDKs: **ZXing-cpp
 
 This project focuses on **angled barcode detection** and **multiple barcode scenarios**, designed to identify and showcase competitive advantages in barcode recognition performance.
 
+![Python barcode SDK benchmark](https://www.dynamsoft.com/codepool/img/2025/11/success_rate_comparison.png)
+
 ## Key Features
 
 - **Multiple SDK Support**: ZXing-Cpp, PyZBar (open-source), Dynamsoft (commercial)
