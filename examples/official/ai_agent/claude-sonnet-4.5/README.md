@@ -56,9 +56,9 @@ python barcode_scanner.py --help
 
 ## License
 
-This application uses a public trial license that requires a network connection. The license key is embedded in the code: `DLS2eyJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSJ9`
+This application uses a public trial license that requires a network connection. The license key is embedded in the code: `DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==`
 
-For production use or offline applications, you can request a 30-day free trial license from the [Dynamsoft Customer Portal](https://www.dynamsoft.com/customer/license/trialLicense?product=dbr&package=python).
+For production use or offline applications, you can request a 30-day free trial license from the [Dynamsoft Customer Portal](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform).
 
 ## Output Format
 

@@ -22,7 +22,7 @@ pip install -r requirements.txt
 # Set your license (replace with your key)
 $env:DBR_LICENSE = "YOUR-LICENSE-KEY"
 ```
-Obtain a trial key: https://www.dynamsoft.com/barcode-reader/trial/
+Obtain a [trial key](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform)
 
 ## Usage
 ```powershell

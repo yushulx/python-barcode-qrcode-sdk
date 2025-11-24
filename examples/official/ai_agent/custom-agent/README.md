@@ -63,7 +63,7 @@ python barcode_scanner.py /path/to/images --batch --format CODE_128 --verbose
 
 ## License
 
-The script uses a free public trial license that requires an internet connection. For offline use or production deployment, get a 30-day trial license from: https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
+The script uses a free public trial license that requires an internet connection. For offline use or production deployment, get a 30-day trial license from: https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform
 
 ## Examples
 

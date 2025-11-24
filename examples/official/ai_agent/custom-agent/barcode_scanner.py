@@ -27,13 +27,13 @@ from dynamsoft_barcode_reader_bundle import (
 def setup_license():
     """Initialize the Dynamsoft license."""
     # Public trial license (requires internet connection)
-    # For offline use, get a 30-day trial from: https://www.dynamsoft.com/customer/license/trialLicense?product=dbr
-    license_key = "DLS2eyJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSJ9"
+    # For offline use, get a 30-day trial from: https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform
+    license_key = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
     
     error_code, error_msg = LicenseManager.init_license(license_key)
     if error_code != EnumErrorCode.EC_OK and error_code != EnumErrorCode.EC_LICENSE_CACHE_USED:
         print(f"❌ License initialization failed: {error_msg}")
-        print("💡 Get a free trial license: https://www.dynamsoft.com/customer/license/trialLicense?product=dbr")
+        print("💡 Get a free trial license: https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform")
         return False
     return True
 
