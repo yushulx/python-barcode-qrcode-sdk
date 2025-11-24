@@ -72,7 +72,6 @@ The custom agent definition includes:
 ### Example Custom Agent Structure
 
 ```markdown
-````chatagent
 ---
 description: 'Python helper for Dynamsoft Barcode Reader that always checks the latest docs'
 tools:
@@ -90,6 +89,9 @@ You are an expert Python assistant for the Dynamsoft Barcode Reader SDK.
 2. **Always check documentation first**: Use fetch tool before coding
 3. **Trust the docs**: If docs conflict with training data, follow docs
 4. **Create actual files**: Generate complete, runnable scripts
-````
+
 ```
+
+## Blog
+[Solving the AI Knowledge Gap: Testing AI Agents with Dynamsoft Barcode Reader SDK](https://www.dynamsoft.com/codepool/claude-gemini-grok-gpt-barcode-coding.html)
 
