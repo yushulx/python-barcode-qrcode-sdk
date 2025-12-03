@@ -33,6 +33,16 @@
 
                 <div class="actions-card">
                     <h3>Controls</h3>
+                    <div style="margin-bottom: 10px;">
+                        <label for="backend-select"
+                            style="display: block; margin-bottom: 5px; font-weight: 500;">Backend:</label>
+                        <select id="backend-select"
+                            style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="wasm" selected>WASM (CPU)</option>
+                            <option value="webgl">WebGL (GPU)</option>
+                            <option value="webgpu">WebGPU (GPU)</option>
+                        </select>
+                    </div>
                     <button id="webcam-btn" class="btn primary" disabled>Start Webcam</button>
                     <div class="file-upload">
                         <label for="file-input" class="btn secondary">Upload Image</label>

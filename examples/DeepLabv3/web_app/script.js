@@ -1,5 +1,6 @@
 // Configuration
-const MODEL_PATH = 'document_detector.onnx';
+const QUANTIZED_MODEL_PATH = 'document_detector_quant.onnx';
+const FP32_MODEL_PATH = 'document_detector.onnx';
 const INPUT_SIZE = 384;
 const MEAN = [0.485, 0.456, 0.406];
 const STD = [0.229, 0.224, 0.225];
@@ -21,6 +22,7 @@ const canvas = document.getElementById('output-canvas');
 const ctx = canvas.getContext('2d');
 const webcamVideo = document.getElementById('webcam-video');
 const sourceImage = document.getElementById('source-image');
+const backendSelect = document.getElementById('backend-select');
 
 // Metrics Elements
 const preprocessEl = document.getElementById('preprocess-time');
@@ -28,20 +30,41 @@ const inferenceEl = document.getElementById('inference-time');
 const postprocessEl = document.getElementById('postprocess-time');
 const totalEl = document.getElementById('total-time');
 const fpsEl = document.getElementById('fps-counter');
-
 // Initialization
-async function init() {
+async function init(backend = 'wasm') {
     try {
-        updateStatus('Loading ONNX Runtime...', 'loading');
+        webcamBtn.disabled = true;
+        updateStatus(`Initializing ${backend}...`, 'loading');
 
         // Initialize ONNX Runtime
         const option = {
-            executionProviders: ['wasm'],
+            executionProviders: [backend],
             graphOptimizationLevel: 'all'
         };
 
-        updateStatus('Loading Model...', 'loading');
-        session = await ort.InferenceSession.create(MODEL_PATH, option);
+        // Optimization for WASM
+        if (backend === 'wasm') {
+            option.executionMode = 'parallel';
+            option.intraOpNumThreads = navigator.hardwareConcurrency || 4;
+        }
+
+        // Select model based on backend
+        // WASM -> Quantized (INT8) for CPU speed
+        // WebGL/WebGPU -> FP32 for GPU shader compatibility
+        const modelPath = backend === 'wasm' ? QUANTIZED_MODEL_PATH : FP32_MODEL_PATH;
+
+        updateStatus(`Loading Model (${backend})...`, 'loading');
+
+        // Release existing session if any
+        if (session) {
+            session = null;
+        }
+
+        session = await ort.InferenceSession.create(modelPath, option);
+
+        // Log the execution provider
+        console.log('Inference Session created with provider:', session.handler.backendName);
+        document.getElementById('backend-type').textContent = session.handler.backendName;
 
         updateStatus('Ready', 'ready');
         webcamBtn.disabled = false;
@@ -59,7 +82,13 @@ async function init() {
     }
 }
 
-// Start initialization immediately (no waiting for OpenCV)
+// Handle Backend Change
+backendSelect.addEventListener('change', (e) => {
+    init(e.target.value);
+});
+
+// Start initialization immediately
+init(backendSelect.value);
 init();
 
 // Helper: Update Status
