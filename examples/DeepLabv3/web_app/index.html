@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Detection Web App</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Import ONNX Runtime Web -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Document Detection Web</h1>
+            <p>Powered by DeepLabV3 MobileNetV3 & ONNX Runtime</p>
+        </header>
+
+        <div class="main-content">
+            <div class="control-panel">
+                <div class="status-card">
+                    <h3>Status</h3>
+                    <div id="status-indicator" class="status-item">
+                        <span class="status-dot"></span>
+                        <span id="status-text">Loading OpenCV...</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Backend:</span>
+                        <span id="backend-type">WebAssembly</span>
+                    </div>
+                </div>
+
+                <div class="actions-card">
+                    <h3>Controls</h3>
+                    <button id="webcam-btn" class="btn primary" disabled>Start Webcam</button>
+                    <div class="file-upload">
+                        <label for="file-input" class="btn secondary">Upload Image</label>
+                        <input type="file" id="file-input" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <h3>Performance</h3>
+                    <div class="metric-row">
+                        <span>Pre-process:</span>
+                        <span id="preprocess-time">- ms</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Inference:</span>
+                        <span id="inference-time">- ms</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Post-process:</span>
+                        <span id="postprocess-time">- ms</span>
+                    </div>
+                    <div class="metric-row total">
+                        <span>Total:</span>
+                        <span id="total-time">- ms</span>
+                    </div>
+                    <div class="metric-row fps">
+                        <span>FPS:</span>
+                        <span id="fps-counter">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="viewport-panel">
+                <div class="canvas-wrapper">
+                    <canvas id="output-canvas"></canvas>
+                    <video id="webcam-video" playsinline style="display: none;"></video>
+                    <img id="source-image" style="display: none;">
+                </div>
+                <div class="view-controls">
+                    <label><input type="checkbox" id="show-mask" checked> Show Mask</label>
+                    <label><input type="checkbox" id="show-boundary" checked> Show Boundary</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
