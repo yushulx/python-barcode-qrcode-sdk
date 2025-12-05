@@ -29,7 +29,7 @@ IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
 
 # Device Configuration
-DEVICE_PREFERENCE = 'cpu'  # 'cuda' or 'cpu'
+DEVICE_PREFERENCE = 'cuda'  # 'cuda' or 'cpu'
 
 # UI Configuration
 WINDOW_CONFIG = {
