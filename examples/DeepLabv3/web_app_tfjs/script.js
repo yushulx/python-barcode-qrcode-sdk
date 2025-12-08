@@ -34,6 +34,9 @@ const fpsEl = document.getElementById('fps-counter');
 // Initialization
 async function init(backend = 'webgl') {
     try {
+        // Enable production mode for performance
+        tf.enableProdMode();
+
         webcamBtn.disabled = true;
         updateStatus(`Initializing ${backend}...`, 'loading');
 
