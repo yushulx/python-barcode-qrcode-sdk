@@ -40,11 +40,19 @@ Thumbs.db
 output/
 *.pth
 !model_mbv3_iou_mix_2C049.pth
+
+# Keep model files in web apps
 *.onnx
-!web_app/document_detector.onnx
+!web_app_onnx/*.onnx
+*.tflite
+
+# TensorFlow conversion artifacts
+tf_saved_model/
+tfjs_model_wrapped/
 
 # Logs
 *.log
+log.txt
 
 # Jupyter
 .ipynb_checkpoints/
