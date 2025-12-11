@@ -1,5 +1,12 @@
 import sys
 import os
+
+# Import utils and RapidOCR before PySide6 to avoid DLL conflicts
+try:
+    from utils import *
+except ImportError:
+    pass
+
 import json
 import csv
 import threading
@@ -989,12 +996,14 @@ class ProcessingWorker(QThread):
     error = Signal(str)        # Error message
     progress = Signal(str)     # Progress message
     normalized_image_used = Signal(object)  # Signal when normalized image should replace original
+    ocr_results_ready = Signal(list)  # Signal for OCR results from VIZ zone
     
     def __init__(self, cvr_instance, file_path, detection_mode="Barcode"):
         super().__init__()
         self.cvr_instance = cvr_instance
         self.file_path = file_path
         self.detection_mode = detection_mode
+        self.current_image = None  # Store current image for OCR
     
     def run(self):
         """Run detection in background thread."""
@@ -1044,6 +1053,8 @@ class ProcessingWorker(QThread):
             
             if has_mrz_results:
                 self.progress.emit("✅ MRZ detection successful on original image")
+                # Run OCR on the VIZ zone
+                self._run_ocr_on_image(self.file_path, result_list)
                 return mrz_results
             
             # Stage 2: No MRZ found, try document normalization + MRZ
@@ -1128,6 +1139,8 @@ class ProcessingWorker(QThread):
                         self.progress.emit("✅ MRZ detection successful on normalized document!")
                         # Emit the normalized image to replace the original
                         self.normalized_image_used.emit(cv_image)
+                        # Run OCR on the normalized image
+                        self._run_ocr_on_image(cv_image, enhanced_result_list)
                         return enhanced_results
                     else:
                         self.progress.emit(f"⚠️ No MRZ found in normalized document {i+1}")
@@ -1144,6 +1157,56 @@ class ProcessingWorker(QThread):
             self.progress.emit(f"❌ Error in MRZ fallback processing: {e}")
             # Fallback to standard processing
             return self.cvr_instance.capture_multi_pages(self.file_path, mrz_template)
+    
+    def _run_ocr_on_image(self, image_source, mrz_result_list):
+        """
+        Run OCR on the VIZ (Visual Inspection Zone) of the passport image.
+        
+        Args:
+            image_source: Either a file path (str) or OpenCV image (numpy array)
+            mrz_result_list: List of MRZ detection results to determine MRZ zone location
+        """
+        try:
+            from utils import get_passport_ocr, RAPIDOCR_AVAILABLE
+            
+            if not RAPIDOCR_AVAILABLE:
+                self.progress.emit("⚠️ OCR not available - install rapidocr_onnxruntime for VIZ text recognition")
+                return
+            
+            self.progress.emit("📝 Running OCR on Visual Inspection Zone...")
+            
+            # Load image if it's a file path
+            if isinstance(image_source, str):
+                image = cv2.imread(image_source)
+            else:
+                image = image_source
+            
+            if image is None:
+                self.progress.emit("⚠️ Could not load image for OCR")
+                return
+            
+            # Collect MRZ items with location info for filtering
+            mrz_items = []
+            for result in mrz_result_list:
+                if result.get_error_code() == EnumErrorCode.EC_OK:
+                    line_result = result.get_recognized_text_lines_result()
+                    if line_result:
+                        mrz_items.extend(line_result.get_items())
+            
+            # Run OCR
+            ocr_engine = get_passport_ocr()
+            ocr_results = ocr_engine.recognize_viz_region(image, mrz_items)
+            
+            if ocr_results:
+                self.progress.emit(f"✅ OCR found {len(ocr_results)} text region(s) in VIZ")
+                self.ocr_results_ready.emit(ocr_results)
+            else:
+                self.progress.emit("⚠️ No text found in VIZ region")
+                self.ocr_results_ready.emit([])
+                
+        except Exception as e:
+            self.progress.emit(f"⚠️ OCR error: {e}")
+            self.ocr_results_ready.emit([])
 
 class ImageDisplayWidget(QLabel):
     """Custom widget for displaying and zooming images with barcode annotations."""
@@ -1648,6 +1711,9 @@ class BarcodeReaderMainWindow(QMainWindow):
         
         # Face detection variables
         self.current_detected_faces = {}  # Store detected faces {page_index: [face_data]}
+        
+        # OCR results for passport VIZ (Visual Inspection Zone)
+        self.current_ocr_results = []  # Store OCR results from VIZ text recognition
         
         # Camera mode variables
         self.camera_results = []  # Store recent camera detection results
@@ -2948,6 +3014,7 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.page_results = {}
         self.page_hash_mapping = {}
         self.current_detected_faces = {}  # Clear face detection results
+        self.current_ocr_results = []  # Clear OCR results
         if self.custom_receiver:
             self.custom_receiver.images.clear()
         
@@ -2962,6 +3029,7 @@ class BarcodeReaderMainWindow(QMainWindow):
         self.worker.error.connect(self.on_processing_error)
         self.worker.progress.connect(self.log_message)
         self.worker.normalized_image_used.connect(self.on_normalized_image_used)
+        self.worker.ocr_results_ready.connect(self.on_ocr_results_ready)
         self.worker.start()
     
     def on_normalized_image_used(self, normalized_image):
@@ -2980,6 +3048,21 @@ class BarcodeReaderMainWindow(QMainWindow):
                 
         except Exception as e:
             self.log_message(f"⚠️ Error replacing image with normalized version: {e}")
+    
+    def on_ocr_results_ready(self, ocr_results):
+        """Handle OCR results from the VIZ zone."""
+        try:
+            self.current_ocr_results = ocr_results
+            
+            if ocr_results:
+                self.log_message(f"📝 Received {len(ocr_results)} OCR text region(s) from passport VIZ")
+                # Results will be displayed when display_page_results is called
+            else:
+                self.log_message("📝 No additional text found in passport VIZ zone")
+                
+        except Exception as e:
+            self.log_message(f"⚠️ Error handling OCR results: {e}")
+            self.current_ocr_results = []
     
     def on_processing_finished(self, results):
         """Handle completion of detection processing."""
@@ -3207,7 +3290,13 @@ class BarcodeReaderMainWindow(QMainWindow):
             self.display_mrz_with_faces(cv_image, detection_items)
         else:
             # Standard display for barcodes and MRZ without face detection
-            self.image_widget.set_image(cv_image, detection_items)
+            if mode_name == "MRZ":
+                annotated_image = cv_image.copy()
+                # Draw OCR annotations
+                self.draw_ocr_annotations(annotated_image)
+                self.image_widget.set_image(annotated_image, detection_items)
+            else:
+                self.image_widget.set_image(cv_image, detection_items)
         
         self.display_page_results()
     
@@ -3372,6 +3461,18 @@ class BarcodeReaderMainWindow(QMainWindow):
             self.log_message(f"❌ Save error: {e}")
             QMessageBox.critical(self, "Save Error", f"Failed to save normalized document: {e}")
     
+    def draw_ocr_annotations(self, image):
+        """Draw OCR bounding boxes on the image."""
+        if hasattr(self, 'current_ocr_results') and self.current_ocr_results:
+            for ocr_result in self.current_ocr_results:
+                if hasattr(ocr_result, 'bbox'):
+                    bbox = ocr_result.bbox
+                    # Convert bbox points to numpy array of integers
+                    pts = np.array([[int(p[0]), int(p[1])] for p in bbox], np.int32)
+                    # Draw bounding box in Cyan
+                    cv2.polylines(image, [pts], True, (255, 255, 0), 2)
+        return image
+
     def display_mrz_with_faces(self, cv_image, detection_items):
         """Display MRZ results with face detection annotations."""
         try:
@@ -3388,6 +3489,9 @@ class BarcodeReaderMainWindow(QMainWindow):
                         # Draw MRZ boundary
                         pts = np.array([[int(p.x), int(p.y)] for p in points], np.int32)
                         cv2.polylines(annotated_image, [pts], True, (0, 165, 255), 2)  # Orange for MRZ
+            
+            # Draw OCR annotations if available
+            self.draw_ocr_annotations(annotated_image)
             
             # Perform face detection
             if face_detector:
@@ -3667,6 +3771,39 @@ class BarcodeReaderMainWindow(QMainWindow):
                 html_content += f'<p style="margin: 5px 0;"><b>❗ Parse Error:</b> <span style="color: #dc3545; font-size: 11px;">{str(e)}</span></p>'
                 
             html_content += '</div>'
+        
+        # Add OCR results from VIZ (Visual Inspection Zone) if available
+        if hasattr(self, 'current_ocr_results') and self.current_ocr_results:
+            html_content += self._format_ocr_results(self.current_ocr_results)
+        
+        return html_content
+    
+    def _format_ocr_results(self, ocr_results):
+        """Format OCR results from the Visual Inspection Zone."""
+        if not ocr_results:
+            return ""
+        
+        html_content = '<div style="margin: 15px 0; padding: 10px; background-color: #e8f4f8; border-left: 4px solid #17a2b8;">'
+        html_content += '<h4 style="color: #0c5460; margin: 0 0 10px 0;">📝 Visual Inspection Zone (VIZ) - OCR Results</h4>'
+        html_content += '<p style="margin: 0 0 10px 0; color: #666; font-size: 11px;">Text recognized above the MRZ zone using RapidOCR</p>'
+        
+        # Sort results by Y position (top to bottom)
+        sorted_results = sorted(ocr_results, key=lambda x: x.get_top_y())
+        
+        for i, result in enumerate(sorted_results, 1):
+            confidence_color = "#28a745" if result.confidence > 0.8 else "#ffc107" if result.confidence > 0.5 else "#dc3545"
+            confidence_pct = int(result.confidence * 100)
+            
+            # Escape HTML in text
+            escaped_text = result.text.replace('<', '&lt;').replace('>', '&gt;')
+            
+            html_content += f'<div style="margin: 5px 0; padding: 8px; background-color: #fff; border: 1px solid #dee2e6; border-radius: 3px;">'
+            html_content += f'<span style="color: #495057; font-weight: bold;">#{i}</span> '
+            html_content += f'<span style="font-family: monospace; color: #212529;">{escaped_text}</span> '
+            html_content += f'<span style="color: {confidence_color}; font-size: 10px;">({confidence_pct}%)</span>'
+            html_content += '</div>'
+        
+        html_content += '</div>'
         
         return html_content
     

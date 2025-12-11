@@ -1,5 +1,172 @@
 from dynamsoft_capture_vision_bundle import *
 import numpy as np
+import cv2
+
+# Try to import RapidOCR for passport VIZ text recognition
+try:
+    from rapidocr_onnxruntime import RapidOCR
+    RAPIDOCR_AVAILABLE = True
+    print("✅ RapidOCR available for passport text recognition")
+except ImportError as e:
+    RAPIDOCR_AVAILABLE = False
+    print(f"⚠️ RapidOCR not available. Error: {e}")
+    print("Install with: pip install rapidocr_onnxruntime")
+
+
+class PassportOCR:
+    """
+    OCR utility class for recognizing text in the Visual Inspection Zone (VIZ)
+    of passports - the human-readable text above the MRZ.
+    Uses RapidOCR (PaddleOCR via ONNX Runtime) for accurate text detection.
+    """
+    
+    _instance = None  # Singleton instance
+    
+    def __new__(cls):
+        """Singleton pattern to reuse the OCR engine."""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+    
+    def __init__(self):
+        if self._initialized:
+            return
+        
+        self.engine = None
+        self.available = False
+        
+        if RAPIDOCR_AVAILABLE:
+            try:
+                self.engine = RapidOCR()
+                self.available = True
+                print("✅ PassportOCR engine initialized successfully")
+            except Exception as e:
+                print(f"❌ Failed to initialize RapidOCR: {e}")
+        
+        self._initialized = True
+    
+    def recognize_text(self, image, mrz_location=None):
+        """
+        Recognize text in the passport image, optionally excluding the MRZ zone.
+        
+        Args:
+            image: OpenCV image (BGR format) or path to image file
+            mrz_location: Optional tuple of (y_start, y_end) to exclude MRZ zone
+                         If provided, only text ABOVE this region will be returned
+        
+        Returns:
+            list: List of OCRResult objects containing:
+                  - text: The recognized text
+                  - confidence: Confidence score (0-1)
+                  - bbox: Bounding box [(x1,y1), (x2,y2), (x3,y3), (x4,y4)]
+        """
+        if not self.available or self.engine is None:
+            return []
+        
+        try:
+            # Run OCR
+            result, elapse = self.engine(image)
+            
+            if result is None:
+                return []
+            
+            ocr_results = []
+            for item in result:
+                bbox = item[0]  # [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
+                text = item[1]
+                confidence = item[2]
+                
+                # Filter out MRZ zone if location provided
+                if mrz_location is not None:
+                    mrz_y_start, mrz_y_end = mrz_location
+                    # Get the top Y coordinate of this text box
+                    text_y = min(point[1] for point in bbox)
+                    
+                    # Skip if text is in or below the MRZ zone
+                    if text_y >= mrz_y_start * 0.95:  # 5% margin
+                        continue
+                
+                ocr_results.append(OCRResult(
+                    text=text,
+                    confidence=confidence,
+                    bbox=bbox
+                ))
+            
+            return ocr_results
+            
+        except Exception as e:
+            print(f"❌ OCR error: {e}")
+            return []
+    
+    def recognize_viz_region(self, image, mrz_items=None):
+        """
+        Recognize text specifically in the VIZ (Visual Inspection Zone) of a passport.
+        Automatically excludes the MRZ zone based on detected MRZ items.
+        
+        Args:
+            image: OpenCV image (BGR format)
+            mrz_items: List of MRZ detection items with get_location() method
+        
+        Returns:
+            list: List of OCRResult objects for text in the VIZ
+        """
+        if not self.available:
+            return []
+        
+        # Determine MRZ zone location from detected items
+        mrz_location = None
+        if mrz_items:
+            try:
+                min_y = float('inf')
+                max_y = 0
+                
+                for item in mrz_items:
+                    if hasattr(item, 'get_location'):
+                        location = item.get_location()
+                        for point in location.points:
+                            min_y = min(min_y, point.y)
+                            max_y = max(max_y, point.y)
+                
+                if min_y < float('inf'):
+                    mrz_location = (min_y, max_y)
+            except Exception as e:
+                print(f"⚠️ Could not determine MRZ location: {e}")
+        
+        return self.recognize_text(image, mrz_location)
+
+
+class OCRResult:
+    """Container for OCR recognition results."""
+    
+    def __init__(self, text, confidence, bbox):
+        self.text = text
+        self.confidence = confidence
+        self.bbox = bbox  # [[x1,y1], [x2,y2], [x3,y3], [x4,y4]]
+    
+    def get_center(self):
+        """Get the center point of the bounding box."""
+        x_coords = [p[0] for p in self.bbox]
+        y_coords = [p[1] for p in self.bbox]
+        return (sum(x_coords) / 4, sum(y_coords) / 4)
+    
+    def get_top_y(self):
+        """Get the top Y coordinate of the bounding box."""
+        return min(p[1] for p in self.bbox)
+    
+    def __repr__(self):
+        return f"OCRResult(text='{self.text[:20]}...', conf={self.confidence:.2f})"
+
+
+# Global OCR instance (lazy initialization)
+_passport_ocr = None
+
+def get_passport_ocr():
+    """Get or create the global PassportOCR instance."""
+    global _passport_ocr
+    if _passport_ocr is None:
+        _passport_ocr = PassportOCR()
+    return _passport_ocr
 
 
 def convertImageData2Mat(normalized_image):
