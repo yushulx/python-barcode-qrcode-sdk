@@ -1800,7 +1800,7 @@ def process_image(image_path, detection_mode):
     
     # Select template based on detection mode
     if detection_mode == "Barcode":
-        template = EnumPresetTemplate.PT_READ_BARCODES.value
+        template = EnumPresetTemplate.PT_READ_BARCODES.value # EnumPresetTemplate.PT_READ_SINGLE_BARCODE.value
     elif detection_mode == "Document":
         template = EnumPresetTemplate.PT_DETECT_AND_NORMALIZE_DOCUMENT.value
     elif detection_mode == "MRZ":
