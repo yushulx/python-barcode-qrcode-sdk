@@ -73,4 +73,5 @@ Then:
 
    ![IP camera viewer with barcode scanning](https://www.dynamsoft.com/codepool/img/2025/08/ip-camera-viewer.png)
 
-
+## Blog
+[Python Development: Real-Time 1D and 2D Barcode Scanning from an IP Camera](https://www.dynamsoft.com/codepool/ip-camera-python-barcode-scanner.html)
