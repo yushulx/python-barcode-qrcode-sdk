@@ -506,7 +506,8 @@ class MainWindow(QMainWindow):
     def load_app_settings(self) -> Dict[str, Any]:
         """Load application settings"""
         try:
-            config_file = os.path.join(os.path.dirname(__file__), 'config.json')
+            _cfg_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+            config_file = os.path.join(_cfg_dir, 'config.json')
             if os.path.exists(config_file):
                 with open(config_file, 'r') as f:
                     return json.load(f)
@@ -530,7 +531,8 @@ class MainWindow(QMainWindow):
     def save_app_settings(self):
         """Save application settings"""
         try:
-            config_file = os.path.join(os.path.dirname(__file__), 'config.json')
+            _cfg_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+            config_file = os.path.join(_cfg_dir, 'config.json')
             with open(config_file, 'w') as f:
                 json.dump(self.app_settings, f, indent=2)
         except Exception as e:

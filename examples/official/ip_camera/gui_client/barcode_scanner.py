@@ -133,7 +133,8 @@ class BarcodeScanner(QObject):
         import json
         
         try:
-            config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+            _cfg_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(_cfg_dir, 'config.json')
             if os.path.exists(config_path):
                 with open(config_path, 'r') as f:
                     config = json.load(f)
