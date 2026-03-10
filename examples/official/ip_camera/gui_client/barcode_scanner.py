@@ -4,15 +4,35 @@ Barcode Scanner for IP Camera GUI Client
 Integrates Dynamsoft Capture Vision Bundle for real-time barcode detection.
 """
 
+import os
+import sys
 import queue
 import threading
 import time
 from typing import List, Optional
 from PySide6.QtCore import QObject, Signal, QTimer
 
+# Add Dynamsoft library path to DLL search path (for PyInstaller packaging)
+def _add_dynamsoft_to_dll_path():
+    """Add dynamsoft library directory to DLL search path"""
+    if hasattr(sys, '_MEIPASS'):
+        # Temporary directory after PyInstaller packaging
+        dcvb_path = os.path.join(sys._MEIPASS, 'dynamsoft_capture_vision_bundle')
+        if os.path.exists(dcvb_path):
+            # Windows: Add DLL search path
+            try:
+                os.add_dll_directory(dcvb_path)
+                # Also add to PATH environment variable (some DLLs may need this)
+                os.environ['PATH'] = dcvb_path + os.pathsep + os.environ.get('PATH', '')
+            except Exception as e:
+                print(f"Warning: Failed to add DLL directory: {e}")
+
+# Call before importing Dynamsoft
+_add_dynamsoft_to_dll_path()
+
 from dynamsoft_capture_vision_bundle import (
-    LicenseManager, CaptureVisionRouter, ImageSourceAdapter, 
-    CapturedResultReceiver, EnumErrorCode, EnumPresetTemplate, 
+    LicenseManager, CaptureVisionRouter, ImageSourceAdapter,
+    CapturedResultReceiver, EnumErrorCode, EnumPresetTemplate,
     EnumCapturedResultItemType
 )
 from utils import convertMat2ImageData
@@ -84,22 +104,48 @@ class BarcodeScanner(QObject):
         # Initialize license
         self._initialize_license()
     
-    def _initialize_license(self):
+    def _initialize_license(self, license_key=None):
         """Initialize Dynamsoft license"""
         try:
-            license_key = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
+            # Use provided key or load from config
+            if not license_key:
+                license_key = self._load_license_from_config()
             
+            if not license_key:
+                self.error_occurred.emit("No license key found. Please configure it in config.json")
+                return
+
             error_code, error_msg = LicenseManager.init_license(license_key)
-            
+
             if error_code != EnumErrorCode.EC_OK and error_code != EnumErrorCode.EC_LICENSE_CACHE_USED:
                 self.error_occurred.emit(f"License initialization failed: {error_msg}")
                 return
-            
+
             self.is_initialized = True
             self._setup_scanner()
-            
+
         except Exception as e:
             self.error_occurred.emit(f"Failed to initialize barcode scanner: {str(e)}")
+    
+    def _load_license_from_config(self):
+        """Load license key from config.json"""
+        import os
+        import json
+        
+        try:
+            config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+            if os.path.exists(config_path):
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                    # Check multiple possible keys for compatibility
+                    license_key = (config.get('dynamsoft_license') or 
+                                  config.get('license_key') or 
+                                  config.get('barcode', {}).get('license_key'))
+                    return license_key
+        except Exception as e:
+            print(f"Error loading license from config: {e}")
+        
+        return None
     
     def _setup_scanner(self):
         """Setup Dynamsoft Capture Vision components"""

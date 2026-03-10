@@ -52,7 +52,7 @@ class ConnectionDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Connect to IP Camera")
         self.setModal(True)
-        self.resize(400, 250)
+        self.resize(420, 320)
         
         self.setup_ui()
         
@@ -122,7 +122,21 @@ class ConnectionDialog(QDialog):
         self.path_edit.setText("/video_feed")
         self.path_edit.textChanged.connect(self.update_url_preview)
         form_layout.addRow("Stream Path:", self.path_edit)
-        
+
+        # RTSP credentials (username / password)
+        self.rtsp_username_label = QLabel("Username (RTSP):")
+        self.rtsp_username_edit = QLineEdit()
+        self.rtsp_username_edit.setPlaceholderText("Leave blank if not required")
+        self.rtsp_username_edit.textChanged.connect(self.update_url_preview)
+        form_layout.addRow(self.rtsp_username_label, self.rtsp_username_edit)
+
+        self.rtsp_password_label = QLabel("Password (RTSP):")
+        self.rtsp_password_edit = QLineEdit()
+        self.rtsp_password_edit.setPlaceholderText("Leave blank if not required")
+        self.rtsp_password_edit.setEchoMode(QLineEdit.Password)
+        self.rtsp_password_edit.textChanged.connect(self.update_url_preview)
+        form_layout.addRow(self.rtsp_password_label, self.rtsp_password_edit)
+
         # URL preview
         self.url_preview = QLabel()
         self.url_preview.setStyleSheet("""
@@ -138,21 +152,27 @@ class ConnectionDialog(QDialog):
         
         layout.addLayout(form_layout)
         
-        # Update preview initially
+        # Update preview initially (also sets visibility of credential fields)
         self.on_protocol_changed()
         self.update_url_preview()
         
     def on_protocol_changed(self):
         """Handle protocol change"""
         is_rtsp = "RTSP" in self.stream_protocol_combo.currentText()
-        
+
         if is_rtsp:
             self.port_spinbox.setValue(554)  # Default RTSP port
             self.path_edit.setText("/stream")
         else:
             self.port_spinbox.setValue(5000)  # Default HTTP port
             self.path_edit.setText("/video_feed")
-            
+
+        # Show/hide credential fields based on protocol
+        self.rtsp_username_label.setVisible(is_rtsp)
+        self.rtsp_username_edit.setVisible(is_rtsp)
+        self.rtsp_password_label.setVisible(is_rtsp)
+        self.rtsp_password_edit.setVisible(is_rtsp)
+
         self.update_url_preview()
 
         
@@ -161,17 +181,26 @@ class ConnectionDialog(QDialog):
         ip = self.ip_edit.text() or "0.0.0.0"
         port = self.port_spinbox.value()
         path = self.path_edit.text() or "/"
-        
+
         if not path.startswith('/'):
             path = '/' + path
-        
+
         is_rtsp = "RTSP" in self.stream_protocol_combo.currentText()
-        
+
         if is_rtsp:
-            url = f"rtsp://{ip}:{port}{path}"
+            username = self.rtsp_username_edit.text().strip()
+            password = self.rtsp_password_edit.text()
+            if username:
+                # Embed credentials in the URL: rtsp://user:pass@host:port/path
+                from urllib.parse import quote
+                encoded_user = quote(username, safe='')
+                encoded_pass = quote(password, safe='')
+                url = f"rtsp://{encoded_user}:{encoded_pass}@{ip}:{port}{path}"
+            else:
+                url = f"rtsp://{ip}:{port}{path}"
         else:
             url = f"http://{ip}:{port}{path}"
-            
+
         self.url_preview.setText(url)
         
     def get_current_url(self):

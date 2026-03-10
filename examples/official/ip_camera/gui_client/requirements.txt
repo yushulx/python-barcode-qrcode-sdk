@@ -3,3 +3,4 @@ requests==2.31.0
 opencv-python==4.8.1.78
 numpy>=1.21.0,<2.0.0
 dynamsoft-capture-vision-bundle>=3.0.6000
+pyinstaller>=6.0.0
