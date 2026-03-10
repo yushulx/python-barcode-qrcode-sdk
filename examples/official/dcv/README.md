@@ -164,4 +164,5 @@ The application includes a built-in license management system:
 - **Quick Setup**: Fill out the form and receive license via email
 - **Instant Activation**: Copy and paste the license key to activate immediately
 
-
+## Blog
+[Building a Multi-Modal Computer Vision Desktop App with AI-Assisted Development](https://www.dynamsoft.com/codepool/ai-agent-python-computer-vision-app.html)
