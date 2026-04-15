@@ -2,6 +2,8 @@
 
 A desktop application for annotating barcode locations in images. It automatically detects barcodes using **Dynamsoft Barcode Reader** and **ZXing-C++**, then lets you review, edit, and export the annotations.
 
+https://github.com/user-attachments/assets/65c31b71-9573-4d0d-bdbb-2fc446db846a
+
 ## Features
 
 - **Dual-engine detection** — Runs both Dynamsoft DBR and ZXing-C++ on every image, showing results side-by-side with differences highlighted.
