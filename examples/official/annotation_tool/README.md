@@ -97,6 +97,8 @@ pip install Pillow
 python viewer.py 
 ```
 
+![barcode annotation viewer](https://www.dynamsoft.com/codepool/img/2026/04/barcode-annotation-viewer.png)
+
 ### Keyboard Shortcuts
 
 | Key | Action |
