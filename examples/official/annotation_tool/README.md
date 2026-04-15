@@ -112,3 +112,6 @@ python viewer.py
 1. **Load images** — Use *Load Images…*, *Load Folder…*, or drag-and-drop image files/folders.
 2. **Load JSON** — Use *Open JSON…* or drag-and-drop a `.json` file exported by the annotation tool.
 3. **Browse** — Select any image in the list. If its filename appears in the JSON, overlays and barcode details are shown automatically.
+
+## Blog
+[Build a Dual-Engine Barcode Annotation Tool in Python to Create Ground-Truth Datasets](https://www.dynamsoft.com/codepool/build-dual-engine-barcode-annotation-tool-python.html)
