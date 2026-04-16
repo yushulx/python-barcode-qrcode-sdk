@@ -1,0 +1,5 @@
+PySide6>=6.5
+opencv-python>=4.8
+numpy>=1.24
+zxing-cpp>=2.1
+dynamsoft-barcode-reader-bundle>=10.0
