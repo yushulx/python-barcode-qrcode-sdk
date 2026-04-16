@@ -451,9 +451,9 @@ class DrawableGraphicsView(QGraphicsView):
                 if os.path.isdir(local):
                     for root_dir, _, files in os.walk(local):
                         for f in files:
-                            if f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif")):
+                            if f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp")):
                                 paths.append(os.path.join(root_dir, f))
-                elif local.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif")):
+                elif local.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp")):
                     paths.append(local)
             if paths:
                 self.files_dropped.emit(paths)
@@ -833,7 +833,7 @@ class AnnotationApp(QMainWindow):
     def _load_files(self):
         paths, _ = QFileDialog.getOpenFileNames(
             self, "Select Images", "",
-            "Images (*.png *.jpg *.jpeg *.bmp *.tiff *.tif)"
+            "Images (*.png *.jpg *.jpeg *.bmp *.tiff *.tif *.webp)"
         )
         self._add_paths(paths)
 
@@ -844,7 +844,7 @@ class AnnotationApp(QMainWindow):
         paths = []
         for root, _, files in os.walk(folder):
             for f in files:
-                if f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif")):
+                if f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp")):
                     paths.append(os.path.join(root, f))
         self._add_paths(paths)
 

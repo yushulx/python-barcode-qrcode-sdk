@@ -206,7 +206,7 @@ class ViewerApp(_TkBase):
         paths = filedialog.askopenfilenames(
             title="Load Images",
             filetypes=[
-                ("Images", "*.png *.jpg *.jpeg *.bmp *.tiff *.tif"),
+                ("Images", "*.png *.jpg *.jpeg *.bmp *.tiff *.tif *.webp"),
                 ("All files", "*.*"),
             ]
         )
@@ -220,7 +220,7 @@ class ViewerApp(_TkBase):
         paths = []
         for root_dir, _, files in os.walk(folder):
             for f in files:
-                if f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif")):
+                if f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp")):
                     paths.append(os.path.join(root_dir, f))
         if paths:
             self._add_images(paths)
@@ -557,13 +557,13 @@ class ViewerApp(_TkBase):
                 for root_dir, _, files in os.walk(p):
                     for f in files:
                         if f.lower().endswith(
-                            (".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif")
+                            (".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp")
                         ):
                             image_files.append(os.path.join(root_dir, f))
             elif p.lower().endswith(".json"):
                 json_files.append(p)
             elif p.lower().endswith(
-                (".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif")
+                (".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif", ".webp")
             ):
                 image_files.append(p)
         if json_files:
