@@ -180,10 +180,28 @@ class AnnotationValidator:
     """Validate detected barcodes against expected values."""
 
     @staticmethod
+    def _normalize_gs1_text(value: str) -> str:
+        """Normalize GS1 text so human-friendly AI formatting still matches raw content."""
+        return value.replace('(', '').replace(')', '')
+
+    @staticmethod
     def _match_texts(detected: str, expected: str) -> bool:
         """Flexible barcode text matching with UPC/EAN equivalence."""
+        detected = detected.strip()
+        expected = expected.strip()
+
         if detected == expected:
             return True
+
+        # ZXing may return human-friendly GS1 text like (01)900... while GT stores 01900...
+        normalized_detected = AnnotationValidator._normalize_gs1_text(detected)
+        normalized_expected = AnnotationValidator._normalize_gs1_text(expected)
+        if normalized_detected == normalized_expected:
+            return True
+
+        detected = normalized_detected
+        expected = normalized_expected
+
         # UPC-A (12 digits) <-> EAN-13 (13 digits with leading 0)
         if len(detected) == 12 and len(expected) == 13 and expected == '0' + detected:
             return True
@@ -236,10 +254,11 @@ class AnnotationValidator:
         fn = len(expected_texts) - tp
         extra = [detected_texts[j] for j in range(len(detected_texts)) if j not in matched_detected_indices]
 
-        is_correct = (fn == 0)  # All expected barcodes detected
+        exact_match = (fn == 0 and fp == 0 and tp == len(expected_texts))
 
         return {
-            'is_correct': is_correct,
+            'is_correct': exact_match,
+            'exact_match': exact_match,
             'expected_count': len(expected_texts),
             'found_count': len(detected_texts),
             'matched': tp,
@@ -249,6 +268,68 @@ class AnnotationValidator:
             'missing': missing,
             'extra': extra
         }
+
+    @staticmethod
+    def classify_validation(validation: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """Return a display-friendly validation bucket for grouping benchmark results."""
+        if not validation:
+            return {
+                'group': 'No Annotation',
+                'order': 2,
+                'status': 'No Annotation',
+            }
+
+        if validation.get('exact_match') or validation.get('is_correct'):
+            return {
+                'group': 'Exact Match',
+                'order': 1,
+                'status': '✓ Exact Match',
+            }
+
+        parts = []
+        missing_count = len(validation.get('missing', []))
+        extra_count = len(validation.get('extra', []))
+        if missing_count:
+            parts.append(f'Missing {missing_count}')
+        if extra_count:
+            parts.append(f'Extra {extra_count}')
+
+        return {
+            'group': 'Needs Review',
+            'order': 0,
+            'status': '✗ ' + (' / '.join(parts) if parts else 'Mismatch'),
+        }
+
+
+class AnnotationLoaderWorker(QThread):
+    """Worker thread for loading annotation JSON files without blocking the UI."""
+
+    finished = Signal(dict, dict)  # annotation_data, annotation_full_data
+    error = Signal(str)
+
+    def __init__(self, file_path: str, parent=None):
+        super().__init__(parent)
+        self.file_path = file_path
+
+    def run(self):
+        try:
+            annotation_data = AnnotationConverter.load_and_convert(self.file_path)
+
+            annotation_full_data = {}
+            with open(self.file_path, 'r', encoding='utf-8') as _f:
+                _raw = json.load(_f)
+            if 'format' in _raw and str(_raw.get('format', '')).startswith('barcode-benchmark'):
+                for _img in _raw.get('images', []):
+                    _fname = _img.get('file', '')
+                    annotation_full_data[_fname] = [
+                        {'text': _bc.get('text', ''), 'points': _bc.get('points', [])}
+                        for _bc in _img.get('barcodes', [])
+                        if isinstance(_bc, dict)
+                    ]
+
+            self.finished.emit(annotation_data, annotation_full_data)
+        except Exception as e:
+            self.error.emit(str(e))
 
 
 class BenchmarkWorker(QThread):
@@ -408,6 +489,16 @@ class HTMLReportExporter:
     .benchmark-summary h4 { margin: 0 0 10px; font-size: 1rem; color: #334155; }
     .benchmark-summary ul { margin: 8px 0 0; padding-left: 20px;
                              font-size: 0.9rem; line-height: 1.8; }
+    .benchmark-group { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.07);
+                       margin-bottom: 20px; overflow: hidden; }
+    .benchmark-group summary { cursor: pointer; list-style: none; font-size: 1rem; font-weight: 700;
+                               color: #334155; padding: 16px 20px; background: #f8fafc;
+                               border-bottom: 1px solid #e2e8f0; }
+    .benchmark-group summary::-webkit-details-marker { display: none; }
+    .benchmark-group summary::before { content: '▸'; display: inline-block; margin-right: 8px;
+                                       color: #64748b; transition: transform 0.15s ease; }
+    .benchmark-group[open] summary::before { transform: rotate(90deg); }
+    .benchmark-group-body { padding: 16px 20px 8px; }
     .benchmark-image-title { font-size: 0.95rem; font-weight: 600; color: #475569;
                               margin: 18px 0 6px; padding-bottom: 4px;
                               border-bottom: 1px solid #e2e8f0; }
@@ -544,8 +635,7 @@ class HTMLReportExporter:
             html += f'    <li>Fastest: <strong>{esc(fastest_lib)}</strong> ({agg[fastest_lib]["total_time"]:.0f} ms total)</li>\n'
         html += '  </ul>\n</div>\n'
 
-        # ── Per-image sections ────────────────────────────────────────────────
-        for fp in file_paths:
+        def render_image_section(fp: str) -> str:
             lib_map = file_results[fp]
             fname = Path(fp).name
             has_gt = any(r.get('validation') for r in lib_map.values())
@@ -554,13 +644,13 @@ class HTMLReportExporter:
                 'background:#d1fae5;padding:1px 7px;border-radius:10px;margin-left:4px;">GT</span>'
                 if has_gt else ''
             )
-            html += f'<h4 class="benchmark-image-title">{esc(fname)}{gt_badge}</h4>\n'
-            html += '<div class="benchmark-table-wrap"><table class="benchmark-table">\n  <thead><tr>'
+            section_html = f'<h4 class="benchmark-image-title">{esc(fname)}{gt_badge}</h4>\n'
+            section_html += '<div class="benchmark-table-wrap"><table class="benchmark-table">\n  <thead><tr>'
             if has_gt:
-                html += '<th>SDK</th><th>Found</th><th>Expected</th><th>Detected &#10003;</th><th>Rate</th><th>Precision</th><th>Time</th><th>Details</th>'
+                section_html += '<th>SDK</th><th>Found</th><th>Expected</th><th>Detected &#10003;</th><th>Rate</th><th>Precision</th><th>Time</th><th>Details</th>'
             else:
-                html += '<th>SDK</th><th>Barcodes Found</th><th>Time</th><th>Details</th>'
-            html += '</tr></thead>\n  <tbody>\n'
+                section_html += '<th>SDK</th><th>Barcodes Found</th><th>Time</th><th>Details</th>'
+            section_html += '</tr></thead>\n  <tbody>\n'
 
             counts = [lib_map[l].get('barcodes_detected', 0) for l in all_libs if l in lib_map]
             max_count = max(counts, default=0)
@@ -581,7 +671,7 @@ class HTMLReportExporter:
                 else:
                     detail = '<em>Nothing found</em>'
 
-                html += f'  <tr><td class="sdk-col">{esc(lib)}</td>'
+                section_html += f'  <tr><td class="sdk-col">{esc(lib)}</td>'
                 if has_gt:
                     v = r.get('validation') or {}
                     tp_v  = v.get('tp', v.get('matched', 0))
@@ -591,7 +681,7 @@ class HTMLReportExporter:
                     pr_p  = (tp_v / (tp_v + fp_v) * 100) if (tp_v + fp_v) > 0 else None
                     dr_h  = f'<span class="{gt_cls(dr_p)}">{dr_p:.1f}%</span>' if dr_p is not None else '<em>N/A</em>'
                     pr_h  = f'<span class="{gt_cls(pr_p)}">{pr_p:.1f}%</span>' if pr_p is not None else '<em>N/A</em>'
-                    html += (
+                    section_html += (
                         f'<td class="{cnt_cls}">{count}</td>'
                         f'<td class="count-col">{exp_v}</td>'
                         f'<td class="count-col">{tp_v}</td>'
@@ -601,13 +691,46 @@ class HTMLReportExporter:
                         f'<td>{detail}</td></tr>\n'
                     )
                 else:
-                    html += (
+                    section_html += (
                         f'<td class="{cnt_cls}">{count}</td>'
                         f'<td class="time-col">{t_ms:.0f} ms</td>'
                         f'<td>{detail}</td></tr>\n'
                     )
 
-            html += '  </tbody>\n</table></div>\n'
+            section_html += '  </tbody>\n</table></div>\n'
+            return section_html
+
+        # ── Grouped per-image sections ───────────────────────────────────────
+        grouped_file_paths = {
+            'Needs Review': [],
+            'Exact Match': [],
+            'No Annotation': [],
+        }
+        for fp in file_paths:
+            lib_map = file_results[fp]
+            statuses = [
+                AnnotationValidator.classify_validation(r.get('validation'))['group']
+                for r in lib_map.values()
+            ]
+            if 'Needs Review' in statuses:
+                grouped_file_paths['Needs Review'].append(fp)
+            elif 'Exact Match' in statuses:
+                grouped_file_paths['Exact Match'].append(fp)
+            else:
+                grouped_file_paths['No Annotation'].append(fp)
+
+        for group_name in ('Needs Review', 'Exact Match', 'No Annotation'):
+            group_files = grouped_file_paths[group_name]
+            if not group_files:
+                continue
+
+            html += f'<details class="benchmark-group">\n'
+            html += f'  <summary>{esc(group_name)} ({len(group_files)})</summary>\n'
+            html += '  <div class="benchmark-group-body">\n'
+            for fp in group_files:
+                html += render_image_section(fp)
+            html += '  </div>\n'
+            html += '</details>\n'
 
         html += '</body>\n</html>\n'
 
@@ -834,28 +957,41 @@ class MainWindow(QMainWindow):
         with open(config_path, 'w') as f:
             json.dump(self.config, f, indent=4)
 
+    @staticmethod
+    def _normalize_annotation_key(path_value: str) -> str:
+        """Normalize file paths so absolute paths can match relative annotation keys."""
+        return str(path_value).replace('\\', '/').strip().lower().lstrip('./')
+
+    def _lookup_annotation_mapping(self, mapping: Optional[Dict[str, Any]], file_path: str):
+        """Find annotation data using exact, basename, stem, or relative-suffix matching."""
+        if not mapping:
+            return None
+
+        normalized_path = self._normalize_annotation_key(file_path)
+        filename = Path(normalized_path).name
+        filename_no_ext = Path(normalized_path).stem
+
+        for candidate in (normalized_path, filename, filename_no_ext):
+            if candidate in mapping:
+                return mapping[candidate]
+
+        suffix_matches = []
+        for key, value in mapping.items():
+            normalized_key = self._normalize_annotation_key(key)
+            if normalized_path == normalized_key or normalized_path.endswith('/' + normalized_key):
+                suffix_matches.append(value)
+
+        if len(suffix_matches) == 1:
+            return suffix_matches[0]
+        if suffix_matches:
+            return suffix_matches[0]
+
+        return None
+
     def _match_annotation(self, file_path: str) -> Optional[List[str]]:
         """Find expected barcodes for a file based on annotation.
-        
-        Matches by:
-        1. Exact filename (with extension)
-        2. Filename without extension (for annotations that don't include extension)
         """
-        if not self.annotation_data:
-            return None
-        
-        filename = Path(file_path).name
-        filename_no_ext = Path(file_path).stem
-        
-        # Try exact match first
-        if filename in self.annotation_data:
-            return self.annotation_data[filename]
-        
-        # Try without extension
-        if filename_no_ext in self.annotation_data:
-            return self.annotation_data[filename_no_ext]
-        
-        return None
+        return self._lookup_annotation_mapping(self.annotation_data, file_path)
 
     def init_ui(self):
         """Initialize user interface."""
@@ -1160,6 +1296,8 @@ class MainWindow(QMainWindow):
 
     def update_file_list(self):
         """Update the file list table."""
+        self.file_list_table.setUpdatesEnabled(False)
+        self.file_list_table.setSortingEnabled(False)
         self.file_list_table.setRowCount(len(self.selected_files))
 
         for idx, file_path in enumerate(self.selected_files):
@@ -1187,6 +1325,8 @@ class MainWindow(QMainWindow):
             annotation_item = QTableWidgetItem(annotation_status)
             self.file_list_table.setItem(idx, 3, annotation_item)
 
+        self.file_list_table.setUpdatesEnabled(True)
+
     def clear_files(self):
         """Clear all selected files, results and reset the viewer."""
         self.selected_files = []
@@ -1206,7 +1346,7 @@ class MainWindow(QMainWindow):
         self.update_run_button()
 
     def load_annotation(self):
-        """Load annotation JSON file."""
+        """Load annotation JSON file in a background thread with a progress dialog."""
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             "Load Annotation File",
@@ -1214,42 +1354,51 @@ class MainWindow(QMainWindow):
             "JSON Files (*.json)"
         )
 
-        if file_path:
-            try:
-                self.annotation_data = AnnotationConverter.load_and_convert(file_path)
-                self.annotation_file = file_path
-                self.update_file_list()
-                self.update_run_button()
+        if not file_path:
+            return
 
-                file_count = len(self.annotation_data)
-                barcode_count = sum(len(v) for v in self.annotation_data.values())
-                self._annotation_status_label.setText(
-                    f"✓ {file_count} images, {barcode_count} barcodes"
-                )
+        # Show indeterminate progress dialog while loading
+        self._annot_progress = QProgressDialog(
+            "Loading annotation file…", None, 0, 0, self
+        )
+        self._annot_progress.setWindowTitle("Loading")
+        self._annot_progress.setWindowModality(Qt.WindowModal)
+        self._annot_progress.setMinimumDuration(0)
+        self._annot_progress.setValue(0)
+        self._annot_progress.show()
 
-                # Also load full annotation data (with polygon points) for image overlay
-                self.annotation_full_data = {}
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as _f:
-                        _raw = json.load(_f)
-                    if 'format' in _raw and str(_raw.get('format','')).startswith('barcode-benchmark'):
-                        for _img in _raw.get('images', []):
-                            _fname = _img.get('file', '')
-                            self.annotation_full_data[_fname] = [
-                                {'text': _bc.get('text', ''), 'points': _bc.get('points', [])}
-                                for _bc in _img.get('barcodes', [])
-                                if isinstance(_bc, dict)
-                            ]
-                except Exception:
-                    pass
+        self._annot_loader_path = file_path
+        self._annot_worker = AnnotationLoaderWorker(file_path, self)
+        self._annot_worker.finished.connect(self._on_annotation_loaded)
+        self._annot_worker.error.connect(self._on_annotation_error)
+        self._annot_worker.start()
 
-                QMessageBox.information(
-                    self,
-                    "Annotation Loaded",
-                    f"{file_count} images, {barcode_count} barcodes loaded."
-                )
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to load annotation:\n{str(e)}")
+    def _on_annotation_loaded(self, annotation_data: dict, annotation_full_data: dict):
+        """Called on the main thread when annotation loading finishes."""
+        self._annot_progress.close()
+
+        self.annotation_data = annotation_data
+        self.annotation_full_data = annotation_full_data
+        self.annotation_file = self._annot_loader_path
+
+        self.update_file_list()
+        self.update_run_button()
+
+        file_count = len(self.annotation_data)
+        barcode_count = sum(len(v) for v in self.annotation_data.values())
+        self._annotation_status_label.setText(
+            f"✓ {file_count} images, {barcode_count} barcodes"
+        )
+        QMessageBox.information(
+            self,
+            "Annotation Loaded",
+            f"{file_count} images, {barcode_count} barcodes loaded."
+        )
+
+    def _on_annotation_error(self, error_message: str):
+        """Called on the main thread when annotation loading fails."""
+        self._annot_progress.close()
+        QMessageBox.critical(self, "Error", f"Failed to load annotation:\n{error_message}")
 
     def on_sdk_changed(self):
         """Update config when SDK checkbox state changes."""
@@ -1371,38 +1520,57 @@ class MainWindow(QMainWindow):
         row = self.detail_table.rowCount()
         self.detail_table.insertRow(row)
 
+        self._populate_detail_row(row, result)
+
+    def _populate_detail_row(self, row: int, result: dict):
+        """Fill one row in the detail table from a benchmark result."""
         validation = result.get('validation')
-        
-        self.detail_table.setItem(row, 0, QTableWidgetItem(Path(file_path).name))
-        self.detail_table.setItem(row, 1, QTableWidgetItem(library_name))
+        status_info = AnnotationValidator.classify_validation(validation)
+
+        self.detail_table.setItem(row, 0, QTableWidgetItem(Path(result['file_path']).name))
+        self.detail_table.setItem(row, 1, QTableWidgetItem(result['library_name']))
         self.detail_table.setItem(row, 2, QTableWidgetItem(str(result['barcodes_detected'])))
         self.detail_table.setItem(row, 3, QTableWidgetItem(str(result['barcodes_expected'])))
 
-        # Matched count
         matched = validation.get('matched', 0) if validation else '-'
         self.detail_table.setItem(row, 4, QTableWidgetItem(str(matched)))
         self.detail_table.setItem(row, 5, QTableWidgetItem(f"{result['detection_time_ms']:.2f}"))
 
-        # Status
-        if validation:
-            if validation['is_correct'] is True:
-                status = "✓ Correct"
-            elif validation['is_correct'] is False:
-                missing = validation.get('missing', [])
-                status = f"✗ Missing {len(missing)}"
-            else:
-                status = "✓ Detected"
-        else:
-            status = "✓ Detected"
-        
-        status_item = QTableWidgetItem(status)
-        if validation and validation.get('is_correct') is False:
+        status_item = QTableWidgetItem(status_info['status'])
+        status_item.setData(Qt.UserRole, status_info['order'])
+        status_item.setToolTip(status_info['group'])
+        if status_info['group'] == 'Needs Review':
             status_item.setForeground(Qt.red)
+        elif status_info['group'] == 'Exact Match':
+            status_item.setForeground(Qt.darkGreen)
         self.detail_table.setItem(row, 6, status_item)
+
+    def _rebuild_detail_table_grouped(self):
+        """Rebuild the detail table grouped by review status for easier inspection."""
+        ordered_results = []
+        for result_list in self.results.values():
+            ordered_results.extend(result_list)
+
+        ordered_results.sort(
+            key=lambda result: (
+                AnnotationValidator.classify_validation(result.get('validation'))['order'],
+                Path(result['file_path']).name.lower(),
+                result['library_name'].lower(),
+            )
+        )
+
+        self.detail_table.setUpdatesEnabled(False)
+        self.detail_table.setRowCount(0)
+        for result in ordered_results:
+            row = self.detail_table.rowCount()
+            self.detail_table.insertRow(row)
+            self._populate_detail_row(row, result)
+        self.detail_table.setUpdatesEnabled(True)
 
     def on_benchmark_finished(self, results: dict):
         """Handle benchmark completion."""
         self.results = results
+        self._rebuild_detail_table_grouped()
         self.btn_run.setEnabled(True)
         self.progress_bar.setVisible(False)
         self.status_label.setText(f"Benchmark completed! Processed {len(self.selected_files)} files.")
@@ -1548,10 +1716,7 @@ class MainWindow(QMainWindow):
                                         cv2.FONT_HERSHEY_SIMPLEX, 0.38, _color, 1, cv2.LINE_AA)
 
             # Draw GT annotation polygons (green) on top
-            _fname = Path(file_path).name
-            _gt_entries = (self.annotation_full_data.get(_fname)
-                           or self.annotation_full_data.get(Path(file_path).stem)
-                           or [])
+            _gt_entries = self._lookup_annotation_mapping(self.annotation_full_data, file_path) or []
             for _bc in _gt_entries:
                 _pts = _bc.get('points', [])
                 if len(_pts) >= 2:
