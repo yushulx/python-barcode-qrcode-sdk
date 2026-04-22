@@ -179,16 +179,39 @@ class AnnotationConverter:
 class AnnotationValidator:
     """Validate detected barcodes against expected values."""
 
+    _CONTROL_TOKEN_MAP = {
+        '<NUL>': '\x00',
+        '␀': '\x00',
+        '<EOT>': '\x04',
+        '␄': '\x04',
+        '<GS>': '\x1d',
+        '[GS]': '\x1d',
+        '␝': '\x1d',
+        '<RS>': '\x1e',
+        '␞': '\x1e',
+    }
+
+    @staticmethod
+    def _normalize_text(value: str) -> str:
+        """Normalize line endings and control-character placeholders."""
+        normalized = value.replace('\r\n', '\n').replace('\r', '\n').strip()
+        for token, replacement in AnnotationValidator._CONTROL_TOKEN_MAP.items():
+            normalized = normalized.replace(token, replacement)
+        return normalized
+
     @staticmethod
     def _normalize_gs1_text(value: str) -> str:
         """Normalize GS1 text so human-friendly AI formatting still matches raw content."""
-        return value.replace('(', '').replace(')', '')
+        normalized = AnnotationValidator._normalize_text(value)
+        for token in ('(', ')', '\x1d', '\x1e', '\x04'):
+            normalized = normalized.replace(token, '')
+        return normalized
 
     @staticmethod
     def _match_texts(detected: str, expected: str) -> bool:
         """Flexible barcode text matching with UPC/EAN equivalence."""
-        detected = detected.strip()
-        expected = expected.strip()
+        detected = AnnotationValidator._normalize_text(detected)
+        expected = AnnotationValidator._normalize_text(expected)
 
         if detected == expected:
             return True
@@ -201,6 +224,11 @@ class AnnotationValidator:
 
         detected = normalized_detected
         expected = normalized_expected
+
+        # EAN/UPC add-on extensions may be present in GT but omitted by decoders.
+        if detected.isdigit() and expected.isdigit() and abs(len(detected) - len(expected)) in (2, 5):
+            if detected.startswith(expected) or expected.startswith(detected):
+                return True
 
         # UPC-A (12 digits) <-> EAN-13 (13 digits with leading 0)
         if len(detected) == 12 and len(expected) == 13 and expected == '0' + detected:
@@ -514,6 +542,21 @@ class HTMLReportExporter:
         return escape(str(s))
 
     @staticmethod
+    def _display_text(s: str) -> str:
+        """Convert control characters to visible markers and preserve line breaks in HTML."""
+        from html import escape
+
+        normalized = AnnotationValidator._normalize_text(str(s))
+        visible = (
+            normalized
+            .replace('\x00', '<NUL>')
+            .replace('\x04', '<EOT>')
+            .replace('\x1d', '<GS>')
+            .replace('\x1e', '<RS>')
+        )
+        return escape(visible).replace('\n', '<br>')
+
+    @staticmethod
     def _gt_cls(rate_pct: float) -> str:
         return 'gt-good' if rate_pct >= 90 else ('gt-ok' if rate_pct >= 70 else 'gt-poor')
 
@@ -522,6 +565,7 @@ class HTMLReportExporter:
         """Generate HTML report identical in layout to the web-app benchmark export."""
         esc = HTMLReportExporter._esc
         gt_cls = HTMLReportExporter._gt_cls
+        display_text = HTMLReportExporter._display_text
 
         # ── Reorganise results: file_path → lib_name → result dict ─────────
         file_results: Dict[str, Dict[str, dict]] = {}
@@ -655,7 +699,7 @@ class HTMLReportExporter:
             )
             section_html = f'<h4 class="benchmark-image-title">{esc(fname)}{gt_badge}</h4>\n'
             if show_expected_values and expected_values:
-                expected_html = ', '.join(esc(value) for value in expected_values)
+                expected_html = '<br>'.join(display_text(value) for value in expected_values)
                 section_html += (
                     '<div class="expected-values">'
                     f'<strong>Expected:</strong> {expected_html}'
@@ -681,7 +725,7 @@ class HTMLReportExporter:
                 barcodes = r.get('detected_data', [])
                 if barcodes:
                     detail = '<ul class="barcodes-list">' + ''.join(
-                        f'<li>[{esc(b.get("type",""))}] {esc(b.get("data",""))}</li>'
+                        f'<li>[{esc(b.get("type",""))}] {display_text(b.get("data",""))}</li>'
                         for b in barcodes
                     ) + '</ul>'
                 else:
