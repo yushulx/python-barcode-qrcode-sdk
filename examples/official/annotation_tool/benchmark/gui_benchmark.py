@@ -418,6 +418,7 @@ class BenchmarkWorker(QThread):
                                 'success': True,
                                 'barcodes_detected': barcode_count,
                                 'barcodes_expected': len(task.expected_barcodes) if task.expected_barcodes else 0,
+                                'expected_values': list(task.expected_barcodes) if task.expected_barcodes else [],
                                 'detection_time_ms': detection_time_ms,
                                 'detected_data': detected_data,
                                 'validation': validation
@@ -502,6 +503,9 @@ class HTMLReportExporter:
     .benchmark-image-title { font-size: 0.95rem; font-weight: 600; color: #475569;
                               margin: 18px 0 6px; padding-bottom: 4px;
                               border-bottom: 1px solid #e2e8f0; }
+    .expected-values { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px;
+                       background: #fff7ed; color: #9a3412; font-size: 0.86rem; }
+    .expected-values strong { color: #7c2d12; }
     """
 
     @staticmethod
@@ -635,16 +639,28 @@ class HTMLReportExporter:
             html += f'    <li>Fastest: <strong>{esc(fastest_lib)}</strong> ({agg[fastest_lib]["total_time"]:.0f} ms total)</li>\n'
         html += '  </ul>\n</div>\n'
 
-        def render_image_section(fp: str) -> str:
+        def render_image_section(fp: str, show_expected_values: bool = False) -> str:
             lib_map = file_results[fp]
             fname = Path(fp).name
             has_gt = any(r.get('validation') for r in lib_map.values())
+            expected_values = []
+            for result in lib_map.values():
+                expected_values = result.get('expected_values') or []
+                if expected_values:
+                    break
             gt_badge = (
                 ' <span style="font-size:0.78rem;font-weight:500;color:#16a34a;'
                 'background:#d1fae5;padding:1px 7px;border-radius:10px;margin-left:4px;">GT</span>'
                 if has_gt else ''
             )
             section_html = f'<h4 class="benchmark-image-title">{esc(fname)}{gt_badge}</h4>\n'
+            if show_expected_values and expected_values:
+                expected_html = ', '.join(esc(value) for value in expected_values)
+                section_html += (
+                    '<div class="expected-values">'
+                    f'<strong>Expected:</strong> {expected_html}'
+                    '</div>\n'
+                )
             section_html += '<div class="benchmark-table-wrap"><table class="benchmark-table">\n  <thead><tr>'
             if has_gt:
                 section_html += '<th>SDK</th><th>Found</th><th>Expected</th><th>Detected &#10003;</th><th>Rate</th><th>Precision</th><th>Time</th><th>Details</th>'
@@ -728,7 +744,7 @@ class HTMLReportExporter:
             html += f'  <summary>{esc(group_name)} ({len(group_files)})</summary>\n'
             html += '  <div class="benchmark-group-body">\n'
             for fp in group_files:
-                html += render_image_section(fp)
+                html += render_image_section(fp, show_expected_values=(group_name == 'Needs Review'))
             html += '  </div>\n'
             html += '</details>\n'
 
