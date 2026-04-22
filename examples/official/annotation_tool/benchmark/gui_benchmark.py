@@ -179,24 +179,29 @@ class AnnotationConverter:
 class AnnotationValidator:
     """Validate detected barcodes against expected values."""
 
-    _CONTROL_TOKEN_MAP = {
-        '<NUL>': '\x00',
-        '␀': '\x00',
-        '<EOT>': '\x04',
-        '␄': '\x04',
-        '<GS>': '\x1d',
-        '[GS]': '\x1d',
-        '␝': '\x1d',
-        '<RS>': '\x1e',
-        '␞': '\x1e',
+    _CONTROL_CHAR_NAMES = {
+        0x00: 'NUL',
+        0x01: 'SOH',
+        0x04: 'EOT',
+        0x10: 'DLE',
+        0x1C: 'FS',
+        0x1D: 'GS',
+        0x1E: 'RS',
     }
 
     @staticmethod
     def _normalize_text(value: str) -> str:
         """Normalize line endings and control-character placeholders."""
         normalized = value.replace('\r\n', '\n').replace('\r', '\n').strip()
-        for token, replacement in AnnotationValidator._CONTROL_TOKEN_MAP.items():
-            normalized = normalized.replace(token, replacement)
+
+        for code, name in AnnotationValidator._CONTROL_CHAR_NAMES.items():
+            raw = chr(code)
+            normalized = normalized.replace(f'<{name}>', raw)
+            normalized = normalized.replace(f'[{name}]', raw)
+            normalized = normalized.replace(chr(0x2400 + code), raw)
+
+        # U+2420 is the control-picture symbol for space.
+        normalized = normalized.replace('␠', ' ')
         return normalized
 
     @staticmethod
@@ -547,13 +552,14 @@ class HTMLReportExporter:
         from html import escape
 
         normalized = AnnotationValidator._normalize_text(str(s))
-        visible = (
-            normalized
-            .replace('\x00', '<NUL>')
-            .replace('\x04', '<EOT>')
-            .replace('\x1d', '<GS>')
-            .replace('\x1e', '<RS>')
-        )
+        visible_parts = []
+        for ch in normalized:
+            code = ord(ch)
+            if code in AnnotationValidator._CONTROL_CHAR_NAMES:
+                visible_parts.append(f'<{AnnotationValidator._CONTROL_CHAR_NAMES[code]}>')
+            else:
+                visible_parts.append(ch)
+        visible = ''.join(visible_parts)
         return escape(visible).replace('\n', '<br>')
 
     @staticmethod
