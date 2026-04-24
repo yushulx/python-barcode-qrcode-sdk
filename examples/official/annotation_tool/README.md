@@ -35,6 +35,78 @@ pip install -r requirements.txt
 python main.py
 ```
 
+### DBR Template Tuning Workflow
+
+If the default DBR preset returns `NO_RESULT` on a hard image, start with an evidence-gathering pass instead of guessing parameters or jumping straight to one special-case template:
+
+```bash
+python probe_dbr_templates.py path/to/image.png
+```
+
+The probe script tries:
+
+- the built-in `PT_READ_BARCODES` preset
+- every template inside `dbr_template.json`
+- the included `dbr_incomplete_qr_template.json` example template
+
+The `dbr_incomplete_qr_template.json` file is only an example for one hard incomplete-QR case. It is not the default answer for every difficult image. For other failures, use the same workflow to create a new focused template that matches the actual barcode type and failure mode.
+
+If you want to test only that example template:
+
+```bash
+python probe_dbr_templates.py path/to/image.png --template-file dbr_incomplete_qr_template.json
+```
+
+If you want a broader evidence pass before changing template parameters, include common preprocessing variants and save a machine-readable report:
+
+```bash
+python probe_dbr_templates.py path/to/image.png --variant-set basic --report-json tuning-report.json
+```
+
+If you already have a known-good template from Dynamsoft, compare it with your current template before guessing:
+
+```bash
+python compare_dbr_template_profiles.py current-template.json known-good-template.json
+```
+
+If you want the smallest possible validator, run the template directly through `CaptureVisionRouter.capture()`:
+
+```bash
+python validate_dbr_template.py path/to/image.png --template-file candidate-template.json
+```
+
+Both standalone helpers, `validate_dbr_template.py` and `probe_dbr_templates.py`, initialize the DBR license before they create `CaptureVisionRouter`. If you add another DBR-only helper script, call `ensure_dbr_license()` first or treat any `NO_RESULT` as untrusted.
+
+To use any custom template inside the GUI, click `Import DBR Template` and select the JSON file you want to test.
+
+The included `dbr_incomplete_qr_template.json` shows what a focused template looks like for one hard single-QR image:
+
+- narrow the task to one symbol type with `BarcodeFormatIds = ["BF_QR_CODE", "BF_MICRO_QR"]`
+- narrow the scene to one barcode with `ExpectedBarcodesCount = 1`
+- make localization more aggressive by combining `LM_SCAN_DIRECTLY`, `LM_CONNECTED_BLOCKS`, `LM_NEURAL_NETWORK`, `LM_STATISTICS`, and `LM_LINES`
+- keep both `GTM_ORIGINAL` and `GTM_INVERTED` grayscale transforms so dark-on-light and light-on-dark candidates are both tested
+- strengthen decode with multiple `DeblurModes`, including `DM_NEURAL_NETWORK` and `DM_DEEP_ANALYSIS`
+- relax QR acceptance a bit with `MinQuietZoneWidth = 0` and a lower `MinResultConfidence`
+
+After comparing against the official template, there is one important correction to that example strategy: do not assume more `DeblurModes` is the next best move. The official template leans much more on `DeformationResistingModes` such as `DRM_BROAD_WARP` and `DRM_DEWRINKLE`, uses a separate decode image-parameter block, keeps `BarcodeFormatSpecificationNameArray` unset, and sets `IfEraseTextZone` to `0`.
+
+Another important correction is workflow-related: image observation should come first. Before AI edits a template, it should inspect the image and explicitly describe visible symptoms such as quiet-zone loss, clipping, warp, blur, low contrast, inversion, or background texture. Those observations should decide which parameter family gets changed first.
+
+When a new image still fails, tune in this order instead of editing many sections at once:
+
+1. Observe the image first and write down the visible symptoms.
+2. Validate the current template with `python validate_dbr_template.py ...`.
+Make sure the script initializes the DBR license before creating `CaptureVisionRouter`; otherwise the result is not trustworthy.
+3. Restrict the scope when appropriate: one barcode, one format, long timeout.
+4. Compare against any known-good template before theorizing.
+5. Adjust localization next: add modes or lower `ConfidenceThreshold`.
+6. Adjust decode after that: check `DeformationResistingModes`, decode-specific image parameters, grayscale/binarization, and only then add or remove `DeblurModes`.
+7. Relax format rules last: quiet zone, mirror mode, partial value.
+
+This keeps each change falsifiable, so you can tell which parameter family actually helped.
+
+If both the raw image and the `basic` variant sweep still return `NO_RESULT`, treat that as evidence that template-only tuning is likely exhausted for the current pixels. At that point, further random parameter changes are usually lower value than preprocessing, better cropping, or a cleaner source image.
+
 ### Keyboard Shortcuts
 
 | Key | Action |
