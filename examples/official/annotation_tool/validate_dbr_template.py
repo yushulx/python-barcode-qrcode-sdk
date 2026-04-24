@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import cv2
+import numpy as np
 
 from dynamsoft_barcode_reader_bundle import CaptureVisionRouter, EnumPresetTemplate
 
@@ -29,6 +30,15 @@ def parse_args():
         action="store_true",
         help="Print the decode result as JSON.",
     )
+    parser.add_argument(
+        "--fallback-profile",
+        choices=["none", "context-retry"],
+        default="none",
+        help=(
+            "Retry a small prioritized set of app-level image variants when the first decode fails. "
+            "'context-retry' favors context expansion and simple resampling/binarization retries."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -48,18 +58,59 @@ def resolve_template_name(template_file, cli_template_name):
     return templates[0]["Name"]
 
 
-def decode(image_path, template_file=None, template_name=None):
-    ensure_dbr_license()
-    router = CaptureVisionRouter()
-    if template_file:
-        err, msg = router.init_settings_from_file(str(template_file))
-        if err != 0:
-            print(f"[DBR] Template load failed ({err}): {msg}")
+def preprocess_image(cv_img, pad):
+    return cv2.copyMakeBorder(
+        cv_img,
+        pad,
+        pad,
+        pad,
+        pad,
+        cv2.BORDER_CONSTANT,
+        value=(255, 255, 255),
+    )
 
-    cv_img = cv2.imread(str(image_path))
-    if cv_img is None:
-        raise RuntimeError(f"Failed to load image with OpenCV: {image_path}")
 
+def build_fallback_attempts(cv_img, fallback_profile="none"):
+    attempts = [("original", cv_img)]
+    if fallback_profile == "none":
+        return attempts
+
+    def add_attempt(name, image):
+        for existing_name, _ in attempts:
+            if existing_name == name:
+                return
+        attempts.append((name, image))
+
+    for extra_pad in (16, 24, 40):
+        add_attempt(f"padded_{extra_pad}", preprocess_image(cv_img, extra_pad))
+
+    base = preprocess_image(cv_img, 16)
+    nearest_2x = cv2.resize(base, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)
+    add_attempt("nearest_2x", nearest_2x)
+
+    nearest_4x = cv2.resize(base, None, fx=4, fy=4, interpolation=cv2.INTER_NEAREST)
+    add_attempt("nearest_4x", nearest_4x)
+
+    gray4 = cv2.cvtColor(nearest_4x, cv2.COLOR_BGR2GRAY)
+    otsu = cv2.threshold(gray4, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    add_attempt("nearest_4x_otsu", otsu)
+    add_attempt("nearest_4x_otsu_inverted", cv2.bitwise_not(otsu))
+
+    adaptive = cv2.adaptiveThreshold(
+        gray4,
+        255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY,
+        31,
+        2,
+    )
+    add_attempt("nearest_4x_adaptive", adaptive)
+    add_attempt("nearest_4x_adaptive_inverted", cv2.bitwise_not(adaptive))
+
+    return attempts
+
+
+def decode_with_router(router, cv_img, template_name):
     result = router.capture(cv_img, template_name)
 
     items = []
@@ -81,6 +132,36 @@ def decode(image_path, template_file=None, template_name=None):
     return items
 
 
+def decode(image_path, template_file=None, template_name=None, fallback_profile="none"):
+    ensure_dbr_license()
+    router = CaptureVisionRouter()
+    if template_file:
+        err, msg = router.init_settings_from_file(str(template_file))
+        if err != 0:
+            print(f"[DBR] Template load failed ({err}): {msg}")
+
+    cv_img = cv2.imread(str(image_path))
+    if cv_img is None:
+        raise RuntimeError(f"Failed to load image with OpenCV: {image_path}")
+
+    attempts = build_fallback_attempts(cv_img, fallback_profile)
+    best_items = []
+    best_attempt = attempts[0][0]
+
+    for attempt_name, attempt_image in attempts:
+        if isinstance(attempt_image, np.ndarray) and attempt_image.ndim == 2:
+            attempt_image = cv2.cvtColor(attempt_image, cv2.COLOR_GRAY2BGR)
+
+        items = decode_with_router(router, attempt_image, template_name)
+        if items:
+            return items, attempt_name
+
+        if not best_items:
+            best_attempt = attempt_name
+
+    return best_items, best_attempt
+
+
 def main():
     args = parse_args()
     image_path = Path(args.image).resolve()
@@ -94,7 +175,12 @@ def main():
             raise SystemExit(f"Template not found: {template_file}")
 
     template_name = resolve_template_name(template_file, args.template_name)
-    items = decode(image_path, template_file, template_name)
+    items, attempt_name = decode(
+        image_path,
+        template_file,
+        template_name,
+        args.fallback_profile,
+    )
 
     if args.json:
         print(
@@ -103,6 +189,8 @@ def main():
                     "image": str(image_path),
                     "template_file": str(template_file) if template_file else None,
                     "template_name": template_name,
+                    "fallback_profile": args.fallback_profile,
+                    "attempt": attempt_name,
                     "items": items,
                 },
                 indent=2,
@@ -113,6 +201,8 @@ def main():
     print(f"image: {image_path}")
     print(f"template_file: {template_file if template_file else 'builtin'}")
     print(f"template_name: {template_name}")
+    print(f"fallback_profile: {args.fallback_profile}")
+    print(f"attempt: {attempt_name}")
     if not items:
         print("NO_RESULT")
         return

@@ -105,7 +105,10 @@ def decode_image(image_path, template_name, template_path=None):
             return [], f"init_settings_from_file failed [{err}]: {msg}"
 
     try:
-        result = router.capture(str(image_path), template_name)
+        cv_img = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
+        if cv_img is None:
+            return [], f"Failed to load image with OpenCV: {image_path}"
+        result = router.capture(cv_img, template_name)
     except Exception as exc:
         return [], str(exc)
 
