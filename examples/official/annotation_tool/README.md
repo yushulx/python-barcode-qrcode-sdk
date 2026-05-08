@@ -157,4 +157,5 @@ python viewer.py
 3. **Browse** — Select any image in the list. If its filename appears in the JSON, overlays and barcode details are shown automatically.
 
 ## Blog
-[Build a Dual-Engine Barcode Annotation Tool in Python to Create Ground-Truth Datasets](https://www.dynamsoft.com/codepool/build-dual-engine-barcode-annotation-tool-python.html)
+- [Build a Dual-Engine Barcode Annotation Tool in Python to Create Ground-Truth Datasets](https://www.dynamsoft.com/codepool/build-dual-engine-barcode-annotation-tool-python.html)
+- [How to Generate Custom Dynamsoft Barcode Reader Templates in Python for Hard Barcode Images](https://www.dynamsoft.com/codepool/build-ai-generated-custom-barcode-reader-templates.html)
