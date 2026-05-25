@@ -19,6 +19,7 @@ Constraints:
 - Inspect the image before editing JSON.
 - Change one parameter family at a time.
 - Use the cheapest trustworthy evidence first.
+- For tiny single-code DataMatrix crops, compare the standard path against `DPMCRM_GENERAL` before resorting to ROI rescue or center-only crops.
 - If raw plus basic variants all fail, say template-only tuning is likely exhausted.
 
 Use these bundled commands when needed:

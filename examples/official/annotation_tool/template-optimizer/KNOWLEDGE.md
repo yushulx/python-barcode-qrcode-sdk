@@ -323,8 +323,24 @@ Each section in BarcodeReaderTaskSettingOptions references an `ImageParameterNam
 | `MinResultConfidence` | `BarcodeFormatSpecificationOptions` | Default 30. Lower to 10 to accept borderline results. |
 | `ExpectedBarcodesCount` | `BarcodeReaderTaskSettingOptions` | 0 = find all. Higher values may speed up processing. |
 | `MirrorMode` | `BarcodeFormatSpecificationOptions` | MM_NORMAL, MM_MIRROR, MM_BOTH |
-| `DPMCodeReadingModes` | `BarcodeReaderTaskSettingOptions` | DPMCRM_SKIP (default), DPMCRM_GENERAL |
+| `DPMCodeReadingModes` | `BarcodeReaderTaskSettingOptions` | DPMCRM_SKIP (default), DPMCRM_GENERAL. For tiny single-code DataMatrix crops, test `DPMCRM_GENERAL` before adding rescue ROIs. |
 | `TextureDetectionModes` | `ImageParameterOptions` → `SST_DETECT_TEXTURE` | TDM_GENERAL_WIDTH_CONCENTRATION |
+
+### DPM On Tiny DataMatrix Crops
+
+Do not reserve `DPMCRM_GENERAL` only for obviously etched metal marks. In practice it can also rescue tiny, rotated, single-code DataMatrix crops that behave more like direct-part-mark scenes than like large printed labels.
+
+**Validated case**:
+
+- Baseline single-ROI tube-cap template with `GTM_AUTO` plus `LM_CONNECTED_BLOCKS` / `LM_LINES` / `LM_STATISTICS` stalled at `95/96` on `matrix/`, missing only `barcode-025.png`.
+- Changing only the scope-level settings to `DPMCodeReadingModes = DPMCRM_GENERAL` and `ExpectedBarcodesCount = 1` lifted the same single-ROI template to `96/96` on `matrix/` while preserving `20/20` on `tubes/cropped_barcodes/barcode_001-020.png`.
+- A narrower port of an inverted-only DPM template also reached `96/96` on `matrix/`, but collapsed to `1/20` on the earlier crop slice. That means the DPM mode was the reusable win; the inverted-only preprocessing was dataset-specific overfitting.
+- Standard DataMatrix inverted-only variants without `DPMCRM_GENERAL` stayed at `95/96`, so the decisive lever in this case was the DPM read path rather than `ExpectedBarcodesCount` alone.
+
+**Best practice**:
+
+- When the scene is one small DataMatrix per crop and standard tuning stalls on one or two hard images, treat `DPMCodeReadingModes` as a scope-level experiment alongside `ExpectedBarcodesCount` before adding center-only crops or multi-ROI rescue.
+- Validate the DPM candidate on both the hard slice and one neighboring broader slice. If an inverted-only DPM port wins on the hard slice but collapses on nearby crops, keep the broader preprocessing and port only the DPM behavior.
 
 ---
 

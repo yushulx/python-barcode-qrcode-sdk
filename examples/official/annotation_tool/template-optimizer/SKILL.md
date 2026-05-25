@@ -206,12 +206,13 @@ Use the image observation, direct validation result, probe matrix, and optional 
 - **Only a preprocessed variant succeeds** → recommend preprocessing plus template tuning; do not pretend template-only tuning solved the problem.
 - **No raw or basic variant succeeds** → stop and say template-only tuning is likely exhausted for the current pixels.
 - **A proven template mainly differs in deformation handling or separate decode image parameters** → prioritize those before adding more `DeblurModes`.
+- **Tiny single-code DataMatrix crops stall under the standard path** → compare `DPMCRM_SKIP` versus `DPMCRM_GENERAL` before adding rescue ROIs or center-only crops. Validate that candidate on a neighboring slice too, because inverted-only DPM ports can overfit badly.
 
 #### 1d. Make one minimal edit
 
 Apply exactly one parameter family per edit, in this order:
 
-1. Scope first: `ExpectedBarcodesCount`, `BarcodeFormatIds`
+1. Scope first: `ExpectedBarcodesCount`, `BarcodeFormatIds`, `DPMCodeReadingModes`
 2. Localization second: `LocalizationModes`, `ConfidenceThreshold`
 3. Decode third: `DeformationResistingModes`, decode `ImageParameterOptions`, `DeblurModes`, `BarcodeScaleModes`, grayscale and binarization choices
 4. Acceptance last: `MinQuietZoneWidth`, `MirrorMode`, `ReturnPartialBarcodeValue`
