@@ -410,7 +410,7 @@ Interpret the evidence conservatively:
 - **Raw image succeeds with a candidate template** → keep tuning in the template only.
 - **Only a preprocessed variant succeeds** → recommend preprocessing plus template tuning; do not claim template-only success.
 - **No raw or basic variant succeeds** → template-only tuning is likely exhausted for the current pixels.
-- **A proven template mainly differs in deformation handling or separate decode image parameters** → prioritize those before adding more `DeblurModes`.
+- **A reference template mainly differs in deformation handling or separate decode image parameters** → prioritize those before adding more `DeblurModes`.
 
 For hard QR-like scenes with tiny tilted codes, low contrast, and multiple candidate code blocks, switch from template tuning to ROI-and-preprocessing recovery before giving up entirely:
 
@@ -425,7 +425,7 @@ Use that tool when the image still visibly contains QR markers but `validate_dbr
 | Symptom | First Parameter Family | Notes |
 |---------|------------------------|-------|
 | Quiet zone missing or crop too tight | `MinQuietZoneWidth`, padding variants | Test padded variants before broad decode changes |
-| Warped, folded, or wrinkled symbol | `DeformationResistingModes` | Compare against any proven template using `DRM_BROAD_WARP` / `DRM_DEWRINKLE` |
+| Warped, folded, or wrinkled symbol | `DeformationResistingModes` | Compare against any reference template using `DRM_BROAD_WARP` / `DRM_DEWRINKLE` |
 | Low contrast but still sharp | Grayscale enhancement, binarization | Prefer decode image parameters over localization churn |
 | Blur without obvious geometric damage | `DeblurModes`, `BarcodeScaleModes` | Keep localization stable if the symbol is already likely found |
 | Nearby dense text or texture | `IfEraseTextZone`, texture removal | Verify text-zone removal is not erasing damaged structure |
@@ -531,6 +531,34 @@ Images: Chinese pharmaceutical product labels photographed by mobile phone; each
 Images: Mobile phone boxes (Samsung, iPhone, Oppo, Honor) stacked on warehouse shelves, photographed by mobile phone. Each image contains 15-30+ boxes with Code 128 barcodes on white labels. Low resolution (721×1280), high JPEG compression. Mix of dark boxes (Samsung, Honor) and white boxes (iPhone). Primary format: CODE_128, with some DATAMATRIX and EAN_13.
 
 **Critical finding: SDK version matters enormously.** The Python SDK `dynamsoft-capture-vision-bundle` v3.0.6000 could not decode 4 of 12 images at all, and `LM_NEURAL_NETWORK` / `DM_NEURAL_NETWORK` modes caused the SDK to silently return 0 results. Upgrading to v3.4.2000 solved all failures with the default template alone.
+
+---
+
+## Barcode + OCR Scenario: Combined Template With Barcode-Referenced OCR
+
+When the page layout is stable, keep barcode decode and OCR in **one capture template**. For the verified page-number case, the decisive lesson was the combined-template structure: barcode decode plus text recognition whose ROI is derived from the barcode result.
+
+The earlier Python workaround overstated the role of manual upscale. In this scenario, the real requirement was correct template wiring plus a stable capture path.
+
+Template traits that mattered:
+
+- `CaptureVisionTemplates[].Name` must be used exactly at runtime.
+- `TargetROIDefOptions` for OCR must reference the barcode result through `ReferenceObjectFilter: ART_BARCODE` and a valid `ReferenceObjectOriginIndex`.
+- One capture should return both barcode and OCR results; consumers can fan them out through callbacks after parsing the single capture result.
+
+Practical playbook:
+
+1. If no template is provided, generate a focused combined template first: one barcode task, one OCR task, and barcode-referenced OCR ROI.
+2. Match the intended capture path first. In the verified page-number case, raw file-based `capture_multi_pages(...)` matched the C# sample and manual upscaling was unnecessary.
+3. Keep barcode and OCR in the same capture pass; do not split them into separate heuristic crops unless the primary path fails.
+4. Keep post-processing minimal: regex-filter numeric OCR candidates, but do not coerce values such as `161 -> 16`.
+5. Only try preprocessing after raw capture, exact template name, and barcode-referenced OCR wiring have all been confirmed.
+
+Observed evidence on the verified sample page image:
+
+- A correctly wired combined template decoded raw input through file-based capture, returning barcode `CBSE` and OCR `16`.
+- The earlier `nearest_4x` rescue came from a different Python capture path and should not be generalized as a requirement of this scenario.
+- The portable lesson is: **combined template + exact template name + barcode-referenced OCR ROI + stable capture API** before any upscale or OCR heuristics.
 
 | Iteration | SDK | Changes | Images | Barcodes | Delta |
 |-----------|-----|---------|--------|----------|-------|

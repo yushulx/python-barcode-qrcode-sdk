@@ -23,6 +23,7 @@ These rules apply in every mode, especially during optimization:
 4. **Use a stop condition.** If the raw image and the basic variant sweep both fail, say explicitly that template-only tuning is likely exhausted for the current pixels.
 5. **Prefer focused templates for focused problems.** When the task is about one known symbol or one recurring failure case, favor a minimal single-template JSON over editing a large exported default file.
 6. **Do not assume example templates are relevant.** Reuse an existing template only when the barcode type and failure pattern are close enough to justify it.
+7. **If no template is supplied, generate a focused template first.** Use the barcode format, expected count, ROI, and symptom pattern to synthesize the smallest defensible starting template; treat any reference template as comparison evidence, not as a requirement.
 
 ### Mode Selection
 
@@ -45,17 +46,12 @@ Inside **Optimize**, choose the execution track that matches the request:
 
 ## Skill Resources
 
-This skill bundles its own resource files. **Before doing anything else**, locate the skill directory:
+This skill is self-contained. Set `SKILL_DIR` to the directory containing this `SKILL.md` file.
 
-```bash
-# Find the skill's own SKILL.md to determine the resource paths
-Glob: **/template-optimizer/SKILL.md
-```
-
-Once found, all resources are relative to that directory:
+All required resources are inside `SKILL_DIR`:
 
 ```
-template-optimizer/
+SKILL_DIR/
    PROMPT.md
    SKILL.md
    KNOWLEDGE.md
@@ -73,9 +69,7 @@ template-optimizer/
 
 The bundled single-image evidence tools live under `tools/`, the batch harness lives under `resources/harness_py/`, and the supporting reference lives in `KNOWLEDGE.md` plus `templates/v3.4.1000/parameters.md`.
 
-Assign the skill directory path to a variable `SKILL_DIR` for use throughout the workflow.
-
-Use the bundled tools under `SKILL_DIR/tools/` as the first-line evidence path for **single-image triage**. If the current repository also exposes root-level wrappers such as `validate_dbr_template.py`, `probe_dbr_templates.py`, or `compare_dbr_template_profiles.py`, treat them as compatibility aliases only.
+Use the bundled tools under `SKILL_DIR/tools/` as the first-line evidence path for **single-image triage**.
 
 The Python harness runs directly from `SKILL_DIR/resources/harness_py/main.py`.
 
@@ -87,28 +81,25 @@ The Python harness runs directly from `SKILL_DIR/resources/harness_py/main.py`.
 | OpenCV, NumPy, Dynamsoft Capture Vision bundle | Single-image triage and batch harness | `pip install -r SKILL_DIR/requirements.txt` |
 | Node.js 18+ (optional) | Report generation (faster for large results) | `node --version` |
 
-## Using With GitHub Copilot
+## Portable Use
 
-`template-optimizer/` is the canonical, portable package. You can copy this folder into another workspace and use it without `.github/`.
+For Copilot, Claude, or another coding agent:
 
-For portable use in Copilot, Claude, or another coding agent:
+1. Keep `PROMPT.md`, `SKILL.md`, and `KNOWLEDGE.md` together in `SKILL_DIR`.
+2. Ask the agent to read `SKILL_DIR/PROMPT.md` and follow this workflow.
+3. Use bundled tools under `SKILL_DIR/tools/` for single-image triage.
+4. Use `SKILL_DIR/resources/harness_py/` for dataset benchmarking and reporting.
 
-1. Keep `template-optimizer/PROMPT.md`, `template-optimizer/SKILL.md`, and `template-optimizer/KNOWLEDGE.md` together.
-2. Ask the agent to read `template-optimizer/PROMPT.md` and follow the workflow in this directory.
-3. Use the bundled tools under `template-optimizer/tools/` for single-image triage.
+### Copilot Invocation Tips
 
-For Copilot-native discovery inside this repository, `.github/` remains an optional thin wrapper:
+Use clear prompts so Copilot enters the correct mode:
 
-1. Keep a discoverable skill entry at `.github/skills/template-optimizer/SKILL.md`.
-2. Optionally keep `.github/prompts/tune-dbr-template.prompt.md` as a convenience entrypoint.
-3. Make those wrappers point back to this directory as the canonical source.
-4. In Copilot Chat, ask for one of these directly:
-   - `Use the template-optimizer skill to tune this barcode image`
-   - `Use the template-optimizer skill to optimize these images`
-   - `Use the template-optimizer skill to explain DeblurModes`
-   - `Use the template-optimizer skill to generate a decode report`
+- `Use the template-optimizer skill to tune this barcode image`
+- `Use the template-optimizer skill to optimize these images`
+- `Use the template-optimizer skill to explain DeblurModes`
+- `Use the template-optimizer skill to generate a decode report`
 
-If skill discovery does not trigger automatically, ask Copilot to read `template-optimizer/PROMPT.md` and follow the Python-only workflow in this directory.
+If discovery does not trigger automatically, ask Copilot to read `SKILL_DIR/PROMPT.md` first, then execute the requested mode.
 
 ---
 
@@ -134,7 +125,9 @@ Ask the user for the following. Use the `AskUserQuestion` tool for structured ch
 | Converted image dir | No | None (temp) | **Required for HEIC/HEIF images** — directory to save converted JPEGs so the HTML report can display them. e.g. `imgs_jpg/`. Created automatically if it doesn't exist. |
 | Preprocessing allowed | No | Yes | Required to decide whether padded/rescaled variants are acceptable evidence or whether the task is strictly template-only |
 | Current template path | No | None | If provided, validate it directly before theorizing |
-| Proven template path | No | None | If the user has a known-good template from Dynamsoft or a teammate, diff it before broad exploration |
+| Reference template path | No | None | If the user has a known-good template from another run or teammate, diff it before broad exploration |
+| Template name override | No | None | If set, force that `CaptureVisionTemplates[].Name` at runtime; do not hard-code stale names |
+| Input scale policy | No | raw | Only after matching the intended runtime path. If a candidate template is still resolution-sensitive, record and apply a deterministic scale policy (for example `nearest_2x`) |
 
 Choose the track immediately after Step 0:
 
@@ -170,7 +163,7 @@ State which single parameter family those symptoms point to before changing anyt
 
 #### 1b. Validate the current template through the simplest path
 
-Use the bundled helper tools here. In repositories that still expose root-level wrappers, those wrappers should forward to the same commands.
+Use the bundled helper tools here.
 
 1. Run the direct validator first:
 
@@ -186,13 +179,21 @@ Use the bundled helper tools here. In repositories that still expose root-level 
    python SKILL_DIR/tools/probe_dbr_templates.py <image>
    ```
 
-3. If the user already has a proven template, compare it before theorizing:
+3. If the user already has a reference template, compare it before theorizing:
 
    ```bash
-   python SKILL_DIR/tools/compare_dbr_template_profiles.py <current-template> <proven-template>
+   python SKILL_DIR/tools/compare_dbr_template_profiles.py <current-template> <reference-template>
    ```
 
-4. If everything still returns `NO_RESULT`, test whether simple preprocessing changes the outcome:
+4. For mixed barcode+OCR templates (barcode decode plus text recognition with barcode-referenced ROI), verify wiring before parameter sweeps:
+
+   - Capture with the exact template name present under `CaptureVisionTemplates[].Name`.
+   - Confirm `TargetROIDefOptions` for OCR uses `ReferenceObjectFilter` with `ART_BARCODE` and a valid `ReferenceObjectOriginIndex`.
+   - If no template exists yet, generate a combined candidate with one barcode task and one OCR task whose ROI is derived from the barcode result.
+   - Match the intended capture path first (for example file-based `capture_multi_pages(...)` versus ndarray `capture(...)`) and validate raw input before trying upscale variants.
+   - If that raw path still fails but deterministic `nearest_2x` succeeds with the same template, treat it as runtime alignment to template assumptions, not as a custom OCR heuristic win.
+
+5. If everything still returns `NO_RESULT`, test whether simple preprocessing changes the outcome:
 
    ```bash
    python SKILL_DIR/tools/probe_dbr_templates.py <image> --variant-set basic --report-json tuning-report.json
@@ -205,7 +206,7 @@ Use the image observation, direct validation result, probe matrix, and optional 
 - **Raw image succeeds with a candidate template** → keep tuning in the template only.
 - **Only a preprocessed variant succeeds** → recommend preprocessing plus template tuning; do not pretend template-only tuning solved the problem.
 - **No raw or basic variant succeeds** → stop and say template-only tuning is likely exhausted for the current pixels.
-- **A proven template mainly differs in deformation handling or separate decode image parameters** → prioritize those before adding more `DeblurModes`.
+- **A reference template mainly differs in deformation handling or separate decode image parameters** → prioritize those before adding more `DeblurModes`.
 - **Tiny single-code DataMatrix crops stall under the standard path** → compare `DPMCRM_SKIP` versus `DPMCRM_GENERAL` before adding rescue ROIs or center-only crops. Validate that candidate on a neighboring slice too, because inverted-only DPM ports can overfit badly.
 
 #### 1d. Make one minimal edit
@@ -583,7 +584,7 @@ Use forward slashes in all paths when running from Git Bash or similar Unix-like
 
 ```bash
 python --version  # Need 3.8+
-pip install -r template-optimizer/resources/harness_py/requirements.txt
+pip install -r SKILL_DIR/requirements.txt
 ```
 
 ### Node.js (optional, for report generation)
@@ -671,9 +672,10 @@ Consult `KNOWLEDGE.md` for the full parameter deep dive. Summary optimization or
 
 ### Template Modification Rules
 
-- **Locate skill resources first** — Glob for `**/template-optimizer/SKILL.md`
+- **Locate skill resources first** — set `SKILL_DIR` to the directory containing this `SKILL.md`
 - **Read KNOWLEDGE.md** before making parameter decisions
 - **Use bundled helper tools first for a single-image failure** — `SKILL_DIR/tools/validate_dbr_template.py`, `SKILL_DIR/tools/probe_dbr_templates.py`, `SKILL_DIR/tools/compare_dbr_template_profiles.py`
+- **For combined barcode+OCR flows, lock template name and ROI wiring first** before changing mode arrays
 - **State the observed symptom and the target parameter family together** before editing
 - Place parameters in the correct **Section/Stage** (see KNOWLEDGE.md architecture diagram)
 - When modifying mode arrays, **add** to the array — don't replace

@@ -11,12 +11,13 @@ Task: tune this barcode image.
 - Image path: `<image-path>`
 - Current template path: `<template-path-or-none>`
 - Format hint: `<format-or-none>`
-- Proven template path: `<template-path-or-none>`
+- Reference template path: `<template-path-or-none>`
 - Preprocessing allowed: `<yes-or-no>`
 
 Constraints:
 
 - Inspect the image before editing JSON.
+- If no template is provided, generate a minimal focused template first from the skill knowledge.
 - Change one parameter family at a time.
 - Use the cheapest trustworthy evidence first.
 - For tiny single-code DataMatrix crops, compare the standard path against `DPMCRM_GENERAL` before resorting to ROI rescue or center-only crops.
@@ -27,12 +28,13 @@ Use these bundled commands when needed:
 - `python template-optimizer/tools/validate_dbr_template.py <image> --template-file <template>`
 - `python template-optimizer/tools/probe_dbr_templates.py <image>`
 - `python template-optimizer/tools/probe_dbr_templates.py <image> --variant-set basic --report-json tuning-report.json`
-- `python template-optimizer/tools/compare_dbr_template_profiles.py <current-template> <proven-template>`
+- `python template-optimizer/tools/compare_dbr_template_profiles.py <current-template> <reference-template>`
 
 Expected output:
 
 - Visual diagnosis
 - Diagnosis
+- Initial focused template when none was provided
 - Example-template relevance
 - Exact JSON change
 - Validation command
