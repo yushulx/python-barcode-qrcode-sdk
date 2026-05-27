@@ -59,7 +59,7 @@ Task: tune this barcode image.
 - Image path: path/to/image.png
 - Current template path: path/to/current-template.json
 - Format hint: QR_CODE
-- Proven template path: none
+- Reference template path: none
 - Preprocessing allowed: yes
 ```
 
