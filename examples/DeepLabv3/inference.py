@@ -77,6 +77,24 @@ class DocumentDetector:
         mask = pred.squeeze(0).cpu().numpy().astype(np.uint8)
         
         return mask
+
+    def compute_model_boundary_margin(
+        self,
+        output: torch.Tensor,
+        mask: np.ndarray
+    ) -> float:
+        """Measure softmax class separation along the predicted mask boundary."""
+        boundary = cv2.morphologyEx(
+            mask.astype(np.uint8),
+            cv2.MORPH_GRADIENT,
+            np.ones((5, 5), dtype=np.uint8)
+        ) > 0
+        if not np.any(boundary):
+            return 0.0
+
+        probabilities = torch.softmax(output, dim=1).squeeze(0).cpu().numpy()
+        boundary_margin = np.abs(probabilities[1] - probabilities[0])
+        return float(boundary_margin[boundary].mean())
     
     @torch.no_grad()
     def detect(self, image: np.ndarray) -> Dict:
@@ -108,7 +126,13 @@ class DocumentDetector:
         # Postprocessing
         with PerformanceTimer() as timer:
             mask = self.postprocess(output)
-            corners, contours = mask_to_boundary(mask, original_size)
+            model_boundary_margin = self.compute_model_boundary_margin(output, mask)
+            corners, contours = mask_to_boundary(
+                mask,
+                original_size,
+                image=image,
+                model_boundary_margin=model_boundary_margin
+            )
         metrics['postprocess_ms'] = timer.elapsed_ms
         
         # Total time
@@ -122,12 +146,10 @@ class DocumentDetector:
         mask_colored = visualize_mask(mask)
         mask_resized = cv2.resize(mask_colored, original_size, 
                                   interpolation=cv2.INTER_NEAREST)
-        
-        # Overlay mask on original image
-        overlay = overlay_mask(image, mask_resized, alpha=0.4)
-        
-        # Draw boundary if corners detected
+
+        overlay = image.copy()
         if corners is not None:
+            overlay = overlay_mask(overlay, mask_resized, alpha=0.4)
             overlay = draw_boundary(overlay, corners, color=config.COLORS['boundary'])
         
         return {

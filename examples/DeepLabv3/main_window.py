@@ -27,6 +27,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         self.current_image = None
+        self.current_image_path = None
+        self.image_paths = []
+        self.current_image_index = -1
         self.current_result = None
         self.detector = None
         self.device = None
@@ -47,6 +50,7 @@ class MainWindow(QMainWindow):
                         config.WINDOW_CONFIG['height'])
         self.setMinimumSize(config.WINDOW_CONFIG['min_width'],
                            config.WINDOW_CONFIG['min_height'])
+        self.setAcceptDrops(True)
         
         # Create central widget
         central_widget = QWidget()
@@ -86,6 +90,7 @@ class MainWindow(QMainWindow):
         
         # Image viewers
         self.image_viewer = ImageViewer()
+        self.image_viewer.filesDropped.connect(self.load_image_paths)
         layout.addWidget(self.image_viewer)
         
         # Zoom controls
@@ -118,10 +123,27 @@ class MainWindow(QMainWindow):
         control_group = QGroupBox("Controls")
         control_layout = QVBoxLayout()
         
-        self.load_image_btn = QPushButton("📁 Load Image")
-        self.load_image_btn.clicked.connect(self.load_image)
+        self.load_image_btn = QPushButton("📁 Load Images")
+        self.load_image_btn.clicked.connect(self.load_images)
         self.load_image_btn.setMinimumHeight(40)
         control_layout.addWidget(self.load_image_btn)
+
+        navigation_layout = QHBoxLayout()
+        self.prev_image_btn = QPushButton("◀ Prev")
+        self.prev_image_btn.clicked.connect(self.show_previous_image)
+        self.prev_image_btn.setEnabled(False)
+        navigation_layout.addWidget(self.prev_image_btn)
+
+        self.image_counter_label = QLabel("0 / 0")
+        self.image_counter_label.setAlignment(Qt.AlignCenter)
+        navigation_layout.addWidget(self.image_counter_label)
+
+        self.next_image_btn = QPushButton("Next ▶")
+        self.next_image_btn.clicked.connect(self.show_next_image)
+        self.next_image_btn.setEnabled(False)
+        navigation_layout.addWidget(self.next_image_btn)
+
+        control_layout.addLayout(navigation_layout)
         
         self.webcam_btn = QPushButton("📷 Start Webcam")
         self.webcam_btn.clicked.connect(self.toggle_webcam)
@@ -161,9 +183,9 @@ class MainWindow(QMainWindow):
         # File menu
         file_menu = menubar.addMenu("&File")
         
-        open_action = QAction("&Open Image", self)
+        open_action = QAction("&Open Images", self)
         open_action.setShortcut(QKeySequence.Open)
-        open_action.triggered.connect(self.load_image)
+        open_action.triggered.connect(self.load_images)
         file_menu.addAction(open_action)
         
         file_menu.addSeparator()
@@ -205,26 +227,88 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"Failed to load model:\n{str(e)}")
             self.statusBar.showMessage("Failed to load model")
     
-    def load_image(self):
-        """Load image from file"""
+    def load_images(self):
+        """Load one or more images from disk."""
         file_filter = "Images (" + " ".join(config.SUPPORTED_FORMATS) + ")"
-        file_path, _ = QFileDialog.getOpenFileName(
+        file_paths, _ = QFileDialog.getOpenFileNames(
             self, "Open Image", "", file_filter
         )
-        
-        if file_path:
-            try:
-                self.current_image = load_image(file_path)
-                self.image_viewer.set_image(self.current_image)
-                self.process_btn.setEnabled(True)
-                self.statusBar.showMessage(f"Loaded: {Path(file_path).name}")
-                
-                # Auto-process
-                self.process_image()
-                
-            except Exception as e:
-                logger.error(f"Failed to load image: {e}")
-                QMessageBox.warning(self, "Error", f"Failed to load image:\n{str(e)}")
+
+        if file_paths:
+            self.load_image_paths(file_paths)
+
+    def load_image_paths(self, file_paths: list):
+        """Load a new image collection from file paths."""
+        valid_paths = [path for path in file_paths if self.is_supported_image_path(path)]
+        if not valid_paths:
+            self.statusBar.showMessage("No supported images selected", 3000)
+            return
+
+        if self.is_webcam_active:
+            self.stop_webcam()
+
+        self.image_paths = valid_paths
+        self.current_image_index = 0
+        self.show_image_at_index(0)
+
+    def is_supported_image_path(self, file_path: str) -> bool:
+        """Return True when the file extension is supported."""
+        suffix = Path(file_path).suffix.lower()
+        supported_suffixes = {
+            pattern.replace('*', '').lower()
+            for pattern in config.SUPPORTED_FORMATS
+        }
+        return suffix in supported_suffixes
+
+    def show_image_at_index(self, index: int):
+        """Display and process the image at the given collection index."""
+        if index < 0 or index >= len(self.image_paths):
+            return
+
+        file_path = self.image_paths[index]
+
+        try:
+            self.current_image = load_image(file_path)
+            self.current_image_path = file_path
+            self.current_image_index = index
+            self.current_result = None
+
+            self.image_viewer.set_image(self.current_image)
+            self.process_btn.setEnabled(True)
+            self.export_btn.setEnabled(False)
+            self.update_image_navigation()
+            self.statusBar.showMessage(f"Loaded: {Path(file_path).name}")
+
+            self.process_image()
+
+        except Exception as e:
+            logger.error(f"Failed to load image: {e}")
+            QMessageBox.warning(self, "Error", f"Failed to load image:\n{str(e)}")
+
+    def show_previous_image(self):
+        """Display the previous image in the loaded collection."""
+        if self.current_image_index > 0:
+            self.show_image_at_index(self.current_image_index - 1)
+
+    def show_next_image(self):
+        """Display the next image in the loaded collection."""
+        if self.current_image_index + 1 < len(self.image_paths):
+            self.show_image_at_index(self.current_image_index + 1)
+
+    def update_image_navigation(self):
+        """Update navigator controls for the current image collection."""
+        has_images = len(self.image_paths) > 0 and not self.is_webcam_active
+        self.prev_image_btn.setEnabled(has_images and self.current_image_index > 0)
+        self.next_image_btn.setEnabled(
+            has_images and self.current_image_index < len(self.image_paths) - 1
+        )
+
+        if has_images:
+            self.image_counter_label.setText(
+                f"{self.current_image_index + 1} / {len(self.image_paths)}"
+            )
+        else:
+            self.image_counter_label.setText("0 / 0")
     
     def toggle_webcam(self):
         """Toggle webcam on/off"""
@@ -244,6 +328,8 @@ class MainWindow(QMainWindow):
             self.webcam_btn.setText("⏹️ Stop Webcam")
             self.load_image_btn.setEnabled(False)
             self.process_btn.setEnabled(False)
+            self.prev_image_btn.setEnabled(False)
+            self.next_image_btn.setEnabled(False)
             
             # Start timer for frame capture
             self.webcam_timer = QTimer()
@@ -270,6 +356,11 @@ class MainWindow(QMainWindow):
         self.webcam_btn.setText("📷 Start Webcam")
         self.load_image_btn.setEnabled(True)
         self.process_btn.setEnabled(self.current_image is not None)
+        self.update_image_navigation()
+
+        if self.image_paths and 0 <= self.current_image_index < len(self.image_paths):
+            self.show_image_at_index(self.current_image_index)
+            return
         
         self.statusBar.showMessage("Webcam stopped")
     
@@ -374,12 +465,50 @@ class MainWindow(QMainWindow):
     def clear_all(self):
         """Clear all data"""
         self.current_image = None
+        self.current_image_path = None
+        self.image_paths = []
+        self.current_image_index = -1
         self.current_result = None
         self.image_viewer.clear()
         self.process_btn.setEnabled(False)
         self.export_btn.setEnabled(False)
+        self.update_image_navigation()
         self.metrics_widget.reset_statistics()
         self.statusBar.showMessage("Cleared")
+
+    def dragEnterEvent(self, event):
+        """Accept supported image files dragged onto the window."""
+        file_paths = self._extract_dropped_image_paths(event)
+        if file_paths:
+            event.acceptProposedAction()
+            return
+        super().dragEnterEvent(event)
+
+    def dropEvent(self, event):
+        """Load dropped image files."""
+        file_paths = self._extract_dropped_image_paths(event)
+        if file_paths:
+            event.acceptProposedAction()
+            self.load_image_paths(file_paths)
+            return
+        super().dropEvent(event)
+
+    def _extract_dropped_image_paths(self, event) -> list:
+        """Collect supported local image paths from a drop event."""
+        mime_data = event.mimeData()
+        if mime_data is None or not mime_data.hasUrls():
+            return []
+
+        file_paths = []
+        for url in mime_data.urls():
+            if not url.isLocalFile():
+                continue
+
+            local_path = url.toLocalFile()
+            if self.is_supported_image_path(local_path):
+                file_paths.append(local_path)
+
+        return file_paths
     
     def show_about(self):
         """Show about dialog"""

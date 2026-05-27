@@ -3,7 +3,7 @@ Custom image viewer widget with zoom and pan capabilities
 """
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
 from PySide6.QtCore import Qt, Signal, QPointF
-from PySide6.QtGui import QPixmap, QWheelEvent, QMouseEvent
+from PySide6.QtGui import QPixmap, QWheelEvent, QMouseEvent, QDragEnterEvent, QDropEvent
 import numpy as np
 from utils import numpy_to_qpixmap
 
@@ -11,6 +11,7 @@ class ImageViewer(QGraphicsView):
     """Custom image viewer with zoom and pan"""
     
     imageClicked = Signal(QPointF)
+    filesDropped = Signal(list)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -22,6 +23,7 @@ class ImageViewer(QGraphicsView):
         self.zoom_factor = 1.0
         self.min_zoom = 0.1
         self.max_zoom = 10.0
+        self.setAcceptDrops(True)
         
         # Enable dragging
         self.setDragMode(QGraphicsView.ScrollHandDrag)
@@ -102,6 +104,34 @@ class ImageViewer(QGraphicsView):
             scene_pos = self.mapToScene(event.pos())
             self.imageClicked.emit(scene_pos)
         super().mousePressEvent(event)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        """Accept image file drops."""
+        if self._extract_local_paths(event.mimeData()):
+            event.acceptProposedAction()
+            return
+        super().dragEnterEvent(event)
+
+    def dropEvent(self, event: QDropEvent):
+        """Emit dropped image file paths."""
+        file_paths = self._extract_local_paths(event.mimeData())
+        if file_paths:
+            event.acceptProposedAction()
+            self.filesDropped.emit(file_paths)
+            return
+        super().dropEvent(event)
+
+    @staticmethod
+    def _extract_local_paths(mime_data) -> list:
+        """Collect local file paths from a drag/drop payload."""
+        if mime_data is None or not mime_data.hasUrls():
+            return []
+
+        file_paths = []
+        for url in mime_data.urls():
+            if url.isLocalFile():
+                file_paths.append(url.toLocalFile())
+        return file_paths
     
     def clear(self):
         """Clear the viewer"""

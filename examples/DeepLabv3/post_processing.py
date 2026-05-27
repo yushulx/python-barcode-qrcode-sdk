@@ -4,13 +4,122 @@ Post-processing utilities for document boundary extraction
 import cv2
 import numpy as np
 from typing import Optional, Tuple, List
+import config
 from utils import get_logger
 
 logger = get_logger(__name__)
 
+def get_boundary_validation_metrics(
+    image: np.ndarray,
+    corners: np.ndarray
+) -> Tuple[float, float, float]:
+    """Measure how much image evidence supports a predicted boundary."""
+    if image.ndim == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+
+    gray_float = gray.astype(np.float32)
+    grad_x = cv2.Sobel(gray_float, cv2.CV_32F, 1, 0, ksize=3)
+    grad_y = cv2.Sobel(gray_float, cv2.CV_32F, 0, 1, ksize=3)
+    grad_mag = cv2.magnitude(grad_x, grad_y)
+
+    band_width = max(
+        config.POSTPROCESSING_CONFIG['min_boundary_band_width'],
+        int(round(min(gray.shape[:2]) * config.POSTPROCESSING_CONFIG['boundary_band_width_ratio']))
+    )
+
+    band_mask = np.zeros_like(gray, dtype=np.uint8)
+    cv2.polylines(band_mask, [corners.astype(np.int32)], True, 255, band_width)
+
+    boundary_values = grad_mag[band_mask > 0]
+    if boundary_values.size == 0:
+        return 0.0, 0.0, 0.0
+
+    contrast_band_width = max(
+        config.POSTPROCESSING_CONFIG['min_contrast_band_width'],
+        int(round(min(gray.shape[:2]) * config.POSTPROCESSING_CONFIG['contrast_band_width_ratio']))
+    )
+    if contrast_band_width % 2 == 0:
+        contrast_band_width += 1
+
+    fill_mask = np.zeros_like(gray, dtype=np.uint8)
+    cv2.fillPoly(fill_mask, [corners.astype(np.int32)], 255)
+    kernel = np.ones((contrast_band_width, contrast_band_width), dtype=np.uint8)
+    dilated_mask = cv2.dilate(fill_mask, kernel, iterations=1)
+    outer_band = cv2.subtract(dilated_mask, fill_mask) > 0
+    inner_region = fill_mask > 0
+
+    inside_outside_contrast = 0.0
+    if np.any(inner_region) and np.any(outer_band):
+        inside_outside_contrast = abs(
+            float(gray[inner_region].mean()) - float(gray[outer_band].mean())
+        )
+
+    return (
+        float(np.mean(boundary_values)),
+        float(np.percentile(boundary_values, 90)),
+        inside_outside_contrast,
+    )
+
+def has_boundary_evidence(
+    image: np.ndarray,
+    corners: Optional[np.ndarray],
+    model_boundary_margin: Optional[float] = None
+) -> bool:
+    """
+    Validate that a predicted boundary aligns with image gradients.
+
+    Blank or nearly uniform images can still produce a plausible-looking mask.
+    Reject those cases unless the candidate quad has enough edge energy nearby.
+    """
+    if corners is None:
+        return False
+
+    if model_boundary_margin is not None:
+        if model_boundary_margin < config.POSTPROCESSING_CONFIG['min_model_boundary_margin']:
+            logger.info(
+                "Rejecting boundary with insufficient model boundary margin: %.3f < %.3f",
+                model_boundary_margin,
+                config.POSTPROCESSING_CONFIG['min_model_boundary_margin']
+            )
+            return False
+
+    boundary_gradient_mean, boundary_gradient_p90, inside_outside_contrast = (
+        get_boundary_validation_metrics(image, corners)
+    )
+
+    if boundary_gradient_mean < config.POSTPROCESSING_CONFIG['min_boundary_gradient_mean']:
+        logger.info(
+            "Rejecting boundary with insufficient gradient evidence: %.3f < %.3f",
+            boundary_gradient_mean,
+            config.POSTPROCESSING_CONFIG['min_boundary_gradient_mean']
+        )
+        return False
+
+    if boundary_gradient_p90 < config.POSTPROCESSING_CONFIG['min_boundary_gradient_p90']:
+        logger.info(
+            "Rejecting boundary with weak high-percentile edge support: %.3f < %.3f",
+            boundary_gradient_p90,
+            config.POSTPROCESSING_CONFIG['min_boundary_gradient_p90']
+        )
+        return False
+
+    if inside_outside_contrast < config.POSTPROCESSING_CONFIG['min_boundary_inside_outside_contrast']:
+        logger.info(
+            "Rejecting boundary with insufficient inside/outside contrast: %.3f < %.3f",
+            inside_outside_contrast,
+            config.POSTPROCESSING_CONFIG['min_boundary_inside_outside_contrast']
+        )
+        return False
+
+    return True
+
 def mask_to_boundary(
     mask: np.ndarray,
-    original_size: Tuple[int, int]
+    original_size: Tuple[int, int],
+    image: Optional[np.ndarray] = None,
+    model_boundary_margin: Optional[float] = None
 ) -> Tuple[Optional[np.ndarray], Optional[List[np.ndarray]]]:
     """
     Extract document boundary from segmentation mask
@@ -18,6 +127,8 @@ def mask_to_boundary(
     Args:
         mask: Binary segmentation mask (H, W)
         original_size: Original image size (width, height)
+        image: Original input image used to validate the predicted boundary
+        model_boundary_margin: Mean absolute softmax margin along the mask boundary
     
     Returns:
         Tuple of (corners, contours) where corners is (4, 2) array of corner points
@@ -56,6 +167,13 @@ def mask_to_boundary(
     
     # Order corners: top-left, top-right, bottom-right, bottom-left
     corners = order_points(corners)
+
+    if image is not None and not has_boundary_evidence(
+        image,
+        corners,
+        model_boundary_margin=model_boundary_margin
+    ):
+        return None, contours
     
     return corners, contours
 

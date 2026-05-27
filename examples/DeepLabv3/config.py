@@ -59,5 +59,16 @@ PERFORMANCE_CONFIG = {
     'webcam_fps': 30,
 }
 
+POSTPROCESSING_CONFIG = {
+    'boundary_band_width_ratio': 0.015,
+    'min_boundary_band_width': 5,
+    'min_boundary_gradient_mean': 1.5,
+    'min_boundary_gradient_p90': 4.1,
+    'contrast_band_width_ratio': 0.05,
+    'min_contrast_band_width': 15,
+    'min_boundary_inside_outside_contrast': 0.25,
+    'min_model_boundary_margin': 0.5,
+}
+
 # Create output directory if it doesn't exist
 OUTPUT_DIR.mkdir(exist_ok=True)
