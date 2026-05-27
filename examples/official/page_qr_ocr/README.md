@@ -40,3 +40,5 @@ pip install -r requirements.txt
 python app.py
 ```
 
+## Blog
+[Build a Python QR Code and Page Number OCR Scanner with PySide6 and Dynamsoft Capture Vision](https://www.dynamsoft.com/codepool/scan-qr-codes-ocr-page-numbers-python.html)
