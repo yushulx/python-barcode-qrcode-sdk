@@ -551,7 +551,7 @@ Practical playbook:
 1. If no template is provided, generate a focused combined template first: one barcode task, one OCR task, and barcode-referenced OCR ROI.
 2. Match the intended capture path first. In the verified page-number case, raw file-based `capture_multi_pages(...)` on the original image was sufficient and manual upscaling was unnecessary.
 3. Keep barcode and OCR in the same capture pass; do not split them into separate heuristic crops unless the primary path fails.
-4. Keep post-processing minimal: regex-filter numeric OCR candidates, but do not coerce values such as `161 -> 16`.
+4. Keep post-processing minimal: when the template already constrains OCR to numeric page-number output, consume the recognized text directly, without page-number length heuristics, numeric caps, or coercions such as `161 -> 16`.
 5. Only try preprocessing after raw capture, exact template name, and barcode-referenced OCR wiring have all been confirmed.
 
 Observed evidence on the verified sample page image:
