@@ -9,6 +9,10 @@ The project uses a single Dynamsoft Capture Vision template to do both tasks in 
 - choose the most likely page number from the OCR hits
 - draw both results as overlays in the GUI
 
+
+https://github.com/user-attachments/assets/d8ffc6a8-d2d1-45fd-98ad-fb52f1e874e8
+
+
 ## Project Layout
 
 - `app.py` — Python desktop app and scanner logic
@@ -36,3 +40,5 @@ pip install -r requirements.txt
 python app.py
 ```
 
+## Blog
+[Build a Python QR Code and Page Number OCR Scanner with PySide6 and Dynamsoft Capture Vision](https://www.dynamsoft.com/codepool/scan-qr-codes-ocr-page-numbers-python.html)
