@@ -35,7 +35,7 @@ if __name__ == '__main__':
                 continue
 
             result_array = cvr_instance.capture_multi_pages(
-                image_path, EnumPresetTemplate.PT_READ_BARCODES_READ_RATE_FIRST.value)
+                image_path, EnumPresetTemplate.PT_READ_BARCODES.value)
 
             results = result_array.get_results()
             if results is None or len(results) == 0:

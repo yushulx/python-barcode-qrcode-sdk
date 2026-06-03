@@ -31,6 +31,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication,
+    QComboBox,
     QFileDialog,
     QFrame,
     QGraphicsItem,
@@ -79,6 +80,14 @@ SUPPORTED_EXTS = IMAGE_EXTS | TIFF_EXTS | PDF_EXTS
 
 PDF_DETECT_DPI = 300
 PDF_DISPLAY_DPI = 150
+
+TEMPLATES: List[Tuple[str, str]] = [
+    ("Read Barcodes (default)", EnumPresetTemplate.PT_READ_BARCODES.value),
+    ("Speed First", EnumPresetTemplate.PT_READ_BARCODES_SPEED_FIRST.value),
+    ("Read Rate First", EnumPresetTemplate.PT_READ_BARCODES_READ_RATE_FIRST.value),
+    ("Single Barcode", EnumPresetTemplate.PT_READ_SINGLE_BARCODE.value),
+]
+DEFAULT_TEMPLATE_INDEX = 0  # Read Barcodes (default)
 
 OVERLAY_COLOR = QColor(0, 200, 80)
 OVERLAY_FILL = QColor(0, 200, 80, 60)
@@ -175,14 +184,81 @@ class ScannerSignals(QObject):
 
 
 class ScannerThread(QThread):
-    def __init__(self, files: List[str], parent=None) -> None:
+    def __init__(
+        self,
+        files: List[str],
+        template: str,
+        cached_pages: Optional[dict] = None,
+        parent=None,
+    ) -> None:
         super().__init__(parent)
         self.files = list(files)
+        self.template = template
+        # {(file_path, page_idx) -> PageData} - rendered pages we can reuse
+        # so a template-switch re-decode does not re-render PDFs/TIFFs.
+        self.cached_pages = cached_pages or {}
         self.signals = ScannerSignals()
         self._stop = False
 
     def stop(self) -> None:
         self._stop = True
+
+    def _prepare_pages(self, file_path: str) -> List[PageData]:
+        """Render pages or reuse cached renders. Emits fileStarted (only when
+        the file was not previously loaded) and a placeholder pageReady for
+        every page. Returns the list of PageData."""
+        cached_keys = sorted(k for k in self.cached_pages if k[0] == file_path)
+        if cached_keys:
+            n_total = cached_keys[-1][1] + 1
+            if all((file_path, i) in self.cached_pages for i in range(n_total)):
+                records: List[PageData] = []
+                for i in range(n_total):
+                    old = self.cached_pages[(file_path, i)]
+                    records.append(
+                        PageData(
+                            file_path=file_path,
+                            page_index=i,
+                            total_pages=n_total,
+                            image=old.image,
+                            detect_width=old.detect_width,
+                            detect_height=old.detect_height,
+                            barcodes=[],
+                            error=None,
+                        )
+                    )
+                # No fileStarted - the tree item already exists.
+                for rec in records:
+                    self.signals.pageReady.emit(rec)
+                return records
+
+        try:
+            rendered = render_pages(file_path)
+        except Exception as exc:
+            self.signals.error.emit(
+                file_path, f"Failed to render: {exc}\n{traceback.format_exc()}"
+            )
+            return []
+
+        total_pages = len(rendered)
+        if total_pages == 0:
+            self.signals.error.emit(file_path, "No pages rendered.")
+            return []
+
+        self.signals.fileStarted.emit(file_path, total_pages)
+
+        records = []
+        for idx, (img, dw, dh) in enumerate(rendered):
+            rec = PageData(
+                file_path=file_path,
+                page_index=idx,
+                total_pages=total_pages,
+                image=img,
+                detect_width=dw,
+                detect_height=dh,
+            )
+            records.append(rec)
+            self.signals.pageReady.emit(rec)
+        return records
 
     def run(self) -> None:
         try:
@@ -192,40 +268,16 @@ class ScannerThread(QThread):
             self.signals.allFinished.emit()
             return
 
-        template = EnumPresetTemplate.PT_READ_BARCODES_READ_RATE_FIRST.value
+        template = self.template
 
         for file_path in self.files:
             if self._stop:
                 break
-            try:
-                rendered = render_pages(file_path)
-            except Exception as exc:
-                self.signals.error.emit(
-                    file_path, f"Failed to render: {exc}\n{traceback.format_exc()}"
-                )
+
+            page_records = self._prepare_pages(file_path)
+            if not page_records:
                 continue
-
-            total_pages = len(rendered)
-            if total_pages == 0:
-                self.signals.error.emit(file_path, "No pages rendered.")
-                continue
-
-            self.signals.fileStarted.emit(file_path, total_pages)
-
-            # Emit placeholder pages first so the UI is responsive while the
-            # scan runs; barcodes will be filled in after decode finishes.
-            page_records: List[PageData] = []
-            for idx, (img, dw, dh) in enumerate(rendered):
-                rec = PageData(
-                    file_path=file_path,
-                    page_index=idx,
-                    total_pages=total_pages,
-                    image=img,
-                    detect_width=dw,
-                    detect_height=dh,
-                )
-                page_records.append(rec)
-                self.signals.pageReady.emit(rec)
+            total_pages = len(page_records)
 
             if self._stop:
                 break
@@ -472,6 +524,7 @@ class MainWindow(QMainWindow):
         self._license_ok = False
         self._barcode_total = 0
         self._auto_select_target: Optional[str] = None
+        self._current_template: str = TEMPLATES[DEFAULT_TEMPLATE_INDEX][1]
 
         self._build_ui()
         self._init_license()
@@ -519,6 +572,20 @@ class MainWindow(QMainWindow):
         )
         self._fit_act.triggered.connect(lambda: self.viewer.fit_to_window())
         toolbar.addAction(self._fit_act)
+
+        toolbar.addSeparator()
+        toolbar.addWidget(QLabel(" Template: "))
+        self._template_combo = QComboBox()
+        for label, _value in TEMPLATES:
+            self._template_combo.addItem(label)
+        self._template_combo.setCurrentIndex(DEFAULT_TEMPLATE_INDEX)
+        self._template_combo.setMinimumWidth(180)
+        self._template_combo.setToolTip(
+            "Capture Vision preset template. Changing it re-decodes the "
+            "currently selected file."
+        )
+        self._template_combo.currentIndexChanged.connect(self._on_template_changed)
+        toolbar.addWidget(self._template_combo)
 
         toolbar.addSeparator()
         spacer = QWidget()
@@ -669,6 +736,50 @@ class MainWindow(QMainWindow):
         if folder:
             self._enqueue_paths([folder])
 
+    def _on_template_changed(self, index: int) -> None:
+        if index < 0 or index >= len(TEMPLATES):
+            return
+        label, value = TEMPLATES[index]
+        self._current_template = value
+
+        file_path = self._current_file_path()
+        if not file_path:
+            self._status_label.setText(f"Template -> {label}")
+            return
+
+        # Re-decode the currently displayed file with the new template.
+        # Cached page renders are reused so PDFs/TIFFs don't have to be
+        # rasterised again.
+        cached = {
+            key: page for key, page in self._pages.items() if key[0] == file_path
+        }
+        if self._scanner and self._scanner.isRunning():
+            self._scanner.stop()
+            self._scanner.wait(2000)
+
+        self._auto_select_target = None  # keep the current selection
+        self._progress.setVisible(True)
+        self._status_label.setText(
+            f"Re-decoding {os.path.basename(file_path)} with '{label}'..."
+        )
+
+        self._scanner = ScannerThread(
+            [file_path], self._current_template, cached_pages=cached, parent=self
+        )
+        self._scanner.signals.fileStarted.connect(self._on_file_started)
+        self._scanner.signals.pageReady.connect(self._on_page_ready)
+        self._scanner.signals.fileFinished.connect(self._on_file_finished)
+        self._scanner.signals.allFinished.connect(self._on_all_finished)
+        self._scanner.signals.error.connect(self._on_scan_error)
+        self._scanner.start()
+
+    def _current_file_path(self) -> Optional[str]:
+        item = self.tree.currentItem()
+        if item is None:
+            return None
+        path = item.data(0, self.FILE_ROLE)
+        return path if path else None
+
     def _on_clear(self) -> None:
         if self._scanner and self._scanner.isRunning():
             self._scanner.stop()
@@ -713,7 +824,7 @@ class MainWindow(QMainWindow):
         self._progress.setVisible(True)
         self._status_label.setText(f"Scanning {len(new_files)} file(s)...")
 
-        self._scanner = ScannerThread(new_files, self)
+        self._scanner = ScannerThread(new_files, self._current_template, parent=self)
         self._scanner.signals.fileStarted.connect(self._on_file_started)
         self._scanner.signals.pageReady.connect(self._on_page_ready)
         self._scanner.signals.fileFinished.connect(self._on_file_finished)
