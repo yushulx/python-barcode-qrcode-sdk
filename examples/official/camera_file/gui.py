@@ -287,6 +287,11 @@ class ScannerThread(QThread):
 # ---------------------------------------------------------------------------
 
 class ImageViewer(QGraphicsView):
+    filesDropped = Signal(list)
+
+    _BG_NORMAL = QColor("#1e1f23")
+    _BG_HOVER = QColor("#2d3a2a")
+
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self._scene = QGraphicsScene(self)
@@ -299,10 +304,21 @@ class ImageViewer(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
-        self.setBackgroundBrush(QBrush(QColor("#1e1f23")))
+        self.setBackgroundBrush(QBrush(self._BG_NORMAL))
+        self.setAcceptDrops(True)
+        self.viewport().setAcceptDrops(True)
         self._pixmap_item: Optional[QGraphicsPixmapItem] = None
         self._zoom = 0
         self._has_page = False
+        self._show_drop_hint()
+
+    def _show_drop_hint(self) -> None:
+        hint = self._scene.addText("Drop images, PDFs, or a folder here")
+        font = QFont()
+        font.setPointSize(14)
+        hint.setFont(font)
+        hint.setDefaultTextColor(QColor("#8a8a8a"))
+        self._scene.setSceneRect(hint.boundingRect().adjusted(-40, -40, 40, 40))
 
     def clear_view(self) -> None:
         self._scene.clear()
@@ -396,6 +412,44 @@ class ImageViewer(QGraphicsView):
         if self._zoom == 0 and self._pixmap_item is not None:
             self.fit_to_window()
 
+    # ----- drag and drop ----------------------------------------------------
+
+    @staticmethod
+    def _urls_to_paths(mime) -> List[str]:
+        paths: List[str] = []
+        if mime.hasUrls():
+            for url in mime.urls():
+                local = url.toLocalFile()
+                if local:
+                    paths.append(local)
+        return paths
+
+    def dragEnterEvent(self, event) -> None:
+        if self._urls_to_paths(event.mimeData()):
+            event.acceptProposedAction()
+            self.setBackgroundBrush(QBrush(self._BG_HOVER))
+            return
+        super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event) -> None:
+        if self._urls_to_paths(event.mimeData()):
+            event.acceptProposedAction()
+            return
+        super().dragMoveEvent(event)
+
+    def dragLeaveEvent(self, event) -> None:
+        self.setBackgroundBrush(QBrush(self._BG_NORMAL))
+        super().dragLeaveEvent(event)
+
+    def dropEvent(self, event) -> None:
+        paths = self._urls_to_paths(event.mimeData())
+        self.setBackgroundBrush(QBrush(self._BG_NORMAL))
+        if paths:
+            event.acceptProposedAction()
+            self.filesDropped.emit(paths)
+            return
+        super().dropEvent(event)
+
 
 # ---------------------------------------------------------------------------
 # Main window
@@ -417,6 +471,7 @@ class MainWindow(QMainWindow):
         self._scanner: Optional[ScannerThread] = None
         self._license_ok = False
         self._barcode_total = 0
+        self._auto_select_target: Optional[str] = None
 
         self._build_ui()
         self._init_license()
@@ -495,6 +550,7 @@ class MainWindow(QMainWindow):
         # viewer + navigator
         self.viewer = ImageViewer()
         self.viewer.setMinimumSize(480, 360)
+        self.viewer.filesDropped.connect(self._enqueue_paths)
 
         nav_bar = QFrame()
         nav_bar.setFrameShape(QFrame.Shape.StyledPanel)
@@ -623,6 +679,7 @@ class MainWindow(QMainWindow):
         self._pages.clear()
         self._file_items.clear()
         self._barcode_total = 0
+        self._auto_select_target = None
         self._page_label.setText("No page selected")
         self._status_label.setText("Cleared.")
         self._update_nav_state()
@@ -648,6 +705,10 @@ class MainWindow(QMainWindow):
         if self._scanner and self._scanner.isRunning():
             self._scanner.stop()
             self._scanner.wait(2000)
+
+        # Auto-select the first page of the first newly dropped file as
+        # soon as its placeholder render becomes available.
+        self._auto_select_target = new_files[0]
 
         self._progress.setVisible(True)
         self._status_label.setText(f"Scanning {len(new_files)} file(s)...")
@@ -734,9 +795,20 @@ class MainWindow(QMainWindow):
             )
             parent.setText(1, str(total))
 
-        # If the user has not selected anything yet, auto-select the very
-        # first item we know about.
-        if self.tree.currentItem() is None:
+        # Auto-select the first page of the most recently dropped batch as
+        # soon as its placeholder render appears, so the user sees the file
+        # immediately. Falls back to picking up the first page that arrives
+        # if nothing is selected yet.
+        if (
+            self._auto_select_target == page.file_path
+            and page.page_index == 0
+        ):
+            self._auto_select_target = None
+            if self.tree.currentItem() is not target_item:
+                self.tree.setCurrentItem(target_item)
+            else:
+                self._show_page(page)
+        elif self.tree.currentItem() is None:
             self.tree.setCurrentItem(target_item)
         elif self.tree.currentItem() is target_item:
             # currently viewed page just got new results -> refresh
