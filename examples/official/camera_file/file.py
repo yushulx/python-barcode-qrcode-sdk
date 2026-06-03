@@ -34,17 +34,31 @@ if __name__ == '__main__':
                 print("The image path does not exist.")
                 continue
 
-            cv_image = cv2.imread(image_path)
-            result = cvr_instance.capture(
-                cv_image, EnumPresetTemplate.PT_READ_BARCODES.value)
-            if result.get_error_code() != EnumErrorCode.EC_OK:
-                print("Error:", result.get_error_code(),
-                      result.get_error_string())
-            else:
-                
+            result_array = cvr_instance.capture_multi_pages(
+                image_path, EnumPresetTemplate.PT_READ_BARCODES_READ_RATE_FIRST.value)
 
-                items = result.get_items()
-                print('Found {} barcodes.'.format(len(items)))
+            results = result_array.get_results()
+            if results is None or len(results) == 0:
+                print("No pages were processed.")
+                continue
+
+            total_barcodes = 0
+            for page_result in results:
+                page_number = 1
+                tag = page_result.get_original_image_tag()
+                if isinstance(tag, FileImageTag):
+                    page_number = tag.get_page_number() + 1
+
+                if page_result.get_error_code() != EnumErrorCode.EC_OK and \
+                        page_result.get_error_code() != EnumErrorCode.EC_UNSUPPORTED_JSON_KEY_WARNING:
+                    print("Page", page_number, "Error:",
+                          page_result.get_error_code(),
+                          page_result.get_error_string())
+                    continue
+
+                items = page_result.get_items()
+                total_barcodes += len(items)
+                print("Page {}: found {} barcode(s).".format(page_number, len(items)))
                 for item in items:
                     format_type = item.get_format_string()
                     text = item.get_text()
@@ -67,16 +81,7 @@ if __name__ == '__main__':
                     print("({}, {})".format(x4, y4))
                     print("-------------------------------------------------")
 
-                    pts = np.array([(x1, y1), (x2, y2), (x3, y3), (x4, y4)], np.int32).reshape((-1, 1, 2))
-                    cv2.drawContours(
-                        cv_image, [pts], 0, (0, 255, 0), 2)
-
-                    cv2.putText(cv_image, text, (x1, y1 - 10),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-
-                cv2.imshow(
-                    "Original Image with Detected Barcodes", cv_image)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+            print("Total: {} barcode(s) across {} page(s).".format(
+                total_barcodes, len(results)))
 
     input("Press Enter to quit...")

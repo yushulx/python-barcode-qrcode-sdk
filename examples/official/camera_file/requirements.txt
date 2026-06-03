@@ -1,2 +1,4 @@
 dynamsoft-capture-vision-bundle
 opencv-python
+PySide6
+PyMuPDF
