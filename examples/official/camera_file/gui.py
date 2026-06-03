@@ -9,6 +9,7 @@ page navigator for multi-page documents (PDFs, TIFFs).
 
 import os
 import sys
+import time
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -41,6 +42,7 @@ from PySide6.QtWidgets import (
     QGraphicsScene,
     QGraphicsSimpleTextItem,
     QGraphicsView,
+    QHeaderView,
     QHBoxLayout,
     QLabel,
     QListWidget,
@@ -127,6 +129,14 @@ class PageData:
     detect_height: int = 0
     barcodes: List[BarcodeHit] = field(default_factory=list)
     error: Optional[str] = None
+    decode_elapsed_ms: Optional[int] = None
+
+
+@dataclass
+class FileScanMetrics:
+    barcode_count: int = 0
+    decode_elapsed_ms: Optional[int] = None
+    used_layout_analysis: bool = False
 
 
 @dataclass
@@ -403,6 +413,7 @@ def render_detection_mats(file_path: str, page_records: List[PageData]) -> List[
 class ScannerSignals(QObject):
     fileStarted = Signal(str, int)
     pageReady = Signal(object)
+    fileMetricsReady = Signal(str, int, int, bool)
     fileFinished = Signal(str)
     allFinished = Signal()
     error = Signal(str, str)
@@ -512,10 +523,14 @@ class ScannerThread(QThread):
                 continue
 
             detection_image = detection_images[page_index]
+            page_start = time.perf_counter()
             try:
                 hits, error = decode_with_layout_analysis(detection_image)
             except Exception as exc:
                 page_record.error = f"Layout analysis failed: {exc}"
+                page_record.decode_elapsed_ms = int(
+                    (time.perf_counter() - page_start) * 1000
+                )
                 self.signals.pageReady.emit(page_record)
                 continue
 
@@ -523,6 +538,7 @@ class ScannerThread(QThread):
             page_record.detect_height = detection_image.shape[0]
             page_record.barcodes = hits
             page_record.error = error
+            page_record.decode_elapsed_ms = int((time.perf_counter() - page_start) * 1000)
             self.signals.pageReady.emit(page_record)
 
     def run(self) -> None:
@@ -550,10 +566,17 @@ class ScannerThread(QThread):
                 break
 
             if self.use_layout_analysis:
+                file_start = time.perf_counter()
                 self._scan_with_layout_analysis(file_path, page_records)
+                file_elapsed_ms = int((time.perf_counter() - file_start) * 1000)
+                total_barcodes = sum(len(page_record.barcodes) for page_record in page_records)
+                self.signals.fileMetricsReady.emit(
+                    file_path, total_barcodes, file_elapsed_ms, True
+                )
                 self.signals.fileFinished.emit(file_path)
                 continue
 
+            file_start = time.perf_counter()
             try:
                 if cvr is None:
                     raise RuntimeError("CaptureVisionRouter was not initialized.")
@@ -568,6 +591,8 @@ class ScannerThread(QThread):
 
             results = result_array.get_results() if result_array else None
             if not results:
+                file_elapsed_ms = int((time.perf_counter() - file_start) * 1000)
+                self.signals.fileMetricsReady.emit(file_path, 0, file_elapsed_ms, False)
                 self.signals.fileFinished.emit(file_path)
                 continue
 
@@ -595,6 +620,14 @@ class ScannerThread(QThread):
                 page_records[page_idx].barcodes = hits
                 self.signals.pageReady.emit(page_records[page_idx])
 
+            file_elapsed_ms = int((time.perf_counter() - file_start) * 1000)
+            total_barcodes = sum(len(page_record.barcodes) for page_record in page_records)
+            if total_pages == 1 and page_records:
+                page_records[0].decode_elapsed_ms = file_elapsed_ms
+                self.signals.pageReady.emit(page_records[0])
+            self.signals.fileMetricsReady.emit(
+                file_path, total_barcodes, file_elapsed_ms, False
+            )
             self.signals.fileFinished.emit(file_path)
 
         self.signals.allFinished.emit()
@@ -709,7 +742,11 @@ class ImageViewer(QGraphicsView):
     def fit_to_window(self) -> None:
         if self._pixmap_item is None:
             return
-        self.fitInView(self._pixmap_item, Qt.AspectRatioMode.KeepAspectRatio)
+        # Reset any accumulated pan/zoom before fitting the current page again.
+        self.resetTransform()
+        target_rect = self._pixmap_item.sceneBoundingRect()
+        self.centerOn(self._pixmap_item)
+        self.fitInView(target_rect, Qt.AspectRatioMode.KeepAspectRatio)
         self._zoom = 0
 
     def wheelEvent(self, event) -> None:
@@ -785,6 +822,7 @@ class MainWindow(QMainWindow):
 
         # data
         self._pages: dict[Tuple[str, int], PageData] = {}
+        self._file_metrics: dict[str, FileScanMetrics] = {}
         self._file_items: dict[str, QTreeWidgetItem] = {}
         self._scanner: Optional[ScannerThread] = None
         self._license_ok = False
@@ -837,7 +875,7 @@ class MainWindow(QMainWindow):
             "Fit to Window",
             self,
         )
-        self._fit_act.triggered.connect(lambda: self.viewer.fit_to_window())
+        self._fit_act.triggered.connect(self._on_fit_to_window)
         toolbar.addAction(self._fit_act)
 
         toolbar.addSeparator()
@@ -876,12 +914,17 @@ class MainWindow(QMainWindow):
 
         # tree (file list)
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["File / Page", "Barcodes"])
-        self.tree.setColumnWidth(0, 220)
-        self.tree.setMinimumWidth(260)
+        self.tree.setHeaderLabels(["File / Page", "Barcodes", "Time (ms)"])
+        self.tree.setMinimumWidth(340)
+        tree_header = self.tree.header()
+        tree_header.setStretchLastSection(False)
+        tree_header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        tree_header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        tree_header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.tree.currentItemChanged.connect(self._on_tree_changed)
 
         tree_panel = QWidget()
+        tree_panel.setMinimumWidth(340)
         tree_layout = QVBoxLayout(tree_panel)
         tree_layout.setContentsMargins(6, 6, 6, 6)
         tree_layout.setSpacing(4)
@@ -938,7 +981,7 @@ class MainWindow(QMainWindow):
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
         splitter.setStretchFactor(2, 0)
-        splitter.setSizes([280, 720, 280])
+        splitter.setSizes([360, 640, 280])
         self.setCentralWidget(splitter)
 
         # status bar
@@ -1028,6 +1071,11 @@ class MainWindow(QMainWindow):
             f"Re-decoding {os.path.basename(file_path)} with {mode_label}..."
         )
 
+    def _on_fit_to_window(self) -> None:
+        self.viewer.fit_to_window()
+        if self.viewer._pixmap_item is not None:
+            self._status_label.setText("Fitted current page to window.")
+
     def _on_layout_analysis_toggled(self, checked: bool) -> None:
         self._layout_analysis_enabled = checked
         file_path = self._current_file_path()
@@ -1045,6 +1093,7 @@ class MainWindow(QMainWindow):
             return
         self._scanner.signals.fileStarted.connect(self._on_file_started)
         self._scanner.signals.pageReady.connect(self._on_page_ready)
+        self._scanner.signals.fileMetricsReady.connect(self._on_file_metrics_ready)
         self._scanner.signals.fileFinished.connect(self._on_file_finished)
         self._scanner.signals.allFinished.connect(self._on_all_finished)
         self._scanner.signals.error.connect(self._on_scan_error)
@@ -1091,6 +1140,7 @@ class MainWindow(QMainWindow):
         self.results.clear()
         self.viewer.clear_view()
         self._pages.clear()
+        self._file_metrics.clear()
         self._file_items.clear()
         self._barcode_total = 0
         self._auto_select_target = None
@@ -1163,13 +1213,37 @@ class MainWindow(QMainWindow):
     # ----- scanner signals -------------------------------------------------
 
     def _on_file_started(self, file_path: str, total_pages: int) -> None:
-        item = QTreeWidgetItem([os.path.basename(file_path), "..."])
+        item = QTreeWidgetItem([os.path.basename(file_path), "...", "..."])
         item.setToolTip(0, file_path)
         item.setData(0, self.FILE_ROLE, file_path)
         self.tree.addTopLevelItem(item)
         self._file_items[file_path] = item
         if total_pages > 1:
             item.setExpanded(True)
+
+    def _on_file_metrics_ready(
+        self,
+        file_path: str,
+        barcode_count: int,
+        decode_elapsed_ms: int,
+        used_layout_analysis: bool,
+    ) -> None:
+        self._file_metrics[file_path] = FileScanMetrics(
+            barcode_count=barcode_count,
+            decode_elapsed_ms=decode_elapsed_ms,
+            used_layout_analysis=used_layout_analysis,
+        )
+
+        item = self._file_items.get(file_path)
+        if item is not None:
+            item.setText(1, str(barcode_count))
+            item.setText(2, str(decode_elapsed_ms))
+
+        current = self.tree.currentItem()
+        if current is not None:
+            page = self._page_from_item(current)
+            if page is not None and page.file_path == file_path:
+                self._show_page(page)
 
     def _on_page_ready(self, page: PageData) -> None:
         key = (page.file_path, page.page_index)
@@ -1190,19 +1264,26 @@ class MainWindow(QMainWindow):
                 break
 
         n_bc = len(page.barcodes)
+        decode_text = (
+            str(page.decode_elapsed_ms) if page.decode_elapsed_ms is not None else ""
+        )
         if page.total_pages == 1:
             parent.setText(1, str(n_bc))
+            parent.setText(2, decode_text)
             parent.setData(0, self.PAGE_ROLE, 0)
             target_item = parent
         else:
             if existing_child is None:
-                child = QTreeWidgetItem([f"Page {page.page_index + 1}", str(n_bc)])
+                child = QTreeWidgetItem(
+                    [f"Page {page.page_index + 1}", str(n_bc), decode_text]
+                )
                 child.setData(0, self.PAGE_ROLE, page.page_index)
                 child.setData(0, self.FILE_ROLE, page.file_path)
                 parent.addChild(child)
                 target_item = child
             else:
                 existing_child.setText(1, str(n_bc))
+                existing_child.setText(2, decode_text)
                 target_item = existing_child
             # roll up total count
             total = sum(
@@ -1210,6 +1291,10 @@ class MainWindow(QMainWindow):
                 for i in range(page.total_pages)
             )
             parent.setText(1, str(total))
+
+        metrics = self._file_metrics.get(page.file_path)
+        if metrics is not None and metrics.decode_elapsed_ms is not None:
+            parent.setText(2, str(metrics.decode_elapsed_ms))
 
         # Auto-select the first page of the most recently dropped batch as
         # soon as its placeholder render appears, so the user sees the file
@@ -1239,9 +1324,12 @@ class MainWindow(QMainWindow):
         self._progress.setVisible(False)
         total_pages = len(self._pages)
         total_bc = sum(len(p.barcodes) for p in self._pages.values())
+        total_elapsed_ms = sum(
+            metrics.decode_elapsed_ms or 0 for metrics in self._file_metrics.values()
+        )
         self._barcode_total = total_bc
         self._status_label.setText(
-            f"Done. {total_pages} page(s), {total_bc} barcode(s) detected."
+            f"Done. {total_pages} page(s), {total_bc} barcode(s), {total_elapsed_ms} ms total."
         )
 
     def _on_scan_error(self, file_path: str, message: str) -> None:
@@ -1259,6 +1347,22 @@ class MainWindow(QMainWindow):
             self._page_label.setText("No page selected")
             self._update_nav_state()
             return
+
+        file_path = current.data(0, self.FILE_ROLE)
+        if file_path:
+            metrics = self._file_metrics.get(file_path)
+            if metrics is not None and (
+                metrics.used_layout_analysis != self._layout_analysis_enabled
+            ):
+                mode_label = (
+                    "layout analysis" if self._layout_analysis_enabled else "standard decoding"
+                )
+                self._restart_selected_file_decode(
+                    file_path,
+                    f"Re-decoding {os.path.basename(file_path)} with {mode_label}...",
+                )
+                return
+
         page = self._page_from_item(current)
         if page is not None:
             self._show_page(page)
@@ -1267,6 +1371,32 @@ class MainWindow(QMainWindow):
             self.results.clear()
             self._page_label.setText(os.path.basename(current.data(0, self.FILE_ROLE) or ""))
             self._update_nav_state()
+
+    def _restart_selected_file_decode(self, file_path: str, status_text: str) -> None:
+        if not file_path:
+            self._status_label.setText(status_text)
+            return
+
+        cached = {
+            key: page for key, page in self._pages.items() if key[0] == file_path
+        }
+        if self._scanner and self._scanner.isRunning():
+            self._scanner.stop()
+            self._scanner.wait(2000)
+
+        self._auto_select_target = None
+        self._progress.setVisible(True)
+        self._status_label.setText(status_text)
+
+        self._scanner = ScannerThread(
+            [file_path],
+            self._current_template,
+            cached_pages=cached,
+            use_layout_analysis=self._layout_analysis_enabled,
+            parent=self,
+        )
+        self._connect_scanner()
+        self._scanner.start()
 
     def _page_from_item(self, item: QTreeWidgetItem) -> Optional[PageData]:
         page_idx = item.data(0, self.PAGE_ROLE)
@@ -1278,6 +1408,21 @@ class MainWindow(QMainWindow):
     def _show_page(self, page: PageData) -> None:
         self.viewer.set_page(page)
         self.results.clear()
+
+        metrics = self._file_metrics.get(page.file_path)
+        decode_elapsed_ms = page.decode_elapsed_ms
+        decode_scope = "Decode"
+        if decode_elapsed_ms is None and metrics is not None:
+            decode_elapsed_ms = metrics.decode_elapsed_ms
+            decode_scope = "File decode"
+
+        if decode_elapsed_ms is not None:
+            info_item = QListWidgetItem(
+                f"[info] Count: {len(page.barcodes)} barcode(s) | {decode_scope} time: {decode_elapsed_ms} ms"
+            )
+            info_item.setForeground(QBrush(QColor("#1c7ed6")))
+            self.results.addItem(info_item)
+
         if page.error:
             err_item = QListWidgetItem(f"[error] {page.error}")
             err_item.setForeground(QBrush(QColor("#c92a2a")))
@@ -1290,11 +1435,14 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(text)
             item.setData(Qt.ItemDataRole.UserRole, hit.text)
             self.results.addItem(item)
-        self._page_label.setText(
+        page_text = (
             f"{os.path.basename(page.file_path)}    "
             f"Page {page.page_index + 1} / {page.total_pages}    "
             f"{len(page.barcodes)} barcode(s)"
         )
+        if decode_elapsed_ms is not None:
+            page_text += f"    {decode_scope}: {decode_elapsed_ms} ms"
+        self._page_label.setText(page_text)
         self._update_nav_state()
 
     def _flat_page_items(self) -> List[QTreeWidgetItem]:
