@@ -59,7 +59,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from dynamsoft_capture_vision_bundle import (
+from dynamsoft_barcode_reader_bundle import (
     CaptureVisionRouter,
     EnumErrorCode,
     EnumPresetTemplate,

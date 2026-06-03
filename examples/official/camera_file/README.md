@@ -1,5 +1,5 @@
 # Python Barcode Scanner & Reader
-This repository contains example code for using the [Dynamsoft Capture Vision SDK](https://pypi.org/project/dynamsoft-capture-vision-bundle/) to detect barcodes from a camera video stream or an image file.
+This repository contains example code for using the [Dynamsoft Barcode Reader Bundle](https://pypi.org/project/dynamsoft-barcode-reader-bundle/) to detect barcodes from a camera video stream or an image file.
 
 https://github.com/user-attachments/assets/18503750-68bd-4043-8187-353e7e8a7808
 

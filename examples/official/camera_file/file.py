@@ -1,5 +1,5 @@
 import sys
-from dynamsoft_capture_vision_bundle import *
+from dynamsoft_barcode_reader_bundle import *
 import os
 import cv2
 import numpy as np
@@ -8,7 +8,7 @@ from utils import *
 if __name__ == '__main__':
 
     print("**********************************************************")
-    print("Welcome to Dynamsoft Capture Vision - Barcode Sample")
+    print("Welcome to Dynamsoft Barcode Reader Bundle - Barcode Sample")
     print("**********************************************************")
 
     error_code, error_message = LicenseManager.init_license(

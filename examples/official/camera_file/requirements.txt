@@ -1,4 +1,4 @@
-dynamsoft-capture-vision-bundle
+dynamsoft-barcode-reader-bundle
 opencv-python
 PySide6
 PyMuPDF

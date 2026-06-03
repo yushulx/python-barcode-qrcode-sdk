@@ -1,4 +1,4 @@
-from dynamsoft_capture_vision_bundle import *
+from dynamsoft_barcode_reader_bundle import *
 import cv2
 import numpy as np
 import queue
