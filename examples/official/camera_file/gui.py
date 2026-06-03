@@ -31,6 +31,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QComboBox,
     QFileDialog,
     QFrame,
@@ -61,10 +62,17 @@ from PySide6.QtWidgets import (
 
 from dynamsoft_barcode_reader_bundle import (
     CaptureVisionRouter,
+    EnumCapturedResultItemType,
     EnumErrorCode,
+    EnumImagePixelFormat,
+    EnumLayoutElementSource,
+    EnumLayoutPattern,
     EnumPresetTemplate,
     FileImageTag,
+    LayoutAnalysisParameter,
+    LayoutAnalyzer,
     LicenseManager,
+    Quadrilateral,
 )
 
 LICENSE_KEY = (
@@ -80,6 +88,12 @@ SUPPORTED_EXTS = IMAGE_EXTS | TIFF_EXTS | PDF_EXTS
 
 PDF_DETECT_DPI = 300
 PDF_DISPLAY_DPI = 150
+BASE_DIR = Path(__file__).resolve().parent
+LAYOUT_FAST_TEMPLATE_PATH = str(BASE_DIR / "GridFastScan.json")
+LAYOUT_FAST_TEMPLATE_NAME = "GridFastScan"
+LAYOUT_DEEP_TEMPLATE_PATH = str(BASE_DIR / "GridDeepDecode.json")
+LAYOUT_DEEP_TEMPLATE_NAME = "GridDeepDecode"
+LAYOUT_ROI_SCALE_FACTOR = 2.0
 
 TEMPLATES: List[Tuple[str, str]] = [
     ("Read Barcodes (default)", EnumPresetTemplate.PT_READ_BARCODES.value),
@@ -115,6 +129,30 @@ class PageData:
     error: Optional[str] = None
 
 
+@dataclass
+class LayoutCommonDecodeResult:
+    locations: List[Quadrilateral] = field(default_factory=list)
+    hits: List[BarcodeHit] = field(default_factory=list)
+
+    def prepare_for_layout_analysis(self) -> None:
+        for location_index, location in enumerate(self.locations):
+            location.id = location_index
+
+
+def _points_from_quad(quad: Quadrilateral) -> List[Tuple[float, float]]:
+    return [(point.x, point.y) for point in quad.points]
+
+
+def _barcode_hit_from_item(item) -> BarcodeHit:
+    location = item.get_location()
+    return BarcodeHit(
+        text=item.get_text(),
+        format=item.get_format_string(),
+        confidence=item.get_confidence(),
+        points=_points_from_quad(location),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Page rendering
 # ---------------------------------------------------------------------------
@@ -123,6 +161,159 @@ def _qimage_from_bgr(mat: np.ndarray) -> QImage:
     rgb = cv2.cvtColor(mat, cv2.COLOR_BGR2RGB)
     h, w = rgb.shape[:2]
     return QImage(rgb.data, w, h, rgb.strides[0], QImage.Format.Format_RGB888).copy()
+
+
+def _qimage_to_bgr(image: QImage) -> np.ndarray:
+    rgb_image = image.convertToFormat(QImage.Format.Format_RGB888)
+    width = rgb_image.width()
+    height = rgb_image.height()
+    stride = rgb_image.bytesPerLine()
+    data = np.frombuffer(rgb_image.bits(), dtype=np.uint8).reshape((height, stride))
+    rgb = data[:, : width * 3].reshape((height, width, 3)).copy()
+    return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+
+
+def _compute_center(quad: Quadrilateral) -> Tuple[float, float]:
+    center_x = sum(point.x for point in quad.points) / 4
+    center_y = sum(point.y for point in quad.points) / 4
+    return center_x, center_y
+
+
+def _expand_quad(quad: Quadrilateral, scale: float) -> Quadrilateral:
+    center_x, center_y = _compute_center(quad)
+    result = Quadrilateral()
+    for point_index, point in enumerate(quad.points):
+        result.points[point_index].x = int(center_x + (point.x - center_x) * scale)
+        result.points[point_index].y = int(center_y + (point.y - center_y) * scale)
+    return result
+
+
+def _capture_layout_fast_scan(image: np.ndarray) -> Tuple[LayoutCommonDecodeResult, Optional[str]]:
+    cvr = CaptureVisionRouter()
+    err_code, err_msg = cvr.init_settings_from_file(LAYOUT_FAST_TEMPLATE_PATH)
+    if err_code != EnumErrorCode.EC_OK:
+        return LayoutCommonDecodeResult(), f"Failed to load layout fast-scan template: {err_msg}"
+
+    result = cvr.capture(
+        np.ascontiguousarray(image),
+        EnumImagePixelFormat.IPF_BGR_888,
+        LAYOUT_FAST_TEMPLATE_NAME,
+    )
+    result_error = result.get_error_code()
+    if result_error not in (
+        EnumErrorCode.EC_OK,
+        EnumErrorCode.EC_TIMEOUT,
+        EnumErrorCode.EC_UNSUPPORTED_JSON_KEY_WARNING,
+    ):
+        return LayoutCommonDecodeResult(), result.get_error_string()
+
+    common_result = LayoutCommonDecodeResult()
+    for item in result.get_items() or []:
+        if item.get_type() == EnumCapturedResultItemType.CRIT_BARCODE:
+            common_result.locations.append(item.get_location())
+            common_result.hits.append(_barcode_hit_from_item(item))
+    return common_result, None
+
+
+class LayoutDeepDecoder:
+    def __init__(self) -> None:
+        self._cvr = CaptureVisionRouter()
+        self._error: Optional[str] = None
+        err_code, err_msg = self._cvr.init_settings_from_file(LAYOUT_DEEP_TEMPLATE_PATH)
+        if err_code != EnumErrorCode.EC_OK:
+            self._error = f"Failed to load layout deep-decode template: {err_msg}"
+
+    @property
+    def error(self) -> Optional[str]:
+        return self._error
+
+    def decode(self, image: np.ndarray, quad: Quadrilateral) -> Optional[BarcodeHit]:
+        if self._error:
+            return None
+
+        err_code, _err_msg, settings = self._cvr.get_simplified_settings(
+            LAYOUT_DEEP_TEMPLATE_NAME
+        )
+        if err_code != EnumErrorCode.EC_OK:
+            return None
+
+        settings.roi = _expand_quad(quad, LAYOUT_ROI_SCALE_FACTOR)
+        settings.roi_measured_in_percentage = 0
+        err_code, _err_msg = self._cvr.update_settings(
+            LAYOUT_DEEP_TEMPLATE_NAME, settings
+        )
+        if err_code != EnumErrorCode.EC_OK:
+            return None
+
+        result = self._cvr.capture(
+            np.ascontiguousarray(image),
+            EnumImagePixelFormat.IPF_BGR_888,
+            LAYOUT_DEEP_TEMPLATE_NAME,
+        )
+        if result.get_error_code() not in (
+            EnumErrorCode.EC_OK,
+            EnumErrorCode.EC_UNSUPPORTED_JSON_KEY_WARNING,
+        ):
+            return None
+
+        for item in result.get_items() or []:
+            if item.get_type() == EnumCapturedResultItemType.CRIT_BARCODE and item.get_text():
+                return _barcode_hit_from_item(item)
+        return None
+
+
+def decode_with_layout_analysis(image: np.ndarray) -> Tuple[List[BarcodeHit], Optional[str]]:
+    common_result, error = _capture_layout_fast_scan(image)
+    if error:
+        return [], error
+    if not common_result.locations:
+        return [], None
+
+    common_result.prepare_for_layout_analysis()
+
+    param = LayoutAnalysisParameter()
+    param.pattern = EnumLayoutPattern.LP_MATRIX
+    param.input_image_height = image.shape[0]
+    param.input_image_width = image.shape[1]
+
+    layout_result = LayoutAnalyzer.analyze(common_result.locations, param)
+    if layout_result is None or layout_result.error_code != EnumErrorCode.EC_OK:
+        error_code = layout_result.error_code if layout_result else -1
+        return common_result.hits, f"Layout analysis failed: ErrorCode: {error_code}"
+
+    hits: List[BarcodeHit] = []
+    used_location_ids: set[int] = set()
+    deep_decoder: Optional[LayoutDeepDecoder] = None
+    deep_decode_error: Optional[str] = None
+
+    for row_elements in layout_result.elements:
+        for element in row_elements:
+            if element.source == EnumLayoutElementSource.LES_INPUT:
+                location_id = getattr(element.quad, "id", -1)
+                if 0 <= location_id < len(common_result.hits):
+                    base_hit = common_result.hits[location_id]
+                    hits.append(
+                        BarcodeHit(
+                            text=base_hit.text,
+                            format=base_hit.format,
+                            confidence=base_hit.confidence,
+                            points=_points_from_quad(element.quad),
+                        )
+                    )
+                    used_location_ids.add(location_id)
+            elif element.source == EnumLayoutElementSource.LES_INFERRED:
+                if deep_decoder is None:
+                    deep_decoder = LayoutDeepDecoder()
+                    deep_decode_error = deep_decoder.error
+                decoded_hit = deep_decoder.decode(image, element.quad)
+                if decoded_hit is not None:
+                    hits.append(decoded_hit)
+
+    for location_id, hit in enumerate(common_result.hits):
+        if location_id not in used_location_ids:
+            hits.append(hit)
+
+    return hits, deep_decode_error
 
 
 def render_pages(file_path: str) -> List[Tuple[QImage, int, int]]:
@@ -171,6 +362,40 @@ def render_pages(file_path: str) -> List[Tuple[QImage, int, int]]:
     return [(img, img.width(), img.height())]
 
 
+def render_detection_mats(file_path: str, page_records: List[PageData]) -> List[np.ndarray]:
+    ext = Path(file_path).suffix.lower()
+
+    if ext in PDF_EXTS:
+        mats: List[np.ndarray] = []
+        with fitz.open(file_path) as doc:
+            for page in doc:
+                pix = page.get_pixmap(dpi=PDF_DETECT_DPI, alpha=False)
+                samples = np.frombuffer(pix.samples, dtype=np.uint8)
+                if pix.n == 1:
+                    pixels = samples.reshape((pix.height, pix.width))
+                    mat = cv2.cvtColor(pixels, cv2.COLOR_GRAY2BGR)
+                else:
+                    pixels = samples.reshape((pix.height, pix.width, pix.n))
+                    mat = cv2.cvtColor(pixels, cv2.COLOR_RGB2BGR)
+                mats.append(np.ascontiguousarray(mat))
+        return mats
+
+    if ext in TIFF_EXTS:
+        ok, mats = cv2.imreadmulti(file_path, [], cv2.IMREAD_COLOR)
+        if ok and mats:
+            return [np.ascontiguousarray(mat) for mat in mats if mat is not None]
+
+    mat = cv2.imread(file_path, cv2.IMREAD_COLOR)
+    if mat is not None:
+        return [np.ascontiguousarray(mat)]
+
+    return [
+        _qimage_to_bgr(page.image)
+        for page in page_records
+        if page.image is not None and not page.image.isNull()
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Scanner thread
 # ---------------------------------------------------------------------------
@@ -189,11 +414,13 @@ class ScannerThread(QThread):
         files: List[str],
         template: str,
         cached_pages: Optional[dict] = None,
+        use_layout_analysis: bool = False,
         parent=None,
     ) -> None:
         super().__init__(parent)
         self.files = list(files)
         self.template = template
+        self.use_layout_analysis = use_layout_analysis
         # {(file_path, page_idx) -> PageData} - rendered pages we can reuse
         # so a template-switch re-decode does not re-render PDFs/TIFFs.
         self.cached_pages = cached_pages or {}
@@ -260,13 +487,53 @@ class ScannerThread(QThread):
             self.signals.pageReady.emit(rec)
         return records
 
-    def run(self) -> None:
+    def _scan_with_layout_analysis(
+        self, file_path: str, page_records: List[PageData]
+    ) -> None:
         try:
-            cvr = CaptureVisionRouter()
+            detection_images = render_detection_mats(file_path, page_records)
         except Exception as exc:
-            self.signals.error.emit("", f"Failed to init CVR: {exc}")
-            self.signals.allFinished.emit()
+            self.signals.error.emit(
+                file_path,
+                f"Failed to render detection images: {exc}\n{traceback.format_exc()}",
+            )
             return
+
+        if not detection_images:
+            self.signals.error.emit(file_path, "No detection images rendered.")
+            return
+
+        for page_index, page_record in enumerate(page_records):
+            if self._stop:
+                break
+            if page_index >= len(detection_images):
+                page_record.error = "No detection image rendered for this page."
+                self.signals.pageReady.emit(page_record)
+                continue
+
+            detection_image = detection_images[page_index]
+            try:
+                hits, error = decode_with_layout_analysis(detection_image)
+            except Exception as exc:
+                page_record.error = f"Layout analysis failed: {exc}"
+                self.signals.pageReady.emit(page_record)
+                continue
+
+            page_record.detect_width = detection_image.shape[1]
+            page_record.detect_height = detection_image.shape[0]
+            page_record.barcodes = hits
+            page_record.error = error
+            self.signals.pageReady.emit(page_record)
+
+    def run(self) -> None:
+        cvr: Optional[CaptureVisionRouter] = None
+        if not self.use_layout_analysis:
+            try:
+                cvr = CaptureVisionRouter()
+            except Exception as exc:
+                self.signals.error.emit("", f"Failed to init CVR: {exc}")
+                self.signals.allFinished.emit()
+                return
 
         template = self.template
 
@@ -282,7 +549,14 @@ class ScannerThread(QThread):
             if self._stop:
                 break
 
+            if self.use_layout_analysis:
+                self._scan_with_layout_analysis(file_path, page_records)
+                self.signals.fileFinished.emit(file_path)
+                continue
+
             try:
+                if cvr is None:
+                    raise RuntimeError("CaptureVisionRouter was not initialized.")
                 result_array = cvr.capture_multi_pages(file_path, template)
             except Exception as exc:
                 self.signals.error.emit(
@@ -315,17 +589,9 @@ class ScannerThread(QThread):
                     continue
 
                 hits: List[BarcodeHit] = []
-                for item in page_result.get_items():
-                    loc = item.get_location()
-                    pts = [(p.x, p.y) for p in loc.points]
-                    hits.append(
-                        BarcodeHit(
-                            text=item.get_text(),
-                            format=item.get_format_string(),
-                            confidence=item.get_confidence(),
-                            points=pts,
-                        )
-                    )
+                for item in page_result.get_items() or []:
+                    if item.get_type() == EnumCapturedResultItemType.CRIT_BARCODE:
+                        hits.append(_barcode_hit_from_item(item))
                 page_records[page_idx].barcodes = hits
                 self.signals.pageReady.emit(page_records[page_idx])
 
@@ -525,6 +791,7 @@ class MainWindow(QMainWindow):
         self._barcode_total = 0
         self._auto_select_target: Optional[str] = None
         self._current_template: str = TEMPLATES[DEFAULT_TEMPLATE_INDEX][1]
+        self._layout_analysis_enabled = False
 
         self._build_ui()
         self._init_license()
@@ -586,6 +853,15 @@ class MainWindow(QMainWindow):
         )
         self._template_combo.currentIndexChanged.connect(self._on_template_changed)
         toolbar.addWidget(self._template_combo)
+
+        self._layout_analysis_checkbox = QCheckBox("Layout Analysis")
+        self._layout_analysis_checkbox.setToolTip(
+            "Use matrix layout analysis and deep decode for grid barcode images."
+        )
+        self._layout_analysis_checkbox.toggled.connect(
+            self._on_layout_analysis_toggled
+        )
+        toolbar.addWidget(self._layout_analysis_checkbox)
 
         toolbar.addSeparator()
         spacer = QWidget()
@@ -747,9 +1023,38 @@ class MainWindow(QMainWindow):
             self._status_label.setText(f"Template -> {label}")
             return
 
-        # Re-decode the currently displayed file with the new template.
-        # Cached page renders are reused so PDFs/TIFFs don't have to be
-        # rasterised again.
+        mode_label = "layout analysis" if self._layout_analysis_enabled else f"'{label}'"
+        self._restart_current_file_decode(
+            f"Re-decoding {os.path.basename(file_path)} with {mode_label}..."
+        )
+
+    def _on_layout_analysis_toggled(self, checked: bool) -> None:
+        self._layout_analysis_enabled = checked
+        file_path = self._current_file_path()
+        mode_label = "layout analysis" if checked else "standard decoding"
+        if not file_path:
+            self._status_label.setText(f"Selected {mode_label}.")
+            return
+
+        self._restart_current_file_decode(
+            f"Re-decoding {os.path.basename(file_path)} with {mode_label}..."
+        )
+
+    def _connect_scanner(self) -> None:
+        if self._scanner is None:
+            return
+        self._scanner.signals.fileStarted.connect(self._on_file_started)
+        self._scanner.signals.pageReady.connect(self._on_page_ready)
+        self._scanner.signals.fileFinished.connect(self._on_file_finished)
+        self._scanner.signals.allFinished.connect(self._on_all_finished)
+        self._scanner.signals.error.connect(self._on_scan_error)
+
+    def _restart_current_file_decode(self, status_text: str) -> None:
+        file_path = self._current_file_path()
+        if not file_path:
+            self._status_label.setText(status_text)
+            return
+
         cached = {
             key: page for key, page in self._pages.items() if key[0] == file_path
         }
@@ -759,18 +1064,16 @@ class MainWindow(QMainWindow):
 
         self._auto_select_target = None  # keep the current selection
         self._progress.setVisible(True)
-        self._status_label.setText(
-            f"Re-decoding {os.path.basename(file_path)} with '{label}'..."
-        )
+        self._status_label.setText(status_text)
 
         self._scanner = ScannerThread(
-            [file_path], self._current_template, cached_pages=cached, parent=self
+            [file_path],
+            self._current_template,
+            cached_pages=cached,
+            use_layout_analysis=self._layout_analysis_enabled,
+            parent=self,
         )
-        self._scanner.signals.fileStarted.connect(self._on_file_started)
-        self._scanner.signals.pageReady.connect(self._on_page_ready)
-        self._scanner.signals.fileFinished.connect(self._on_file_finished)
-        self._scanner.signals.allFinished.connect(self._on_all_finished)
-        self._scanner.signals.error.connect(self._on_scan_error)
+        self._connect_scanner()
         self._scanner.start()
 
     def _current_file_path(self) -> Optional[str]:
@@ -822,14 +1125,16 @@ class MainWindow(QMainWindow):
         self._auto_select_target = new_files[0]
 
         self._progress.setVisible(True)
-        self._status_label.setText(f"Scanning {len(new_files)} file(s)...")
+        mode_text = " with layout analysis" if self._layout_analysis_enabled else ""
+        self._status_label.setText(f"Scanning {len(new_files)} file(s){mode_text}...")
 
-        self._scanner = ScannerThread(new_files, self._current_template, parent=self)
-        self._scanner.signals.fileStarted.connect(self._on_file_started)
-        self._scanner.signals.pageReady.connect(self._on_page_ready)
-        self._scanner.signals.fileFinished.connect(self._on_file_finished)
-        self._scanner.signals.allFinished.connect(self._on_all_finished)
-        self._scanner.signals.error.connect(self._on_scan_error)
+        self._scanner = ScannerThread(
+            new_files,
+            self._current_template,
+            use_layout_analysis=self._layout_analysis_enabled,
+            parent=self,
+        )
+        self._connect_scanner()
         self._scanner.start()
 
     @staticmethod
