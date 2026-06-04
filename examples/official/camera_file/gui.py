@@ -67,15 +67,24 @@ from dynamsoft_barcode_reader_bundle import (
     EnumCapturedResultItemType,
     EnumErrorCode,
     EnumImagePixelFormat,
-    EnumLayoutElementSource,
-    EnumLayoutPattern,
     EnumPresetTemplate,
     FileImageTag,
-    LayoutAnalysisParameter,
-    LayoutAnalyzer,
     LicenseManager,
     Quadrilateral,
 )
+
+try:
+    from dynamsoft_barcode_reader_bundle import (
+        EnumLayoutElementSource,
+        EnumLayoutPattern,
+        LayoutAnalysisParameter,
+        LayoutAnalyzer,
+    )
+except ImportError:
+    EnumLayoutElementSource = None
+    EnumLayoutPattern = None
+    LayoutAnalysisParameter = None
+    LayoutAnalyzer = None
 
 LICENSE_KEY = (
     "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6"
@@ -96,6 +105,20 @@ LAYOUT_FAST_TEMPLATE_NAME = "GridFastScan"
 LAYOUT_DEEP_TEMPLATE_PATH = str(BASE_DIR / "GridDeepDecode.json")
 LAYOUT_DEEP_TEMPLATE_NAME = "GridDeepDecode"
 LAYOUT_ROI_SCALE_FACTOR = 2.0
+LAYOUT_ANALYSIS_AVAILABLE = all(
+    symbol is not None
+    for symbol in (
+        EnumLayoutElementSource,
+        EnumLayoutPattern,
+        LayoutAnalysisParameter,
+        LayoutAnalyzer,
+    )
+)
+LAYOUT_ANALYSIS_UNAVAILABLE_REASON = (
+    ""
+    if LAYOUT_ANALYSIS_AVAILABLE
+    else "Layout analysis is unavailable in the installed Dynamsoft Barcode Reader Bundle version."
+)
 
 TEMPLATES: List[Tuple[str, str]] = [
     ("Read Barcodes (default)", EnumPresetTemplate.PT_READ_BARCODES.value),
@@ -137,6 +160,7 @@ class FileScanMetrics:
     barcode_count: int = 0
     decode_elapsed_ms: Optional[int] = None
     used_layout_analysis: bool = False
+    template: Optional[str] = None
 
 
 @dataclass
@@ -273,6 +297,9 @@ class LayoutDeepDecoder:
 
 
 def decode_with_layout_analysis(image: np.ndarray) -> Tuple[List[BarcodeHit], Optional[str]]:
+    if not LAYOUT_ANALYSIS_AVAILABLE:
+        return [], LAYOUT_ANALYSIS_UNAVAILABLE_REASON
+
     common_result, error = _capture_layout_fast_scan(image)
     if error:
         return [], error
@@ -413,7 +440,7 @@ def render_detection_mats(file_path: str, page_records: List[PageData]) -> List[
 class ScannerSignals(QObject):
     fileStarted = Signal(str, int)
     pageReady = Signal(object)
-    fileMetricsReady = Signal(str, int, int, bool)
+    fileMetricsReady = Signal(str, int, int, bool, str)
     fileFinished = Signal(str)
     allFinished = Signal()
     error = Signal(str, str)
@@ -431,7 +458,7 @@ class ScannerThread(QThread):
         super().__init__(parent)
         self.files = list(files)
         self.template = template
-        self.use_layout_analysis = use_layout_analysis
+        self.use_layout_analysis = use_layout_analysis and LAYOUT_ANALYSIS_AVAILABLE
         # {(file_path, page_idx) -> PageData} - rendered pages we can reuse
         # so a template-switch re-decode does not re-render PDFs/TIFFs.
         self.cached_pages = cached_pages or {}
@@ -571,7 +598,7 @@ class ScannerThread(QThread):
                 file_elapsed_ms = int((time.perf_counter() - file_start) * 1000)
                 total_barcodes = sum(len(page_record.barcodes) for page_record in page_records)
                 self.signals.fileMetricsReady.emit(
-                    file_path, total_barcodes, file_elapsed_ms, True
+                    file_path, total_barcodes, file_elapsed_ms, True, self.template
                 )
                 self.signals.fileFinished.emit(file_path)
                 continue
@@ -592,7 +619,9 @@ class ScannerThread(QThread):
             results = result_array.get_results() if result_array else None
             if not results:
                 file_elapsed_ms = int((time.perf_counter() - file_start) * 1000)
-                self.signals.fileMetricsReady.emit(file_path, 0, file_elapsed_ms, False)
+                self.signals.fileMetricsReady.emit(
+                    file_path, 0, file_elapsed_ms, False, self.template
+                )
                 self.signals.fileFinished.emit(file_path)
                 continue
 
@@ -626,7 +655,7 @@ class ScannerThread(QThread):
                 page_records[0].decode_elapsed_ms = file_elapsed_ms
                 self.signals.pageReady.emit(page_records[0])
             self.signals.fileMetricsReady.emit(
-                file_path, total_barcodes, file_elapsed_ms, False
+                file_path, total_barcodes, file_elapsed_ms, False, self.template
             )
             self.signals.fileFinished.emit(file_path)
 
@@ -899,6 +928,11 @@ class MainWindow(QMainWindow):
         self._layout_analysis_checkbox.toggled.connect(
             self._on_layout_analysis_toggled
         )
+        if not LAYOUT_ANALYSIS_AVAILABLE:
+            self._layout_analysis_checkbox.setEnabled(False)
+            self._layout_analysis_checkbox.setToolTip(
+                LAYOUT_ANALYSIS_UNAVAILABLE_REASON
+            )
         toolbar.addWidget(self._layout_analysis_checkbox)
 
         toolbar.addSeparator()
@@ -1003,7 +1037,14 @@ class MainWindow(QMainWindow):
             return
         if code in (EnumErrorCode.EC_OK, EnumErrorCode.EC_LICENSE_CACHE_USED):
             self._license_ok = True
-            self._status_label.setText("License OK. Drop files/folders to scan.")
+            if LAYOUT_ANALYSIS_AVAILABLE:
+                self._status_label.setText(
+                    "License OK. Drop files/folders to scan. Check 'Layout Analysis' to enable grid analysis."
+                )
+            else:
+                self._status_label.setText(
+                    "License OK. Layout analysis is unavailable in this bundle version; standard decoding only."
+                )
         else:
             self._license_ok = False
             QMessageBox.warning(
@@ -1077,6 +1118,14 @@ class MainWindow(QMainWindow):
             self._status_label.setText("Fitted current page to window.")
 
     def _on_layout_analysis_toggled(self, checked: bool) -> None:
+        if checked and not LAYOUT_ANALYSIS_AVAILABLE:
+            self._layout_analysis_checkbox.blockSignals(True)
+            self._layout_analysis_checkbox.setChecked(False)
+            self._layout_analysis_checkbox.blockSignals(False)
+            self._layout_analysis_enabled = False
+            self._status_label.setText(LAYOUT_ANALYSIS_UNAVAILABLE_REASON)
+            return
+
         self._layout_analysis_enabled = checked
         file_path = self._current_file_path()
         mode_label = "layout analysis" if checked else "standard decoding"
@@ -1227,11 +1276,13 @@ class MainWindow(QMainWindow):
         barcode_count: int,
         decode_elapsed_ms: int,
         used_layout_analysis: bool,
+        template: str,
     ) -> None:
         self._file_metrics[file_path] = FileScanMetrics(
             barcode_count=barcode_count,
             decode_elapsed_ms=decode_elapsed_ms,
             used_layout_analysis=used_layout_analysis,
+            template=template,
         )
 
         item = self._file_items.get(file_path)
@@ -1350,10 +1401,7 @@ class MainWindow(QMainWindow):
 
         file_path = current.data(0, self.FILE_ROLE)
         if file_path:
-            metrics = self._file_metrics.get(file_path)
-            if metrics is not None and (
-                metrics.used_layout_analysis != self._layout_analysis_enabled
-            ):
+            if self._file_needs_redecode(file_path):
                 mode_label = (
                     "layout analysis" if self._layout_analysis_enabled else "standard decoding"
                 )
@@ -1405,23 +1453,38 @@ class MainWindow(QMainWindow):
             return None
         return self._pages.get((file_path, int(page_idx)))
 
+    def _decode_mode_label(self, file_path: str) -> str:
+        metrics = self._file_metrics.get(file_path)
+        if metrics is not None and metrics.used_layout_analysis:
+            return "Layout analysis"
+        return "Standard decoding"
+
+    def _file_needs_redecode(self, file_path: str) -> bool:
+        metrics = self._file_metrics.get(file_path)
+        if metrics is None:
+            return False
+        if self._layout_analysis_enabled:
+            return not metrics.used_layout_analysis
+        return metrics.used_layout_analysis or metrics.template != self._current_template
+
     def _show_page(self, page: PageData) -> None:
         self.viewer.set_page(page)
         self.results.clear()
 
         metrics = self._file_metrics.get(page.file_path)
+        mode_label = self._decode_mode_label(page.file_path)
         decode_elapsed_ms = page.decode_elapsed_ms
         decode_scope = "Decode"
         if decode_elapsed_ms is None and metrics is not None:
             decode_elapsed_ms = metrics.decode_elapsed_ms
             decode_scope = "File decode"
 
+        info_text = f"[info] Mode: {mode_label} | Count: {len(page.barcodes)} barcode(s)"
         if decode_elapsed_ms is not None:
-            info_item = QListWidgetItem(
-                f"[info] Count: {len(page.barcodes)} barcode(s) | {decode_scope} time: {decode_elapsed_ms} ms"
-            )
-            info_item.setForeground(QBrush(QColor("#1c7ed6")))
-            self.results.addItem(info_item)
+            info_text += f" | {decode_scope} time: {decode_elapsed_ms} ms"
+        info_item = QListWidgetItem(info_text)
+        info_item.setForeground(QBrush(QColor("#1c7ed6")))
+        self.results.addItem(info_item)
 
         if page.error:
             err_item = QListWidgetItem(f"[error] {page.error}")
@@ -1438,7 +1501,8 @@ class MainWindow(QMainWindow):
         page_text = (
             f"{os.path.basename(page.file_path)}    "
             f"Page {page.page_index + 1} / {page.total_pages}    "
-            f"{len(page.barcodes)} barcode(s)"
+            f"{len(page.barcodes)} barcode(s)    "
+            f"Mode: {mode_label}"
         )
         if decode_elapsed_ms is not None:
             page_text += f"    {decode_scope}: {decode_elapsed_ms} ms"
