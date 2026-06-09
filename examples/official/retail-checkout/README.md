@@ -5,8 +5,7 @@ checkout encounters — **EAN-13, UPC-A, EAN-8, Code 128, GS1-128, and QR** —
 from a **live camera** or an **image file**, using the
 [Dynamsoft Barcode Reader Bundle](https://www.dynamsoft.com/barcode-reader/overview/) for Python.
 
-![Retail self-checkout frame with live barcode overlays](./images/checkout-belt-annotated.png)
-
+https://github.com/user-attachments/assets/204c6adb-3cfd-45c2-8f45-c297279b49c5
 
 ## Setup
 
