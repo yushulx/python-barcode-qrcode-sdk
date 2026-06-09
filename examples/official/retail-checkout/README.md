@@ -34,3 +34,6 @@ python retail_scanner_gui.py
 Get a 30-day free trial license at
 [dynamsoft.com/customer/license/trialLicense](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform)
 and replace `LICENSE_KEY` in `retail_scanner_gui.py`.
+
+## Blog
+[How to Choose a Barcode Reader for Retail Checkout Systems](https://www.dynamsoft.com/codepool/choose-barcode-reader-retail-checkout-systems.html)
