@@ -6,6 +6,8 @@ then compares Dynamsoft Capture Vision's built-in `PT_READ_BARCODES` preset
 against a focused custom template that adds grayscale inversion and restricts
 formats to Code 128 and QR Code.
 
+https://github.com/user-attachments/assets/b07bbbc0-5069-4466-9133-b3d00cb95874
+
 ## Run
 
 ```bash
