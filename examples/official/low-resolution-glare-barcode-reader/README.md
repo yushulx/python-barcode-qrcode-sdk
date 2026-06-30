@@ -27,3 +27,6 @@ benchmark script includes a public trial key fallback for reproducible demos.
 - `reports/benchmark-results.json`: per-image decode results
 - `reports/benchmark-report.html`: visual report with bar charts and files
   recovered by the custom template
+
+## Blog
+[How to Build a Most Accurate Barcode Reader for Low-Resolution, Low-Light, and Glare Images](https://www.dynamsoft.com/codepool/accurate-barcode-reader-low-resolution-low-light-glare.html)
