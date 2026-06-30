@@ -242,7 +242,9 @@ def main() -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
     write_html_report(results, REPORT_DIR / "benchmark-report.html")
-    shutil.copy2(ASSET_DIR / "low-resolution-glare-barcode-reader.png", REPORT_DIR / "cover.png")
+    cover_src = ASSET_DIR / "low-resolution-glare-barcode-reader.png"
+    if cover_src.exists():
+        shutil.copy2(cover_src, REPORT_DIR / "cover.png")
 
     for result in results:
         print(
