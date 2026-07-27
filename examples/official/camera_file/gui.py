@@ -25,6 +25,7 @@ from PySide6.QtGui import (
     QColor,
     QFont,
     QImage,
+    QImageReader,
     QPainter,
     QPen,
     QPixmap,
@@ -390,7 +391,12 @@ def render_pages(file_path: str) -> List[Tuple[QImage, int, int]]:
                 pages.append((img, img.width(), img.height()))
         return pages
 
-    img = QImage(file_path)
+    # QImage(file_path) ignores the EXIF orientation tag, while both
+    # cv2.imread and Dynamsoft apply it. Load with autoTransform so the
+    # preview matches the coordinate space the decoder reports in.
+    reader = QImageReader(file_path)
+    reader.setAutoTransform(True)
+    img = reader.read()
     if img.isNull():
         mat = cv2.imread(file_path, cv2.IMREAD_COLOR)
         if mat is None:
