@@ -128,6 +128,9 @@ TEMPLATES: List[Tuple[str, str]] = [
     ("Single Barcode", EnumPresetTemplate.PT_READ_SINGLE_BARCODE.value),
 ]
 DEFAULT_TEMPLATE_INDEX = 0  # Read Barcodes (default)
+# The compare pane defaults to a contrasting template so the split view shows a
+# meaningful difference immediately.
+COMPARE_DEFAULT_TEMPLATE_INDEX = 2  # Read Rate First
 
 OVERLAY_COLOR = QColor(0, 200, 80)
 OVERLAY_FILL = QColor(0, 200, 80, 60)
@@ -842,6 +845,281 @@ class ImageViewer(QGraphicsView):
 
 
 # ---------------------------------------------------------------------------
+# Viewer pane - shared display widget for the primary and compare views
+# ---------------------------------------------------------------------------
+
+class ViewerPane(QWidget):
+    """Display widget shared by the primary and compare views.
+
+    Layout (identical for every pane so split views line up visually):
+    a header with a title and a template selector, the image viewer with
+    barcode overlays, a "Detected barcodes" results list, and a summary label.
+    """
+
+    statusMessage = Signal(str)
+    templateChanged = Signal(int)
+
+    def __init__(self, title: str, default_template_index: int, parent=None) -> None:
+        super().__init__(parent)
+        self._build_ui(title, default_template_index)
+
+    def _build_ui(self, title: str, default_template_index: int) -> None:
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
+
+        header = QHBoxLayout()
+        self._title_label = QLabel(title)
+        self._title_label.setStyleSheet("font-weight: 600;")
+        header.addWidget(self._title_label)
+        header.addWidget(QLabel("Template:"))
+        self.template_combo = QComboBox()
+        for label, _value in TEMPLATES:
+            self.template_combo.addItem(label)
+        self.template_combo.setCurrentIndex(default_template_index)
+        self.template_combo.setMinimumWidth(160)
+        self.template_combo.currentIndexChanged.connect(self._on_combo_changed)
+        header.addWidget(self.template_combo, 1)
+        layout.addLayout(header)
+
+        self.viewer = ImageViewer()
+        self.viewer.setMinimumSize(320, 240)
+        layout.addWidget(self.viewer, 3)
+
+        layout.addWidget(QLabel("Detected barcodes"))
+        self.results = QListWidget()
+        self.results.setWordWrap(True)
+        self.results.setAlternatingRowColors(True)
+        self.results.itemDoubleClicked.connect(self._on_result_double_clicked)
+        layout.addWidget(self.results, 1)
+
+        self._info_label = QLabel("")
+        self._info_label.setStyleSheet("color: #8a8a8a;")
+        layout.addWidget(self._info_label)
+
+    # ----- display ---------------------------------------------------------
+
+    def render_page(self, page: PageData, info_text: str, summary: str = "") -> None:
+        """Show *page* in the viewer and render its results list."""
+        self.viewer.set_page(page)
+        self.results.clear()
+        info_item = QListWidgetItem(info_text)
+        info_item.setForeground(QBrush(QColor("#1c7ed6")))
+        self.results.addItem(info_item)
+        if page.error:
+            err_item = QListWidgetItem(f"[error] {page.error}")
+            err_item.setForeground(QBrush(QColor("#c92a2a")))
+            self.results.addItem(err_item)
+        for idx, hit in enumerate(page.barcodes, start=1):
+            text = (
+                f"#{idx}  [{hit.format}]  conf={hit.confidence}\n"
+                f"    {hit.text}"
+            )
+            item = QListWidgetItem(text)
+            item.setData(Qt.ItemDataRole.UserRole, hit.text)
+            self.results.addItem(item)
+        self._info_label.setText(summary)
+
+    def clear(self) -> None:
+        self.viewer.clear_view()
+        self.results.clear()
+        self._info_label.setText("")
+
+    def set_title(self, title: str) -> None:
+        self._title_label.setText(title)
+
+    def current_template_label(self) -> str:
+        return self.template_combo.currentText()
+
+    def current_template_value(self) -> str:
+        index = self.template_combo.currentIndex()
+        if 0 <= index < len(TEMPLATES):
+            return TEMPLATES[index][1]
+        return ""
+
+    # ----- internals -------------------------------------------------------
+
+    def _on_combo_changed(self, index: int) -> None:
+        self.templateChanged.emit(index)
+
+    def _on_result_double_clicked(self, item: QListWidgetItem) -> None:
+        text = item.data(Qt.ItemDataRole.UserRole)
+        if text:
+            QApplication.clipboard().setText(text)
+            self.statusMessage.emit(f"Copied to clipboard: {text[:60]}")
+
+
+# ---------------------------------------------------------------------------
+# Compare pane - a ViewerPane that decodes independently in split view
+# ---------------------------------------------------------------------------
+
+class ComparePane(ViewerPane):
+    """Secondary pane used in split view.
+
+    Decodes the selected file with its own template through ``ScannerThread``
+    (which calls ``CaptureVisionRouter.capture_multi_pages`` on the file path),
+    so PDFs are decoded natively by Dynamsoft rather than rasterized externally.
+    """
+
+    def __init__(self, parent=None) -> None:
+        super().__init__("Compare View", COMPARE_DEFAULT_TEMPLATE_INDEX, parent)
+        self._pages: dict[Tuple[str, int], PageData] = {}
+        self._file_metrics: dict[str, FileScanMetrics] = {}
+        self._scanner: Optional[ScannerThread] = None
+        self._current_file: Optional[str] = None
+        self._current_page_idx: int = 0
+        self.template: str = TEMPLATES[COMPARE_DEFAULT_TEMPLATE_INDEX][1]
+        self.templateChanged.connect(self._on_template_changed)
+
+    # ----- public API ------------------------------------------------------
+
+    def sync(
+        self,
+        file_path: Optional[str],
+        page_idx: int,
+        cached_pages: Optional[dict] = None,
+    ) -> None:
+        """Decode/show *file_path* at *page_idx* using this pane's template.
+
+        *cached_pages* may contain already-rendered preview pages (e.g. from
+        the primary pane) so the PDF/TIFF is not re-rendered for display.
+        """
+        if file_path is None:
+            self.clear()
+            return
+
+        self._current_page_idx = page_idx
+
+        if file_path != self._current_file:
+            self._current_file = file_path
+            self._decode_current(
+                f"Compare: decoding {os.path.basename(file_path)} with "
+                f"'{self.current_template_label()}'...",
+                self._merged_cache(file_path, cached_pages),
+            )
+            return
+
+        # Same file as before.
+        if self._scanner is not None and self._scanner.isRunning():
+            # A decode is already in flight; the page appears when ready.
+            return
+
+        if self._file_needs_redecode(file_path):
+            self._decode_current(
+                f"Compare: re-decoding {os.path.basename(file_path)} with "
+                f"'{self.current_template_label()}'...",
+                self._merged_cache(file_path, cached_pages),
+            )
+        else:
+            self._show_current_page()
+
+    def clear_all(self) -> None:
+        self.stop()
+        self._pages.clear()
+        self._file_metrics.clear()
+        self._current_file = None
+        self._current_page_idx = 0
+        self.clear()
+
+    def stop(self) -> None:
+        if self._scanner is not None and self._scanner.isRunning():
+            self._scanner.stop()
+            self._scanner.wait(2000)
+
+    # ----- internals -------------------------------------------------------
+
+    def _merged_cache(self, file_path: str, cached_pages: Optional[dict]) -> dict:
+        merged: dict = dict(cached_pages or {})
+        for key, page in self._pages.items():
+            if key[0] == file_path:
+                merged[key] = page
+        return merged
+
+    def _file_needs_redecode(self, file_path: str) -> bool:
+        metrics = self._file_metrics.get(file_path)
+        if metrics is None:
+            return True
+        # Layout analysis is never used in the compare pane.
+        return metrics.template != self.template
+
+    def _decode_current(self, status: str, cached_pages: dict) -> None:
+        file_path = self._current_file
+        if not file_path:
+            return
+        self.stop()
+        self.statusMessage.emit(status)
+        self._scanner = ScannerThread(
+            [file_path],
+            self.template,
+            cached_pages=cached_pages,
+            use_layout_analysis=False,
+            parent=self,
+        )
+        self._scanner.signals.pageReady.connect(self._on_page_ready)
+        self._scanner.signals.fileMetricsReady.connect(self._on_file_metrics)
+        self._scanner.signals.error.connect(self._on_error)
+        self._scanner.start()
+
+    def _on_template_changed(self, index: int) -> None:
+        if index < 0 or index >= len(TEMPLATES):
+            return
+        self.template = TEMPLATES[index][1]
+        if self._current_file:
+            self._decode_current(
+                f"Compare: re-decoding {os.path.basename(self._current_file)} with "
+                f"'{self.current_template_label()}'...",
+                self._merged_cache(self._current_file, None),
+            )
+
+    def _on_page_ready(self, page: PageData) -> None:
+        self._pages[(page.file_path, page.page_index)] = page
+        if (
+            page.file_path == self._current_file
+            and page.page_index == self._current_page_idx
+        ):
+            self._show_current_page()
+
+    def _on_file_metrics(
+        self,
+        file_path: str,
+        barcode_count: int,
+        decode_elapsed_ms: int,
+        used_layout_analysis: bool,
+        template: str,
+    ) -> None:
+        self._file_metrics[file_path] = FileScanMetrics(
+            barcode_count=barcode_count,
+            decode_elapsed_ms=decode_elapsed_ms,
+            used_layout_analysis=used_layout_analysis,
+            template=template,
+        )
+        if file_path == self._current_file:
+            self._show_current_page()
+
+    def _on_error(self, file_path: str, message: str) -> None:
+        self.statusMessage.emit(f"Compare error: {message.splitlines()[0]}")
+
+    def _show_current_page(self) -> None:
+        page = self._pages.get((self._current_file, self._current_page_idx))
+        if page is None:
+            self.clear()
+            return
+        metrics = self._file_metrics.get(page.file_path)
+        decode_ms = page.decode_elapsed_ms
+        if decode_ms is None and metrics is not None:
+            decode_ms = metrics.decode_elapsed_ms
+        info_text = (
+            f"[info] Template: {self.current_template_label()} | "
+            f"Count: {len(page.barcodes)} barcode(s)"
+        )
+        summary = f"{len(page.barcodes)} barcode(s)"
+        if decode_ms is not None:
+            info_text += f" | Time: {decode_ms} ms"
+            summary += f"  |  {decode_ms} ms"
+        self.render_page(page, info_text, summary)
+
+
+# ---------------------------------------------------------------------------
 # Main window
 # ---------------------------------------------------------------------------
 
@@ -865,6 +1143,7 @@ class MainWindow(QMainWindow):
         self._auto_select_target: Optional[str] = None
         self._current_template: str = TEMPLATES[DEFAULT_TEMPLATE_INDEX][1]
         self._layout_analysis_enabled = False
+        self._split_enabled = False
 
         self._build_ui()
         self._init_license()
@@ -913,19 +1192,20 @@ class MainWindow(QMainWindow):
         self._fit_act.triggered.connect(self._on_fit_to_window)
         toolbar.addAction(self._fit_act)
 
-        toolbar.addSeparator()
-        toolbar.addWidget(QLabel(" Template: "))
-        self._template_combo = QComboBox()
-        for label, _value in TEMPLATES:
-            self._template_combo.addItem(label)
-        self._template_combo.setCurrentIndex(DEFAULT_TEMPLATE_INDEX)
-        self._template_combo.setMinimumWidth(180)
-        self._template_combo.setToolTip(
-            "Capture Vision preset template. Changing it re-decodes the "
-            "currently selected file."
+        self._split_act = QAction(
+            style.standardIcon(QStyle.StandardPixmap.SP_TitleBarUnshadeButton),
+            "Split View",
+            self,
         )
-        self._template_combo.currentIndexChanged.connect(self._on_template_changed)
-        toolbar.addWidget(self._template_combo)
+        self._split_act.setCheckable(True)
+        self._split_act.setToolTip(
+            "Show a second pane to compare decode results of the same file with "
+            "different templates. PDFs are decoded natively in each pane."
+        )
+        self._split_act.toggled.connect(self._on_split_toggled)
+        toolbar.addAction(self._split_act)
+
+        toolbar.addSeparator()
 
         self._layout_analysis_checkbox = QCheckBox("Layout Analysis")
         self._layout_analysis_checkbox.setToolTip(
@@ -973,10 +1253,25 @@ class MainWindow(QMainWindow):
         tree_layout.addWidget(tree_hint)
         tree_layout.addWidget(self.tree)
 
-        # viewer + navigator
-        self.viewer = ImageViewer()
-        self.viewer.setMinimumSize(480, 360)
-        self.viewer.filesDropped.connect(self._enqueue_paths)
+        # viewer panes (primary + compare) ---------------------------------
+        self._primary_pane = ViewerPane("Primary View", DEFAULT_TEMPLATE_INDEX)
+        self._compare_pane = ComparePane()
+        self._compare_pane.setVisible(False)
+
+        # Convenience aliases so existing single-view code keeps working.
+        self.viewer = self._primary_pane.viewer
+        self.results = self._primary_pane.results
+
+        self._primary_pane.viewer.filesDropped.connect(self._enqueue_paths)
+        self._compare_pane.viewer.filesDropped.connect(self._enqueue_paths)
+        self._primary_pane.templateChanged.connect(self._on_template_changed)
+
+        self._viewer_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self._viewer_splitter.addWidget(self._primary_pane)
+        self._viewer_splitter.addWidget(self._compare_pane)
+        self._viewer_splitter.setStretchFactor(0, 1)
+        self._viewer_splitter.setStretchFactor(1, 1)
+        self._viewer_splitter.setChildrenCollapsible(False)
 
         nav_bar = QFrame()
         nav_bar.setFrameShape(QFrame.Shape.StyledPanel)
@@ -997,31 +1292,16 @@ class MainWindow(QMainWindow):
         center_layout = QVBoxLayout(center_panel)
         center_layout.setContentsMargins(0, 0, 0, 0)
         center_layout.setSpacing(0)
-        center_layout.addWidget(self.viewer, 1)
+        center_layout.addWidget(self._viewer_splitter, 1)
         center_layout.addWidget(nav_bar)
 
-        # results panel
-        self.results = QListWidget()
-        self.results.setWordWrap(True)
-        self.results.setAlternatingRowColors(True)
-        self.results.itemDoubleClicked.connect(self._on_result_double_clicked)
-
-        results_panel = QWidget()
-        results_layout = QVBoxLayout(results_panel)
-        results_layout.setContentsMargins(6, 6, 6, 6)
-        results_layout.setSpacing(4)
-        results_layout.addWidget(QLabel("Detected barcodes"))
-        results_layout.addWidget(self.results)
-
-        # splitter
+        # main splitter: file tree | viewer pane(s)
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.addWidget(tree_panel)
         splitter.addWidget(center_panel)
-        splitter.addWidget(results_panel)
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
-        splitter.setStretchFactor(2, 0)
-        splitter.setSizes([360, 640, 280])
+        splitter.setSizes([360, 920])
         self.setCentralWidget(splitter)
 
         # status bar
@@ -1029,6 +1309,9 @@ class MainWindow(QMainWindow):
         sb = QStatusBar()
         sb.addWidget(self._status_label, 1)
         self.setStatusBar(sb)
+
+        self._primary_pane.statusMessage.connect(self._status_label.setText)
+        self._compare_pane.statusMessage.connect(self._status_label.setText)
 
         self._update_nav_state()
 
@@ -1123,6 +1406,44 @@ class MainWindow(QMainWindow):
         if self.viewer._pixmap_item is not None:
             self._status_label.setText("Fitted current page to window.")
 
+    def _on_split_toggled(self, checked: bool) -> None:
+        self._split_enabled = checked
+        if checked:
+            # Split view compares standard templates; disable layout analysis.
+            if self._layout_analysis_enabled:
+                # Triggers _on_layout_analysis_toggled -> standard re-decode.
+                self._layout_analysis_checkbox.setChecked(False)
+            self._layout_analysis_checkbox.setEnabled(False)
+            self._compare_pane.setVisible(True)
+            self._viewer_splitter.setStretchFactor(0, 1)
+            self._viewer_splitter.setStretchFactor(1, 1)
+            self._viewer_splitter.setSizes([600, 520])
+            self._sync_compare()
+            self._status_label.setText(
+                "Split view: compare templates side by side."
+            )
+        else:
+            self._compare_pane.setVisible(False)
+            self._compare_pane.stop()
+            self._layout_analysis_checkbox.setEnabled(LAYOUT_ANALYSIS_AVAILABLE)
+            self._status_label.setText("Split view disabled.")
+
+    def _sync_compare(self) -> None:
+        if not self._split_enabled or self._compare_pane is None:
+            return
+        item = self.tree.currentItem()
+        if item is None:
+            self._compare_pane.clear()
+            return
+        file_path = item.data(0, self.FILE_ROLE)
+        page_idx = item.data(0, self.PAGE_ROLE)
+        if file_path is None or page_idx is None:
+            return
+        # Reuse the primary pane's rendered preview pages so PDFs/TIFFs are
+        # not re-rendered for display; decoding still happens natively.
+        cached = {k: v for k, v in self._pages.items() if k[0] == file_path}
+        self._compare_pane.sync(file_path, int(page_idx), cached_pages=cached)
+
     def _on_layout_analysis_toggled(self, checked: bool) -> None:
         if checked and not LAYOUT_ANALYSIS_AVAILABLE:
             self._layout_analysis_checkbox.blockSignals(True)
@@ -1192,8 +1513,8 @@ class MainWindow(QMainWindow):
             self._scanner.stop()
             self._scanner.wait(2000)
         self.tree.clear()
-        self.results.clear()
-        self.viewer.clear_view()
+        self._primary_pane.clear()
+        self._compare_pane.clear_all()
         self._pages.clear()
         self._file_metrics.clear()
         self._file_items.clear()
@@ -1399,10 +1720,10 @@ class MainWindow(QMainWindow):
 
     def _on_tree_changed(self, current: Optional[QTreeWidgetItem], _prev) -> None:
         if current is None:
-            self.viewer.clear_view()
-            self.results.clear()
+            self._primary_pane.clear()
             self._page_label.setText("No page selected")
             self._update_nav_state()
+            self._sync_compare()
             return
 
         file_path = current.data(0, self.FILE_ROLE)
@@ -1415,16 +1736,17 @@ class MainWindow(QMainWindow):
                     file_path,
                     f"Re-decoding {os.path.basename(file_path)} with {mode_label}...",
                 )
+                self._sync_compare()
                 return
 
         page = self._page_from_item(current)
         if page is not None:
             self._show_page(page)
         else:
-            self.viewer.clear_view()
-            self.results.clear()
+            self._primary_pane.clear()
             self._page_label.setText(os.path.basename(current.data(0, self.FILE_ROLE) or ""))
             self._update_nav_state()
+        self._sync_compare()
 
     def _restart_selected_file_decode(self, file_path: str, status_text: str) -> None:
         if not file_path:
@@ -1474,9 +1796,6 @@ class MainWindow(QMainWindow):
         return metrics.used_layout_analysis or metrics.template != self._current_template
 
     def _show_page(self, page: PageData) -> None:
-        self.viewer.set_page(page)
-        self.results.clear()
-
         metrics = self._file_metrics.get(page.file_path)
         mode_label = self._decode_mode_label(page.file_path)
         decode_elapsed_ms = page.decode_elapsed_ms
@@ -1486,24 +1805,12 @@ class MainWindow(QMainWindow):
             decode_scope = "File decode"
 
         info_text = f"[info] Mode: {mode_label} | Count: {len(page.barcodes)} barcode(s)"
+        summary = f"{len(page.barcodes)} barcode(s)"
         if decode_elapsed_ms is not None:
             info_text += f" | {decode_scope} time: {decode_elapsed_ms} ms"
-        info_item = QListWidgetItem(info_text)
-        info_item.setForeground(QBrush(QColor("#1c7ed6")))
-        self.results.addItem(info_item)
+            summary += f"  |  {decode_scope}: {decode_elapsed_ms} ms"
+        self._primary_pane.render_page(page, info_text, summary)
 
-        if page.error:
-            err_item = QListWidgetItem(f"[error] {page.error}")
-            err_item.setForeground(QBrush(QColor("#c92a2a")))
-            self.results.addItem(err_item)
-        for idx, hit in enumerate(page.barcodes, start=1):
-            text = (
-                f"#{idx}  [{hit.format}]  conf={hit.confidence}\n"
-                f"    {hit.text}"
-            )
-            item = QListWidgetItem(text)
-            item.setData(Qt.ItemDataRole.UserRole, hit.text)
-            self.results.addItem(item)
         page_text = (
             f"{os.path.basename(page.file_path)}    "
             f"Page {page.page_index + 1} / {page.total_pages}    "
@@ -1554,20 +1861,13 @@ class MainWindow(QMainWindow):
         self._prev_btn.setEnabled(has_items and idx > 0)
         self._next_btn.setEnabled(has_items and idx >= 0 and idx < len(items) - 1)
 
-    # ----- results panel ---------------------------------------------------
-
-    def _on_result_double_clicked(self, item: QListWidgetItem) -> None:
-        text = item.data(Qt.ItemDataRole.UserRole)
-        if text:
-            QApplication.clipboard().setText(text)
-            self._status_label.setText(f"Copied to clipboard: {text[:60]}")
-
     # ----- cleanup ---------------------------------------------------------
 
     def closeEvent(self, event) -> None:
         if self._scanner and self._scanner.isRunning():
             self._scanner.stop()
             self._scanner.wait(2000)
+        self._compare_pane.stop()
         super().closeEvent(event)
 
 
