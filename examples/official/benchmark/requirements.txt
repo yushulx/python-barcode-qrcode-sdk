@@ -1,0 +1,4 @@
+opencv-python>=4.8
+numpy>=1.24
+zxing-cpp>=2.1
+dynamsoft-capture-vision-bundle>=3.0

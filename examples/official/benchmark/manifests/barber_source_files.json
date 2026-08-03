@@ -1,0 +1,4510 @@
+{
+  "dataset": "BarBeR",
+  "image_root": "D:/images/public-barcode-dataset/BarBeR - Dataset/dataset/images",
+  "annotation_root": "D:/images/public-barcode-dataset/BarBeR - Dataset/Annotations/VIA",
+  "source_annotation_files": [
+    {
+      "relative_path": "Artelab Extended.json",
+      "sha256": "b15d79bb6effc7d643bd082ab632dd3bb4bf4684845a363724ea3f2f595bb184",
+      "bytes": 50187
+    },
+    {
+      "relative_path": "Artelab.json",
+      "sha256": "90cf795cae4d5fda44ffdfd4c65729d3fbec11c3bed6e9282c43ab3ee0f10f2a",
+      "bytes": 150499
+    },
+    {
+      "relative_path": "Bodnar.json",
+      "sha256": "d823dc98038f43ebbf559677de8873270ba49866ede49ceebaab7257b0d1780b",
+      "bytes": 37194
+    },
+    {
+      "relative_path": "Deal Kaist.json",
+      "sha256": "91ad46048a55e23feab32475ca353a0e1b61b79d7b3188f4f136f55c10b1c8b0",
+      "bytes": 1090519
+    },
+    {
+      "relative_path": "Dubska.json",
+      "sha256": "3951c0015a6cde9aa1d994d0dbc9d710e91137d2e1976672aa80c7b4bb3e7d6f",
+      "bytes": 326377
+    },
+    {
+      "relative_path": "InventBar.json",
+      "sha256": "65a6b94d20286e3f69e7548403372ea548224fdb1a0247a7007df4db2c526e0d",
+      "bytes": 199524
+    },
+    {
+      "relative_path": "Muenster.json",
+      "sha256": "d8c7252a52e2aca606af4109bd30e7b0ef6e4391c85c0e736428c3043220a676",
+      "bytes": 402098
+    },
+    {
+      "relative_path": "Open Food Facts.json",
+      "sha256": "9a0fb50302d1e7bf64d535f2404b805c0988d2457f7ec90959c11d8f672cc6bb",
+      "bytes": 68114
+    },
+    {
+      "relative_path": "ParcelBar.json",
+      "sha256": "74575f2f7bde800f9e0572c3b1347ba0d9c7f810182b1c4ea10c873ab06e3b74",
+      "bytes": 380793
+    },
+    {
+      "relative_path": "SKUU DSP Lab.json",
+      "sha256": "5dfe367a45bda60a41c7769ca6bba728dc98d78e6e5b375f14d1d4eef123cb2b",
+      "bytes": 129172
+    },
+    {
+      "relative_path": "Szentandrasi-Dubska QR.json",
+      "sha256": "9c0ea68273fb64f75dda3dfa7f7fdd78d8ce0831956e4ebeae7e36cf17022a80",
+      "bytes": 80886
+    },
+    {
+      "relative_path": "ZVZ-real.json",
+      "sha256": "974b088ba2738e0cb1589562f24da42f7670702d3807db27436653186399c7bf",
+      "bytes": 417862
+    }
+  ],
+  "overlapping_annotation_records": [
+    {
+      "relative_path": "20110817_013.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_030.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_040.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_043.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_048.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_066.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_089.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_096.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_106.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_143.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_175.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_177.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_201.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_206.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": false
+    },
+    {
+      "relative_path": "20110817_207.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_211.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_299.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_317.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_326.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_355.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_376.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_394.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_401.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "20110817_402.jpg",
+      "selected_annotation_file": "Dubska.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    },
+    {
+      "relative_path": "IMG_20120226_161648.jpg",
+      "selected_annotation_file": "Szentandrasi-Dubska QR.json",
+      "discarded_annotation_file": "Szentandrasi-Dubska QR.json",
+      "same_format_payload_multiset": true
+    }
+  ],
+  "excluded_images": [
+    {
+      "relative_path": "PostBarcode945_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode845_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3144550019369_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203527.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8936017360634.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode740.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9556041131087.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5057753125806.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010241993059-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8002205319804.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613404131473.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0468.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5000169046814.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613034684875.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode212.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode220_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801155735081.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5052109876630.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3228020481150.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode455.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934563138165_2.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010102241497.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8938503101042.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode003_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Special_0177.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0898745035445.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3270160682669.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7441163401007.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5000382036319_1.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3661112850449.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode267.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801237806623.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5000213020128.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5024616003069.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3451790988813.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode169.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "00994965.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "26063669.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5412929000514_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0012546676113.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode526.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "00314121.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "00187343.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613404013885.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0096619235797.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060337221108.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20480370.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4005401285991_1.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5011308000994.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3483130000879.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3266191057910.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4779039730306.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4062300026919-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7612297021328.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode457_0.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0500.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7624841023177.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8410416008866_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801083453002.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8805806117059_1.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5901960048055.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "066.jpg",
+      "annotation_file": "Bodnar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode002.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0077034009873.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode343_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2330740028407_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4010716065137-01_N95.jpg",
+      "annotation_file": "Muenster.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613404121528.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode837_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode151.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4250665325581_3.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203311.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8002270000294.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5051413679876.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode107_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5052109939205.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode507.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202908.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8002330002534.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5412253972778-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203042.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20246648.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode412.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode084.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9310012045502.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204019.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0461.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8437004440679.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3336374401684_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5057373870810.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3760166270453.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode568.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3222476440570.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8806182557187.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0446.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9311493002985.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204442.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8803733236379.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7899572806164_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "00765107.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode575.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode300_0.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode466_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode822_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8802259001096.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8003753900551.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204255.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3173286693666_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5014213000929.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "76237317.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode869_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4260134390019.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode632.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7611521048261.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0422.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935107560428.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5025253004112.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203046.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode469.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3848231873959.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3564700014660.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203515.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode266.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode097_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode511.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode172.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801037025217.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode663.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809388461418.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5017375377182.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935039513196.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3080216048543.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060028560509.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "42208532.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(754).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0054881000055.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode277.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode249.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "23036925.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3661112055813.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode475.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0025293003804.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060123609714.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0710619793940.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8936175700822.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0486.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935107563498.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7610287335585.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3505340020529.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8410843016076.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode751.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode794.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode242.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode704_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5900334007421.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9300652804973.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(756).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801767336690.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode108.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0258771003649.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9355606000222.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8006860642031.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3292992003993.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934588232220.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode650_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203359.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0036000373905.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4058700660068-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode871_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4005808801046.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode486.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4306188227380-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3770008126008_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801117534912.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140608_120605.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode771.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode368.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5410543551016.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7861182301506.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2244057017125.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode516_0.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801237806647.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5012251012850.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5400141323139.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8424193222223.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode104_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8413376011624.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7610800639329.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203413.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9300633522063.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8076802085738.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode213.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801094112400.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "01209303.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3560071008796.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201034.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode072_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801052730547.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809388460398.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5025232413997-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5000128919586.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203038.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5202853100318.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5000169024904.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3560070669813.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060151180773.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode313_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode888.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode144.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060338039795.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3661112054045.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "21285363.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8000050448700.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801115134237.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204238.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3661112056810.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201623.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20200916_213210.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9339687066841.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2326926601007.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8718537512362.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8005495341005.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode858.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4305399070402-01_N95.jpg",
+      "annotation_file": "Muenster.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode408.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613379771407.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201148.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4967825561023-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8717973830030.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0016000502666.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(558).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8936072190221.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203340.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode439.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204638.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20409531.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode222_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809487490180.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3073781000122.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(752).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode859_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201217.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode741_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0518.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5051413965399.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613404155035.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode574.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "6935543280012.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3258231071000.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode904_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "6281052230131.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5051413188514.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4028665001404-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201953.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201739.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "1541430020002.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0272118009392.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_368.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809326451563.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934563138165_1.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3234750027414.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0040000424314.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8850389106259.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode179_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode747.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0482.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5039303002386.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0722252161031.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809394642443.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode382.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode076.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935134592751.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204103.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5055014320076.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode893.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_255.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8803381101722.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203438.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4388844280564.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801037073232.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3250391273782_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3760077187918.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801097250703.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3228021000084.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8936079280819.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935054882826.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Special_0070.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3700238314159_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9100000781099.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801094132705.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5011166054559.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8711500430168-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4311501484838_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201728.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8002580010945.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0040293982249.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9001432047282.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20609269.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0038000916106.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3276724114058.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934707010487.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode885_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060123607765.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204620.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203417.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801024956296.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5051413739273.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "90082993.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode461_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2239569018555.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_146.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3092718617967.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9300767092821.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3256226081836.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode314.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "90424403.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode415_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202631.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode477.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5057172098958.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4306188029717-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613036961707.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20191019_125039.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203449.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934673109345.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_215.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4901885002058.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode127.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5051594007062.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3240931541419_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934680011518.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "42124504.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8411135441019.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4311501625217_4.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode886_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode578.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4058700310321.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0020685000959.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0401.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801045571867.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202016.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8001916002326.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20154691.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202749.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202323.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode004.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8936017360634_1.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4052700093079_3.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode757_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8002266000017-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801062014828.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3180950010346.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4580385650039.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7290002166832-01_N95.jpg",
+      "annotation_file": "Muenster.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5900084261029.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0011110881786.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(539).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode109_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2136004004459.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "22121103.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935015510447.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5018811000848.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935054882826_1.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809196730553.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4903034012659.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3760057250038.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8938500334023.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8410261111124.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5024333233152.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3560071182816.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8936025771217.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4035364000706.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4026175043419-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202937.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3434730707835.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode571_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode112.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode742.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0420.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010909006770.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode515.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5012254112595.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode251_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203055.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203608.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8719200088986.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8936028043717.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(535).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3307130602553.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode836.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode727_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201820.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3171920011272_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934777201167.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201908.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8993053411010.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5045097866592.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202318.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2800020005003.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3033710065066.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801045440200.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7610434019832.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5020379150774.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801037073164.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3104931615917_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5900512110165.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801767335679.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3256220210492.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5057172098743.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4531915002255.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801094202408.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801037073218.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201049.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3258831092795_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode419.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "80787174_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203932.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode034_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0467.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8718885890846_3.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203927.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801391100681.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4047584005577-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode184_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4260130210052.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode001.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7622210449283.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203752.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204132.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "00806756.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3328079000057_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8710609016310-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3178530410105.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4800519183036.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0072417178245.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3760091970275.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202008.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8808739000306.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "42256069.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8887719277495.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935136860292.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3462800000302_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode021.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode079_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613312103272.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010357112092.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202532.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "26001425.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5020379135085.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Special_0240.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613404135228.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0459.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5023751000322.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4045178003510.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0421.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode205.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "22166821.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3457040288764_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(757).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "87182262.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060038571533.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8410069010568_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Special_0112.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204604.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5701001475174.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203428.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode429_0.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3661112056834.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4002239423106.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2322013800599.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203758.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode451.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode322.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4016364008176-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8808739000504.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2329238801752.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3191010083309.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203354.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613413851102.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8699421939956.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0437.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20200916_213138.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode739_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5052320289240.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0419.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4779039730290.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4088700052013.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3596710344642.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3560070677825.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0054881005517.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5051413258477.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode770.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8057014941555.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3521872711056.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010251712633.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5053990153459.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809081710035.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140608_120715.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0522.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3389090003342_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20200916_213010.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3760159101344.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4902102126915.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "50357215.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5011295195451.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2868039009054_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5052003083127.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Special_0186.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4009300505341.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201723.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode333_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809388460237.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3263626463810.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5021554989356.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201810.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2319125202007.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7290013998026_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode236.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "51001120.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8076808150072.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010549104614.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3560070423088.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5052449479027.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3609050750056.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3262151833754_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203445.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode035_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(758).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203453.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9339687106738.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8806365082970.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801045522838.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Special_0081.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204545.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "50989713.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode043_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "87157154.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "04041906.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5054070716335.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7640157480053.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8711200503896.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode155_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5410228223054_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8996001301760.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801007402284.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode720.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20553913.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7640109530027.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5020411125883.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613035619425.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934678030033.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_334.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4809010272027.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3425470021008_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode495_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "EAN13_09_0061.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5449000259912.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4037678222164-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode509_0.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0501.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4005808801046_1.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7702018925957.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3256221674569.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode356.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode408_0.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5400141167153.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode317.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5054070299043.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode870.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode861.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010251618447.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3347431200256.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "068.jpg",
+      "annotation_file": "Bodnar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140608_120600.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5038584800018.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201630.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202751.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613036959063.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613379512277.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode162.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode293.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7622210318947.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode133_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode551.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613312159644.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801056043551.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode443_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203404.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9300727004048.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0466.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7684625684710.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode938_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201634.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5900084207461.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9415549814635.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "6922255451427.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9319864001926.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935039510034.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2000000281179.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3250390007395.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809388461029.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode411.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4250090807959-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0463.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0435.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode188.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "6902395310280.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8936010541320.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode497_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204633.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613269887171.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode414.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8718885890846_4.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode728.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20200916_212929.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0488.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202420.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "24044028.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801767335686.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3448550008010_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "[P]ISBN_18_0067.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode171.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode655_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204159.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0553.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010358216782.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801094012304.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2868039009054_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204624.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2165742004797_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode404.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode137.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode105.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode346.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "46164186.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7610029180428.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4026584133107.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5017174118023.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8588004338111.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0406.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3438860001658.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "[S]ISBN_02_0093.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9002759812614-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode413.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201950.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2328182300656.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5024333004400.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20431617.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode102.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0858764000350.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4022804050650-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801007120515.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5029730075305.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_219.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613413748181.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202658.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4260107220299.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4001686215210.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4902705100787.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "6600412475256_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode221_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode628_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8076809513388.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801048002313.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode868.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801037073225.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8076809513753.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613269780076.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5998997405906.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3265850000038.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8000121310370.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203704.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202801.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203035.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode401.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20191019_122813.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201006.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202559.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20706852.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode457.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204509.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0890512002032.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode075_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203505.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8076808060654.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5052449753752.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode841_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9002490100070.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0054881006972.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801094432409.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8021425074508-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7630017624413.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060479997336.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7640172470046.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20564629.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode119_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9300682043007.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode174.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode478.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(696).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8935039513189.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3560071094980_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode499.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5022374050134.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202855.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0220040003162.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204051.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2135003002756.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613269382904.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode654_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4305615490212_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4012200040263.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0402.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode192.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202828.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode510.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934673576390.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8808739000108.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode768_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5012389670731.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode122.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202353.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3516890002873.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8723400772187.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4897036691120.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201626.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3222475403064_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0040000000327.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8806365009632.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3462800000302_2.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode176_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode889_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5057967620579.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "6009702811154.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5000169267578.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3760199054563.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202948.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode020.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode160_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode124.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202103.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0393.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "80052760.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0201093005396.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3427290003097.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode242.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(759).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5000314126125.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7610614027206.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode746_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "041.jpg",
+      "annotation_file": "Bodnar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0479.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801767337314.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140608_120553.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode198.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode864.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4030414003058.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9002827249014-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5014442007867.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801052734460.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(714).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202942.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode807_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3228022120095.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801045132228.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode132_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8850389106235.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode167.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "09012028.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5013531211765.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode687.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203407.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7310791192185-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7611631315949.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801007303147.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8410104002954-01.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203118.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8007900000255.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3428290000093_1.jpg",
+      "annotation_file": "Open Food Facts.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0418.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5057753304188.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode512.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201442.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809456977872.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4005401285991.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0528.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "00705615.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "50989706.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5054070039748.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8809456977919.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5034210110070.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode882_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0056600816503.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0439.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_189.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "01510294.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202552.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode154.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(751).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode106.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4060800174475.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8934707011736.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5900531000010.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5773184530148.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "50271382.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode535_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20452056.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "076.jpg",
+      "annotation_file": "Bodnar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5600499577059.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4779039730276.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5057172016037.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204608.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "03240014.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8003753900551_1.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_404.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8806004801467.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4025500245078.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060135537227.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode103.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(753).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5031153333412.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "Foto(719).jpg",
+      "annotation_file": "Artelab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5060479997695.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "4056489036654.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_203532.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20200916_213424.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7611201002095.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "9310012040057.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode887.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode211_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5400112392102.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode126_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801007052397.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_201155.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0048582003309.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7613269677031.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode891.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20110817_114.jpg",
+      "annotation_file": "Dubska.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode543_0.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "3258561430621.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode466.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "ProductBarcode398.jpg",
+      "annotation_file": "InventBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5032722313637.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8801055704521.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_202425.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "5010238015252.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "2286328008319.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "PostBarcode226.jpg",
+      "annotation_file": "ParcelBar.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "7640175926083.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "IMAG0555.jpg",
+      "annotation_file": "Artelab Extended.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "8805806117066.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "0717273501560.jpg",
+      "annotation_file": "Deal Kaist.json",
+      "reason": "no_reliable_ground_truth"
+    },
+    {
+      "relative_path": "20140607_204553.jpg",
+      "annotation_file": "SKUU DSP Lab.json",
+      "reason": "no_reliable_ground_truth"
+    }
+  ],
+  "exact_duplicate_images": [
+    {
+      "relative_path": "Special_0029.jpg",
+      "annotation_file": "ZVZ-real.json",
+      "image_sha256": "e493bfd01936f092284d9a4057ce78f6d40c12839d565e87f2f3833430297b93",
+      "reason": "exact_duplicate_image"
+    }
+  ],
+  "summary": {
+    "annotation_files": 12,
+    "manifest_images": 7894,
+    "audited_image_records": 8748,
+    "source_images": 8748,
+    "annotations": 9818,
+    "eligible_annotations": 8616,
+    "missing_payload_or_generic": 1190,
+    "invalid_annotations": 12,
+    "missing_images": 0,
+    "unannotated_images": 0,
+    "duplicate_image_records": 1,
+    "excluded_images_without_ground_truth": 853,
+    "benchmark_annotations": 8615,
+    "dataset_max_barcodes": 14
+  }
+}
