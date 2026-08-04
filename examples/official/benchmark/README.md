@@ -136,4 +136,5 @@ python tools/generate_html_report.py `
 - Unsupported formats remain visible in coverage-adjusted metrics.
 - Decoder and input pipeline errors are explicit outcomes, not no-read results.
 
-
+## Blog
+[How to Benchmark Barcode Reading in Python with ZXing-C++ and Dynamsoft Barcode Reader](https://www.dynamsoft.com/codepool/benchmark-barcode-reading-python-zxing-dynamsoft-barcode-reader.html)
