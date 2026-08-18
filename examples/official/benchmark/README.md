@@ -2,7 +2,7 @@
 
 This project measures barcode decoding accuracy and speed for the ZXing Python package and Dynamsoft Barcode Reader Python on the public [BarBeR dataset](https://ditto.ing.unimore.it/barber/). Both readers are evaluated with the same image set, ground truth manifest, matching rules, and raw JSONL result protocol.
 
-<video src="assets/barcode-benchmark-python-video.mp4" poster="assets/barcode-benchmark-python-video-poster.png" controls muted width="100%"></video>
+https://github.com/user-attachments/assets/2fb0a810-b7b8-4f3b-9d32-2abe334d28f2
 
 ## Dependencies
 
