@@ -52,11 +52,47 @@ def canonical_format(value: str) -> str:
     return mapping.get(key, key)
 
 
+def unescape_html_entities(value: str) -> str:
+    return (
+        value.replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", '"')
+        .replace("&#39;", "'")
+        .replace("&apos;", "'")
+    )
+
+
+def strip_leading_gs1_marker(value: str) -> str:
+    while True:
+        if value.startswith("{GS}"):
+            value = value[4:]
+            continue
+        if value.startswith("{FNC1}"):
+            value = value[6:]
+            continue
+        if value.startswith("\x1d"):
+            value = value[1:]
+            continue
+        return value
+
+
+def is_unreliable_placeholder(payload: str) -> bool:
+    return payload == "^"
+
+
 def normalized_payload(fmt: str, payload: str) -> str:
+    result = unescape_html_entities(payload).rstrip("\r\n")
+    if result.startswith("\\000001"):
+        result = result[7:]
     fmt = canonical_format(fmt)
-    if fmt == "UPC_A" and len(payload) == 13 and payload.startswith("0"):
-        return payload[1:]
-    return payload
+    if fmt == "UPC_A" and len(result) == 13 and result.startswith("0"):
+        return result[1:]
+    if fmt == "CODE_39" and len(result) >= 2 and result.startswith("*") and result.endswith("*"):
+        return result[1:-1]
+    if fmt in {"CODE_128", "GS1_128"}:
+        return strip_leading_gs1_marker(result)
+    return result
 
 
 def valid_gtin(value: str) -> bool:
@@ -452,6 +488,8 @@ def match_results(truth: list[dict[str, Any]], predictions: list[dict[str, Any]]
     for ti, gt in enumerate(truth):
         if not gt.get("decode_eligible"):
             continue
+        if is_unreliable_placeholder(gt.get("text", "")):
+            continue
         if not is_supported(decoder, gt["format"]):
             output.append({"truth_index": ti, "prediction_index": None, "outcome": "unsupported_format"})
             continue
@@ -677,6 +715,23 @@ def generate_summary(jsonl: Path, output: Path) -> None:
     output.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def rematch_results(args: argparse.Namespace) -> int:
+    records = read_jsonl(args.results)
+    for record in records:
+        if record.get("error"):
+            continue
+        record["matches"] = match_results(record.get("ground_truth") or [], record.get("predictions") or [], record["decoder"])
+    output = args.output
+    output.mkdir(parents=True, exist_ok=True)
+    jsonl = output / "results.jsonl"
+    write_jsonl(jsonl, records)
+    generate_summary(jsonl, output / "summary.json")
+    generate_results_json(jsonl, output / "summary.json", output / "results.json")
+    print(f"rematched {len(records)} records")
+    print(f"wrote {jsonl}, {output / 'summary.json'} and {output / 'results.json'}")
+    return 0
+
+
 def generate_results_json(jsonl: Path, summary: Path, output: Path) -> None:
     value = {
         "summary": json.loads(summary.read_text(encoding="utf-8")),
@@ -723,6 +778,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("summarize")
     p.add_argument("--results", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
+    p = sub.add_parser("rematch")
+    p.add_argument("--results", type=Path, required=True)
+    p.add_argument("--output", type=Path, required=True)
     p = sub.add_parser("write-environment")
     p.add_argument("--output", type=Path, default=Path("configs/benchmark_environment.json"))
     p.add_argument("--repetitions", type=int, default=1)
@@ -750,6 +808,8 @@ def main() -> int:
     if args.command == "summarize":
         generate_summary(args.results, args.output)
         return 0
+    if args.command == "rematch":
+        return rematch_results(args)
     if args.command == "write-environment":
         return write_environment(args)
     raise SystemExit(f"unknown command: {args.command}")
