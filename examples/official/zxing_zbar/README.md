@@ -1,5 +1,5 @@
 # Barcode SDK Benchmark Framework
-Comprehensive benchmarking framework to compare barcode reader SDKs: **ZXing-cpp**, **ZBar**, and [Dynamsoft Capture Vision SDK](https://pypi.org/search/?q=dynamsoft-capture-vision-bundle).
+Comprehensive benchmarking framework to compare barcode reader SDKs: **ZXing-cpp**, **ZBar**, and [Dynamsoft Barcode Reader](https://pypi.org/project/dynamsoft-barcode-reader-bundle/).
 
 This project focuses on **angled barcode detection** and **multiple barcode scenarios**, designed to identify and showcase competitive advantages in barcode recognition performance.
 
@@ -40,7 +40,7 @@ This project provides two benchmark programs:
 1. Obtain a [30-day trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) and update the code with the license key in `simple.py`.
     
     ```python
-    from dynamsoft_capture_vision_bundle import *
+    from dynamsoft_barcode_reader_bundle import *
     error_code, error_message = LicenseManager.init_license(
         "LICENSE-KEY")
     ```
@@ -110,7 +110,7 @@ Edit `config/benchmark_config.json` to enable/disable SDKs and configure setting
 }
 ```
 
-**Note**: Dynamsoft requires a valid license key. Visit [Dynamsoft's website](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) to obtain one.
+**Note**: Dynamsoft Barcode Reader requires a valid license key. Visit [Dynamsoft's website](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) to obtain one.
 
 ## Test Scenarios
 

@@ -2,7 +2,7 @@ import argparse
 import pyzbar.pyzbar as zbar
 from PIL import Image
 import zxingcpp
-from dynamsoft_capture_vision_bundle import *
+from dynamsoft_barcode_reader_bundle import *
 import time
 import os
 import data
@@ -167,7 +167,7 @@ def main():
         ''')
         return
 
-    # Initialize Dynamsoft Capture Vision
+    # Initialize Dynamsoft Barcode Reader (barcode module of Dynamsoft Capture Vision)
     error_code, error_message = LicenseManager.init_license(
         "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==")
 

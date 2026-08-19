@@ -164,43 +164,43 @@ class PyZBarReader(BarcodeReaderInterface):
 
 
 class DynamsoftBarcodeReader(BarcodeReaderInterface):
-    """Dynamsoft Capture Vision Bundle implementation."""
-    
+    """Dynamsoft Barcode Reader (bundle) implementation."""
+
     def __init__(self, config: Dict[str, Any]):
         super().__init__("Dynamsoft", config)
         self.license = config.get('license', '')
         self.cvr_instance = None
-    
+
     def initialize(self) -> bool:
-        """Initialize Dynamsoft Capture Vision Router."""
+        """Initialize Dynamsoft Barcode Reader (Capture Vision Router)."""
         try:
-            from dynamsoft_capture_vision_bundle import (
+            from dynamsoft_barcode_reader_bundle import (
                 LicenseManager, CaptureVisionRouter, EnumErrorCode
             )
-            
+
             # Initialize license
             error_code, error_message = LicenseManager.init_license(self.license)
             if error_code != EnumErrorCode.EC_OK and error_code != EnumErrorCode.EC_LICENSE_CACHE_USED:
                 print(f"Dynamsoft license initialization failed: ErrorCode: {error_code}, ErrorString: {error_message}")
                 return False
-            
+
             # Create CaptureVisionRouter instance
             self.cvr_instance = CaptureVisionRouter()
             print(f"Dynamsoft Barcode Reader initialized successfully")
             return True
-            
+
         except ImportError as e:
             print(f"Failed to import Dynamsoft SDK: {e}")
-            print("Please install: pip install dynamsoft-capture-vision-bundle")
+            print("Please install: pip install dynamsoft-barcode-reader-bundle")
             return False
         except Exception as e:
             print(f"Failed to initialize Dynamsoft: {e}")
             return False
-    
+
     def decode_barcodes(self, image_path: str) -> Tuple[List[Dict[str, Any]], float]:
-        """Decode barcodes using Dynamsoft Capture Vision."""
+        """Decode barcodes using Dynamsoft Barcode Reader."""
         import time
-        from dynamsoft_capture_vision_bundle import EnumPresetTemplate, EnumErrorCode
+        from dynamsoft_barcode_reader_bundle import EnumPresetTemplate, EnumErrorCode
         
         start_time = time.perf_counter()
         

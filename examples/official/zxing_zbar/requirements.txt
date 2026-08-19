@@ -17,7 +17,7 @@ openpyxl>=3.0.0
 
 # Optional: If you have access to commercial libraries
 # Dynamsoft Barcode Reader SDK (requires license)
-dynamsoft-capture-vision-bundle>=3.2.1000
+dynamsoft-barcode-reader-bundle>=11.6.1000
 
 # Development and Testing
 pytest>=6.0.0
