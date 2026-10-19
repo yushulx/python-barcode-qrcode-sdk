@@ -1,0 +1,926 @@
+[
+  {
+    "profile": "PT_READ_BARCODES preset",
+    "template_name": "ReadBarcodes_Default",
+    "decoded": 10,
+    "total": 14,
+    "decode_rate": 71.43,
+    "avg_time_ms": 46.19,
+    "per_image": [
+      {
+        "file": "code128_blurred.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 118.47,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 69,
+            "points": [
+              {
+                "x": 93,
+                "y": 97
+              },
+              {
+                "x": 666,
+                "y": 97
+              },
+              {
+                "x": 666,
+                "y": 267
+              },
+              {
+                "x": 93,
+                "y": 267
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_clean.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 10.99,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 41,
+            "points": [
+              {
+                "x": 95,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 268
+              },
+              {
+                "x": 95,
+                "y": 268
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_glare.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 9.47,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 41,
+            "points": [
+              {
+                "x": 95,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 268
+              },
+              {
+                "x": 95,
+                "y": 267
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_inverted.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [],
+        "ok": false,
+        "time_ms": 129.17,
+        "items": []
+      },
+      {
+        "file": "code128_inverted_low_light.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [],
+        "ok": false,
+        "time_ms": 248.87,
+        "items": []
+      },
+      {
+        "file": "code128_low_light.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 14.9,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 47,
+            "points": [
+              {
+                "x": 95,
+                "y": 97
+              },
+              {
+                "x": 664,
+                "y": 97
+              },
+              {
+                "x": 664,
+                "y": 267
+              },
+              {
+                "x": 95,
+                "y": 267
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_low_resolution.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 21.7,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 93,
+            "points": [
+              {
+                "x": 94,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 268
+              },
+              {
+                "x": 94,
+                "y": 268
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_blurred.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 10.21,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 84,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 487,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 333
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_clean.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 6.85,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 86,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_glare.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 7.77,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 86,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_inverted.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [],
+        "ok": false,
+        "time_ms": 19.92,
+        "items": []
+      },
+      {
+        "file": "qr_inverted_low_light.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [],
+        "ok": false,
+        "time_ms": 26.72,
+        "items": []
+      },
+      {
+        "file": "qr_low_light.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 13.54,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 86,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_low_resolution.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 8.05,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 85,
+            "points": [
+              {
+                "x": 269,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 115
+              },
+              {
+                "x": 487,
+                "y": 333
+              },
+              {
+                "x": 271,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "profile": "Fast custom template",
+    "template_name": "ReadBarcodes_FastInverted",
+    "decoded": 14,
+    "total": 14,
+    "decode_rate": 100.0,
+    "avg_time_ms": 21.73,
+    "per_image": [
+      {
+        "file": "code128_blurred.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 17.37,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 69,
+            "points": [
+              {
+                "x": 93,
+                "y": 97
+              },
+              {
+                "x": 666,
+                "y": 97
+              },
+              {
+                "x": 666,
+                "y": 267
+              },
+              {
+                "x": 93,
+                "y": 267
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_clean.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 9.09,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 41,
+            "points": [
+              {
+                "x": 95,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 268
+              },
+              {
+                "x": 95,
+                "y": 268
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_glare.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 8.75,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 41,
+            "points": [
+              {
+                "x": 95,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 268
+              },
+              {
+                "x": 95,
+                "y": 267
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_inverted.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 64.1,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 41,
+            "points": [
+              {
+                "x": 95,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 268
+              },
+              {
+                "x": 95,
+                "y": 268
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_inverted_low_light.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 72.16,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 72,
+            "points": [
+              {
+                "x": 95,
+                "y": 96
+              },
+              {
+                "x": 664,
+                "y": 96
+              },
+              {
+                "x": 663,
+                "y": 267
+              },
+              {
+                "x": 95,
+                "y": 268
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_low_light.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 14.65,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 47,
+            "points": [
+              {
+                "x": 95,
+                "y": 97
+              },
+              {
+                "x": 664,
+                "y": 97
+              },
+              {
+                "x": 664,
+                "y": 267
+              },
+              {
+                "x": 95,
+                "y": 267
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "code128_low_resolution.png",
+        "expected": [
+          "INV-LOWRES-00042"
+        ],
+        "found": [
+          "INV-LOWRES-00042"
+        ],
+        "ok": true,
+        "time_ms": 17.12,
+        "items": [
+          {
+            "text": "INV-LOWRES-00042",
+            "format": "CODE_128",
+            "confidence": 93,
+            "points": [
+              {
+                "x": 94,
+                "y": 95
+              },
+              {
+                "x": 665,
+                "y": 95
+              },
+              {
+                "x": 664,
+                "y": 267
+              },
+              {
+                "x": 94,
+                "y": 267
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_blurred.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 8.58,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 84,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 487,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 333
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_clean.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 8.76,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 86,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_glare.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 7.71,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 86,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_inverted.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 22.37,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 86,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_inverted_low_light.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 30.26,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 85,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_low_light.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 13.76,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 86,
+            "points": [
+              {
+                "x": 270,
+                "y": 115
+              },
+              {
+                "x": 489,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 333
+              },
+              {
+                "x": 270,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "file": "qr_low_resolution.png",
+        "expected": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "found": [
+          "https://example.com/warehouse/bin/A12?sku=DS-042"
+        ],
+        "ok": true,
+        "time_ms": 9.54,
+        "items": [
+          {
+            "text": "https://example.com/warehouse/bin/A12?sku=DS-042",
+            "format": "QR_CODE",
+            "confidence": 85,
+            "points": [
+              {
+                "x": 269,
+                "y": 115
+              },
+              {
+                "x": 488,
+                "y": 115
+              },
+              {
+                "x": 487,
+                "y": 333
+              },
+              {
+                "x": 271,
+                "y": 334
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

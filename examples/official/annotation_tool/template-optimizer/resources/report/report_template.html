@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBR Template Optimization Report</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --card: #16213e;
+    --accent: #0f3460;
+    --success: #2ecc71;
+    --fail: #e74c3c;
+    --text: #e0e0e0;
+    --text-dim: #8e8e8e;
+    --border: #2a2a4a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+  }
+  h1 { font-size: 1.5em; margin-bottom: 8px; }
+  .subtitle { color: var(--text-dim); margin-bottom: 24px; font-size: 0.9em; }
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-card .value {
+    font-size: 2em;
+    font-weight: bold;
+    color: var(--success);
+  }
+  .stat-card .value.warn { color: #f39c12; }
+  .stat-card .label {
+    font-size: 0.8em;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filters button {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+  }
+  .filters button.active {
+    background: var(--accent);
+    border-color: #1a6fb5;
+  }
+  .filters button:hover { border-color: #1a6fb5; }
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .image-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .image-card:hover { border-color: #1a6fb5; }
+  .image-card.decoded { border-left: 3px solid var(--success); }
+  .image-card.failed { border-left: 3px solid var(--fail); }
+  .image-card .img-container {
+    width: 100%;
+    background: #0d0d1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    cursor: zoom-in;
+  }
+  .image-card .img-wrapper {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+  }
+  .image-card .img-wrapper img {
+    max-width: 100%;
+    max-height: 250px;
+    display: block;
+  }
+  .image-card .img-wrapper svg.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .image-card .info {
+    padding: 10px 12px;
+  }
+  .image-card .filename {
+    font-size: 0.8em;
+    color: var(--text-dim);
+    word-break: break-all;
+    margin-bottom: 4px;
+  }
+  .image-card .status {
+    font-size: 0.85em;
+    font-weight: bold;
+  }
+  .image-card .status.ok { color: var(--success); }
+  .image-card .status.fail { color: var(--fail); }
+  .barcode-detail {
+    font-size: 0.78em;
+    color: var(--text-dim);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .barcode-detail .bc-text {
+    color: var(--text);
+    font-family: monospace;
+    background: rgba(255,255,255,0.05);
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+  .barcode-detail .bc-format {
+    color: #3498db;
+    font-size: 0.9em;
+  }
+  .barcode-detail .bc-confidence {
+    color: var(--success);
+  }
+  details.image-details {
+    margin-top: 6px;
+  }
+  details.image-details summary {
+    cursor: pointer;
+    font-size: 0.78em;
+    color: var(--text-dim);
+    user-select: none;
+  }
+  details.image-details summary:hover { color: var(--text); }
+  .time-info {
+    font-size: 0.75em;
+    color: var(--text-dim);
+  }
+  .hidden { display: none !important; }
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 0.85em;
+  }
+  .comparison-table th, .comparison-table td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  .comparison-table th {
+    background: var(--accent);
+  }
+  .comparison-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+  .delta-pos { color: var(--success); }
+  .delta-neg { color: var(--fail); }
+
+  /* ── Lightbox ── */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lightbox.hidden { display: none !important; }
+  .lb-panel {
+    display: flex;
+    flex-direction: column;
+    width: 92vw;
+    height: 92vh;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  }
+  .lb-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--accent);
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .lb-toolbar .lb-filename {
+    flex: 1;
+    font-size: 0.8em;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .lb-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--text);
+    width: 32px;
+    height: 32px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .lb-btn:hover { background: rgba(255,255,255,0.22); }
+  .lb-btn.lb-close { margin-left: 4px; }
+  .lb-btn.lb-poly-on { background: rgba(46,204,113,0.28); border-color: rgba(46,204,113,0.6); color: #2ecc71; }
+  .lb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.15); margin: 0 2px; flex-shrink: 0; }
+  .lb-hint {
+    font-size: 0.7em;
+    color: rgba(255,255,255,0.35);
+    flex-shrink: 0;
+    padding: 0 4px;
+  }
+  .lb-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  .lb-viewport {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    background: #0a0a18;
+  }
+  .lb-viewport.dragging { cursor: grabbing; }
+  .lb-inner {
+    transform-origin: center center;
+    /* actual transform set via JS: translate then rotate then scale */
+  }
+  .lb-img-wrap {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+  }
+  .lb-img-wrap img {
+    display: block;
+    max-width: none;
+  }
+  .lb-img-wrap svg.overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .lb-results {
+    width: 300px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    background: var(--card);
+    border-left: 1px solid var(--border);
+    padding: 14px;
+    font-size: 1em;
+  }
+  .lb-results .lb-res-title {
+    font-size: 0.8em;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .lb-res-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .lb-res-item .bc-format {
+    color: #3498db;
+    font-size: 1em;
+  }
+  .lb-res-item .bc-confidence {
+    color: var(--success);
+    font-size: 1em;
+  }
+  .lb-res-item .bc-text {
+    color: var(--text);
+    font-family: monospace;
+    background: rgba(255,255,255,0.06);
+    padding: 5px 7px;
+    border-radius: 2px;
+    margin-top: 7px;
+    word-break: break-all;
+    font-size: 1em;
+    display: block;
+  }
+  .lb-no-results {
+    color: var(--text-dim);
+    font-size: 1em;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .lb-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 5px 12px;
+    background: var(--accent);
+    font-size: 0.75em;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .lb-footer span { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<h1>DBR Template Optimization Report</h1>
+<p class="subtitle" id="subtitle">Generated by template-optimizer skill</p>
+
+<!-- Comparison table (populated if baseline + final data present) -->
+<div id="comparison-section" class="hidden">
+  <h2 style="margin-bottom:12px; font-size:1.1em;">Baseline vs. Optimized</h2>
+  <table class="comparison-table" id="comparison-table">
+    <thead><tr><th>Metric</th><th>Baseline</th><th>Optimized</th><th>Delta</th></tr></thead>
+    <tbody id="comparison-body"></tbody>
+  </table>
+</div>
+
+<!-- Summary cards -->
+<div class="summary" id="summary"></div>
+
+<!-- Filter buttons -->
+<div class="filters">
+  <button class="active" data-filter="all">All (<span id="count-all">0</span>)</button>
+  <button data-filter="decoded">Decoded (<span id="count-decoded">0</span>)</button>
+  <button data-filter="failed">Failed (<span id="count-failed">0</span>)</button>
+</div>
+
+<!-- Image grid -->
+<div class="image-grid" id="grid"></div>
+
+<!-- ── Lightbox ── -->
+<div id="lightbox" class="lightbox hidden" onmousedown="lbBackdropDown(event)">
+  <div class="lb-panel" onmousedown="event.stopPropagation()">
+    <div class="lb-toolbar">
+      <button class="lb-btn" onclick="lbRotate(-90)" title="Rotate CCW">↺</button>
+      <button class="lb-btn" onclick="lbRotate(90)"  title="Rotate CW">↻</button>
+      <div class="lb-sep"></div>
+      <button class="lb-btn" onclick="lbZoomBtn(1.3)"  title="Zoom in">＋</button>
+      <button class="lb-btn" onclick="lbZoomBtn(1/1.3)" title="Zoom out">－</button>
+      <button class="lb-btn" onclick="lbReset()"     title="Fit / Reset">⊙</button>
+      <div class="lb-sep"></div>
+      <button class="lb-btn lb-poly-on" id="lb-poly-btn" onclick="lbTogglePolygons()" title="Toggle barcode highlighting">⬡</button>
+      <div class="lb-sep"></div>
+      <button class="lb-btn" onclick="lbNav(-1)" title="Previous image (←)">&#8592;</button>
+      <span id="lb-nav-pos" style="font-size:0.75em;color:var(--text-dim);flex-shrink:0;min-width:3.5em;text-align:center;"></span>
+      <button class="lb-btn" onclick="lbNav(1)"  title="Next image (→)">&#8594;</button>
+      <div class="lb-sep"></div>
+      <span class="lb-filename" id="lb-filename"></span>
+      <span class="lb-hint">scroll=zoom · drag=pan · r=rotate · ←→=nav · h=highlights · Esc=close</span>
+      <button class="lb-btn lb-close" onclick="lbClose()" title="Close (Esc)">✕</button>
+    </div>
+    <div class="lb-body">
+      <div class="lb-viewport" id="lb-viewport">
+        <div class="lb-inner" id="lb-inner">
+          <div class="lb-img-wrap" id="lb-img-wrap"></div>
+        </div>
+      </div>
+      <div class="lb-results" id="lb-results">
+        <div class="lb-res-title">Barcodes</div>
+        <div id="lb-res-body"><p class="lb-no-results">No barcodes</p></div>
+      </div>
+    </div>
+    <div class="lb-footer">
+      <span id="lb-zoom-label">100%</span>
+      <span id="lb-rot-label">0°</span>
+      <span id="lb-size-label"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA placeholder (replaced by the skill) ──
+const RESULTS = __RESULTS_JSON__;
+const BASELINE = __BASELINE_JSON__;  // null if no baseline comparison
+const IMAGE_DIR = __IMAGE_DIR__;     // relative path to images
+
+// ── Lightbox state ──
+const lb = {
+  scale: 1,
+  rotation: 0,
+  tx: 0,       // translation from center of viewport (CSS pixels)
+  ty: 0,
+  dragging: false,
+  dragOrigin: { x: 0, y: 0 },
+  transOrigin: { tx: 0, ty: 0 },
+  showPolygons: true,
+  currentKey: null,
+};
+let lbOrder = []; // ordered stableKeys matching current grid filter
+
+function lbApply() {
+  const inner = document.getElementById('lb-inner');
+  // lb-inner is centered by flexbox on lb-viewport; tx/ty are offsets from that center.
+  inner.style.transform =
+    `translate(${lb.tx}px, ${lb.ty}px) rotate(${lb.rotation}deg) scale(${lb.scale})`;
+  document.getElementById('lb-zoom-label').textContent = Math.round(lb.scale * 100) + '%';
+  document.getElementById('lb-rot-label').textContent = lb.rotation + '°';
+}
+
+function lbFitScale() {
+  const img = document.getElementById('lb-img');
+  const vp  = document.getElementById('lb-viewport');
+  if (!img || !img.naturalWidth) return 1;
+  // When rotated 90/270, swap dimensions
+  const rot = lb.rotation % 180;
+  const imgW = rot === 0 ? img.naturalWidth  : img.naturalHeight;
+  const imgH = rot === 0 ? img.naturalHeight : img.naturalWidth;
+  const vpW  = vp.clientWidth  - 32;
+  const vpH  = vp.clientHeight - 32;
+  return Math.min(1, vpW / imgW, vpH / imgH);
+}
+
+function lbReset() {
+  lb.tx = 0; lb.ty = 0;
+  lb.scale = lbFitScale();
+  lbApply();
+}
+
+function lbRotate(deg) {
+  lb.rotation = (lb.rotation + deg + 360) % 360;
+  lb.tx = 0; lb.ty = 0;
+  lb.scale = lbFitScale();
+  lbApply();
+}
+
+function lbZoomBtn(factor) {
+  lb.scale = Math.max(0.05, Math.min(40, lb.scale * factor));
+  lbApply();
+}
+
+function lbZoomAt(factor, clientX, clientY) {
+  const vp   = document.getElementById('lb-viewport');
+  const rect = vp.getBoundingClientRect();
+  // Cursor position relative to viewport center
+  const cx = clientX - rect.left - rect.width  / 2;
+  const cy = clientY - rect.top  - rect.height / 2;
+  // Keep the point under the cursor fixed:
+  // (cx - tx_new) / scale_new = (cx - tx) / scale  →  tx_new = cx - (cx - tx) * factor
+  lb.tx = cx - (cx - lb.tx) * factor;
+  lb.ty = cy - (cy - lb.ty) * factor;
+  lb.scale = Math.max(0.05, Math.min(40, lb.scale * factor));
+  lbApply();
+}
+
+function lbOpen(imgSrc, polygonsSvg, filename, naturalW, naturalH, barcodes, stableKey) {
+  lb.scale = 1; lb.rotation = 0; lb.tx = 0; lb.ty = 0;
+  lb.currentKey = stableKey || filename;
+
+  // Show lightbox FIRST so the viewport has real pixel dimensions when
+  // lbFitScale() reads clientWidth/clientHeight (both are 0 while hidden).
+  document.getElementById('lb-filename').textContent = filename;
+  document.getElementById('lightbox').classList.remove('hidden');
+
+  // Update nav button states
+  const idx = lbOrder.indexOf(lb.currentKey);
+  const total = lbOrder.length;
+  document.getElementById('lb-nav-pos').textContent = total ? `${idx + 1} / ${total}` : '';
+
+  // Populate results sidebar
+  const resBody = document.getElementById('lb-res-body');
+  if (barcodes && barcodes.length > 0) {
+    resBody.innerHTML = barcodes.map((bc) =>
+      `<div class="lb-res-item">
+        <div><span class="bc-format">${bc.format}</span>&ensp;<span class="bc-confidence">${bc.confidence}%</span></div>
+        <span class="bc-text">${escapeHtml(bc.text)}</span>
+      </div>`
+    ).join('');
+  } else {
+    resBody.innerHTML = '<p class="lb-no-results">No barcodes decoded</p>';
+  }
+
+  const wrap = document.getElementById('lb-img-wrap');
+  wrap.innerHTML = `<img id="lb-img" src="${imgSrc}" alt=""><svg id="lb-svg" class="overlay">${polygonsSvg}</svg>`;
+
+  const img = document.getElementById('lb-img');
+  const svg = document.getElementById('lb-svg');
+  svg.style.visibility = lb.showPolygons ? 'visible' : 'hidden';
+
+  const setViewbox = () => {
+    const w = img.naturalWidth  || naturalW;
+    const h = img.naturalHeight || naturalH;
+    if (w && h) svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    document.getElementById('lb-size-label').textContent = w && h ? `${w}×${h}px` : '';
+    lb.scale = lbFitScale();
+    lbApply();
+  };
+
+  if (img.complete && img.naturalWidth) { setViewbox(); }
+  else { img.onload = setViewbox; }
+}
+
+function lbTogglePolygons() {
+  lb.showPolygons = !lb.showPolygons;
+  const svg = document.getElementById('lb-svg');
+  if (svg) svg.style.visibility = lb.showPolygons ? 'visible' : 'hidden';
+  const btn = document.getElementById('lb-poly-btn');
+  btn.classList.toggle('lb-poly-on', lb.showPolygons);
+}
+
+function lbNav(delta) {
+  if (!lb.currentKey || lbOrder.length < 2) return;
+  const idx = lbOrder.indexOf(lb.currentKey);
+  if (idx === -1) return;
+  const newKey = lbOrder[(idx + delta + lbOrder.length) % lbOrder.length];
+  const d = lbStore[newKey] || { polygons: '', filename: newKey, barcodes: [] };
+  const thumb = document.querySelector(`.img-container[data-lb-key="${CSS.escape(newKey)}"] img`);
+  const imgSrc = (thumb && thumb.src) || newKey;
+  let nw = 0, nh = 0;
+  if (thumb && thumb.naturalWidth) { nw = thumb.naturalWidth; nh = thumb.naturalHeight; }
+  lbOpen(imgSrc, d.polygons, d.filename, nw, nh, d.barcodes, newKey);
+}
+
+function lbClose() {
+  document.getElementById('lightbox').classList.add('hidden');
+  document.getElementById('lb-img-wrap').innerHTML = '';
+}
+
+function lbBackdropDown(e) {
+  if (e.target === document.getElementById('lightbox')) lbClose();
+}
+
+// ── Drag-to-pan ──
+const lbVp = document.getElementById('lb-viewport');
+
+lbVp.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  lb.dragging = true;
+  lb.dragOrigin  = { x: e.clientX, y: e.clientY };
+  lb.transOrigin = { tx: lb.tx, ty: lb.ty };
+  lbVp.classList.add('dragging');
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!lb.dragging) return;
+  lb.tx = lb.transOrigin.tx + (e.clientX - lb.dragOrigin.x);
+  lb.ty = lb.transOrigin.ty + (e.clientY - lb.dragOrigin.y);
+  lbApply();
+});
+
+document.addEventListener('mouseup', () => {
+  if (!lb.dragging) return;
+  lb.dragging = false;
+  lbVp.classList.remove('dragging');
+});
+
+// ── Scroll-to-zoom ──
+lbVp.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+  lbZoomAt(factor, e.clientX, e.clientY);
+}, { passive: false });
+
+// ── Touch zoom (pinch) ──
+let lbTouchDist0 = null;
+let lbTouchScale0 = 1;
+lbVp.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lbTouchDist0  = Math.hypot(dx, dy);
+    lbTouchScale0 = lb.scale;
+    e.preventDefault();
+  }
+}, { passive: false });
+lbVp.addEventListener('touchmove', e => {
+  if (e.touches.length === 2 && lbTouchDist0) {
+    const dx   = e.touches[0].clientX - e.touches[1].clientX;
+    const dy   = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.hypot(dx, dy);
+    lb.scale = Math.max(0.05, Math.min(40, lbTouchScale0 * dist / lbTouchDist0));
+    lbApply();
+    e.preventDefault();
+  }
+}, { passive: false });
+lbVp.addEventListener('touchend', () => { lbTouchDist0 = null; });
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lightbox').classList.contains('hidden')) return;
+  if (e.key === 'Escape')               lbClose();
+  else if (e.key === 'ArrowRight')      lbNav(1);
+  else if (e.key === 'ArrowLeft')       lbNav(-1);
+  else if (e.key === 'r')              lbRotate(90);
+  else if (e.key === 'R')              lbRotate(-90);
+  else if (e.key === '+' || e.key === '=') lbZoomBtn(1.3);
+  else if (e.key === '-')              lbZoomBtn(1/1.3);
+  else if (e.key === '0')              lbReset();
+  else if (e.key === 'h' || e.key === 'H') lbTogglePolygons();
+});
+
+// ── Render summary ──
+function renderSummary() {
+  const s = document.getElementById('summary');
+  const cards = [
+    { value: `${RESULTS.images_decoded}/${RESULTS.total_images}`, label: 'Images Decoded', warn: RESULTS.decode_rate < 0.8 },
+    { value: `${(RESULTS.decode_rate * 100).toFixed(1)}%`, label: 'Decode Rate', warn: RESULTS.decode_rate < 0.8 },
+    { value: RESULTS.avg_confidence.toFixed(1), label: 'Avg Confidence', warn: RESULTS.avg_confidence < 80 },
+    { value: `${RESULTS.avg_time_ms.toFixed(0)}ms`, label: 'Avg Time/Image', warn: RESULTS.avg_time_ms > 500 },
+  ];
+  if (RESULTS.ground_truth_match_rate !== undefined) {
+    cards.push({ value: `${(RESULTS.ground_truth_match_rate * 100).toFixed(1)}%`, label: 'GT Match Rate', warn: RESULTS.ground_truth_match_rate < 0.8 });
+  }
+  s.innerHTML = cards.map(c =>
+    `<div class="stat-card"><div class="value ${c.warn ? 'warn' : ''}">${c.value}</div><div class="label">${c.label}</div></div>`
+  ).join('');
+}
+
+// ── Render comparison table ──
+function renderComparison() {
+  if (!BASELINE) return;
+  document.getElementById('comparison-section').classList.remove('hidden');
+  const body = document.getElementById('comparison-body');
+  const rows = [
+    { label: 'Decode Rate', b: BASELINE.decode_rate, o: RESULTS.decode_rate, fmt: v => `${(v*100).toFixed(1)}%`, higher: true },
+    { label: 'Images Decoded', b: BASELINE.images_decoded, o: RESULTS.images_decoded, fmt: v => v, higher: true },
+    { label: 'Avg Confidence', b: BASELINE.avg_confidence, o: RESULTS.avg_confidence, fmt: v => v.toFixed(1), higher: true },
+    { label: 'Avg Time (ms)', b: BASELINE.avg_time_ms, o: RESULTS.avg_time_ms, fmt: v => v.toFixed(0), higher: false },
+  ];
+  if (BASELINE.ground_truth_match_rate !== undefined) {
+    rows.push({ label: 'GT Match Rate', b: BASELINE.ground_truth_match_rate, o: RESULTS.ground_truth_match_rate, fmt: v => `${(v*100).toFixed(1)}%`, higher: true });
+  }
+  body.innerHTML = rows.map(r => {
+    const delta = r.o - r.b;
+    const good = r.higher ? delta > 0 : delta < 0;
+    const cls = delta === 0 ? '' : (good ? 'delta-pos' : 'delta-neg');
+    const sign = delta > 0 ? '+' : '';
+    const deltaStr = typeof r.b === 'number' && typeof r.o === 'number'
+      ? (r.label.includes('%') || r.label.includes('Rate') ? `${sign}${(delta*100).toFixed(1)}%` : `${sign}${delta.toFixed(1)}`)
+      : '';
+    return `<tr><td>${r.label}</td><td>${r.fmt(r.b)}</td><td>${r.fmt(r.o)}</td><td class="${cls}">${deltaStr}</td></tr>`;
+  }).join('');
+}
+
+// ── Lightbox data store (keyed by image src for stability across filter re-renders) ──
+const lbStore = {};
+
+// ── Render image grid ──
+function renderGrid(filter) {
+  const grid = document.getElementById('grid');
+  lbOrder = [];
+  let decoded = 0, failed = 0;
+  const cards = RESULTS.per_image.map(img => {
+    const ok = img.barcodes && img.barcodes.length > 0;
+    if (ok) decoded++; else failed++;
+    if (filter === 'decoded' && !ok) return '';
+    if (filter === 'failed' && ok) return '';
+
+    // Prefer embedded data URI (no file:// loading needed); fall back to path.
+    const imgSrc = img.data_uri || (IMAGE_DIR + '/' + (img.converted_file || img.file));
+    const stableKey = img.converted_file || img.file;
+    let barcodeHtml = '';
+    let svgPolygons = '';
+    if (ok) {
+      img.barcodes.forEach((bc, i) => {
+        barcodeHtml += `<div><span class="bc-format">${bc.format}</span> <span class="bc-confidence">${bc.confidence}%</span></div>`;
+        barcodeHtml += `<div><span class="bc-text">${escapeHtml(bc.text)}</span></div>`;
+        if (bc.location && bc.location.length === 4) {
+          const pts = bc.location.map(p => p.join(',')).join(' ');
+          svgPolygons += `<polygon points="${pts}" fill="rgba(46,204,113,0.15)" stroke="#2ecc71" stroke-width="2"/>`;
+        }
+      });
+    }
+    const svgOverlay = svgPolygons
+      ? `<svg class="overlay" viewBox="0 0 1 1" preserveAspectRatio="none">${svgPolygons}</svg>`
+      : '';
+
+    // Store lightbox data keyed by stable filename (not data URI which is huge)
+    lbStore[stableKey] = { polygons: svgPolygons, filename: img.file, barcodes: img.barcodes || [] };
+    lbOrder.push(stableKey);
+
+    return `
+      <div class="image-card ${ok ? 'decoded' : 'failed'}">
+        <div class="img-container" data-lb-key="${stableKey}" title="Click to enlarge">
+          <div class="img-wrapper">
+            <img src="${imgSrc}" loading="lazy"
+              onload="var s=this.parentElement.querySelector('svg.overlay'); if(s) s.setAttribute('viewBox','0 0 '+this.naturalWidth+' '+this.naturalHeight);"
+              onerror="this.alt='Image not found'; this.style.padding='40px';">
+            ${svgOverlay}
+          </div>
+        </div>
+        <div class="info">
+          <div class="filename">${img.file}</div>
+          <div class="status ${ok ? 'ok' : 'fail'}">${ok ? 'DECODED' : 'FAILED'} <span class="time-info">(${img.time_ms.toFixed(0)}ms)</span></div>
+          ${ok ? `<details class="image-details"><summary>Barcode details</summary><div class="barcode-detail">${barcodeHtml}</div></details>` : ''}
+        </div>
+      </div>`;
+  });
+
+  grid.innerHTML = cards.join('');
+  document.getElementById('count-all').textContent = decoded + failed;
+  document.getElementById('count-decoded').textContent = decoded;
+  document.getElementById('count-failed').textContent = failed;
+}
+
+// ── Delegated click on any .img-container ──
+document.getElementById('grid').addEventListener('click', e => {
+  const container = e.target.closest('.img-container');
+  if (!container) return;
+  const storeKey = container.dataset.lbKey;
+  if (!storeKey) return;
+  const d = lbStore[storeKey] || { polygons: '', filename: storeKey, barcodes: [] };
+  const thumb = container.querySelector('img');
+  // Use thumb.src: if images are embedded it's a data URI (no file:// needed);
+  // if served over HTTP it's an absolute URL already in browser cache.
+  const imgSrc = (thumb && thumb.src) || storeKey;
+  let nw = 0, nh = 0;
+  if (thumb && thumb.naturalWidth) { nw = thumb.naturalWidth; nh = thumb.naturalHeight; }
+  lbOpen(imgSrc, d.polygons, d.filename, nw, nh, d.barcodes, storeKey);
+});
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+// ── Filter buttons ──
+document.querySelectorAll('.filters button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGrid(btn.dataset.filter);
+  });
+});
+
+// ── Init ──
+renderSummary();
+renderComparison();
+renderGrid('all');
+</script>
+</body>
+</html>

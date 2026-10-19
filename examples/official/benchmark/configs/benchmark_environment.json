@@ -1,0 +1,17 @@
+{
+  "measured_at": "2026-08-03T10:34:24+0800",
+  "operating_system": "Windows-10-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+  "physical_cores": null,
+  "logical_processors": 16,
+  "memory_gb": null,
+  "python": "3.11.9",
+  "architecture": "AMD64",
+  "configuration": "Python wheels",
+  "benchmark_processes": 1,
+  "threads_per_decoder_task": 1,
+  "repetitions": 1,
+  "zxing_python_package": "zxing-cpp",
+  "dynamsoft_python_package": "dynamsoft-capture-vision-bundle",
+  "dynamsoft_barcode_reader_template": "ReadBarcodes_Default"
+}

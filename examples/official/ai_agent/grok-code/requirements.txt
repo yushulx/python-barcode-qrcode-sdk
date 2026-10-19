@@ -1,0 +1,1 @@
+dynamsoft_barcode_reader_bundle

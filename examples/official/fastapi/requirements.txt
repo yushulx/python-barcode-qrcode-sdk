@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+dynamsoft-capture-vision-bundle
+python-multipart

@@ -1,0 +1,55 @@
+{
+  "description": "Synthetic fixed-layout pages for page_qr_ocr testing.",
+  "images": [
+    {
+      "file": "page_qr_ocr_11.png",
+      "page_number": "11",
+      "qr_text": "PAGE11"
+    },
+    {
+      "file": "page_qr_ocr_12.png",
+      "page_number": "12",
+      "qr_text": "PAGE12"
+    },
+    {
+      "file": "page_qr_ocr_13.png",
+      "page_number": "13",
+      "qr_text": "PAGE13"
+    },
+    {
+      "file": "page_qr_ocr_14.png",
+      "page_number": "14",
+      "qr_text": "PAGE14"
+    },
+    {
+      "file": "page_qr_ocr_15.png",
+      "page_number": "15",
+      "qr_text": "PAGE15"
+    },
+    {
+      "file": "page_qr_ocr_16.png",
+      "page_number": "16",
+      "qr_text": "PAGE16"
+    },
+    {
+      "file": "page_qr_ocr_17.png",
+      "page_number": "17",
+      "qr_text": "PAGE17"
+    },
+    {
+      "file": "page_qr_ocr_18.png",
+      "page_number": "18",
+      "qr_text": "PAGE18"
+    },
+    {
+      "file": "page_qr_ocr_19.png",
+      "page_number": "19",
+      "qr_text": "PAGE19"
+    },
+    {
+      "file": "page_qr_ocr_20.png",
+      "page_number": "20",
+      "qr_text": "PAGE20"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+pillow
+qrcode
+python-barcode
+opencv-python
+dynamsoft-capture-vision-bundle

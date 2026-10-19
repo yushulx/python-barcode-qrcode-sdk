@@ -1,0 +1,155 @@
+{
+	"BarcodeFormatSpecificationOptions" : 
+	[
+		{
+			"BarcodeFormatIds" : 
+			[
+				"BF_PDF417",
+				"BF_QR_CODE",
+				"BF_DATAMATRIX",
+				"BF_AZTEC",
+				"BF_MICRO_QR",
+				"BF_MICRO_PDF417",
+				"BF_DOTCODE"
+			],
+			"MirrorMode" : "MM_BOTH",
+			"Name" : "bfs1"
+		},
+		{
+			"Name" : "bfs2"
+		}
+	],
+	"BarcodeReaderTaskSettingOptions" : 
+	[
+		{
+			"BarcodeFormatSpecificationNameArray" : 
+			[
+				"bfs1",
+				"bfs2"
+			],
+			"Name" : "task-read-barcodes",
+			"SectionArray" : 
+			[
+				{
+					"ImageParameterName" : "ip-read-barcodes",
+					"Section" : "ST_REGION_PREDETECTION",
+					"StageArray" : 
+					[
+						{
+							"Stage" : "SST_PREDETECT_REGIONS"
+						}
+					]
+				},
+				{
+					"ImageParameterName" : "ip-read-barcodes",
+					"Section" : "ST_BARCODE_LOCALIZATION",
+					"StageArray" : 
+					[
+						{
+							"Stage" : "SST_LOCALIZE_CANDIDATE_BARCODES"
+						},
+						{
+							"Stage" : "SST_LOCALIZE_BARCODES"
+						}
+					]
+				},
+				{
+					"ImageParameterName" : "ip-read-barcodes",
+					"Section" : "ST_BARCODE_DECODING",
+					"StageArray" : 
+					[
+						{
+							"Stage" : "SST_RESIST_DEFORMATION"
+						},
+						{
+							"Stage" : "SST_COMPLEMENT_BARCODE"
+						},
+						{
+							"Stage" : "SST_SCALE_BARCODE_IMAGE"
+						},
+						{
+							"Stage" : "SST_DECODE_BARCODES"
+						}
+					]
+				}
+			]
+		}
+	],
+	"CaptureVisionTemplates" : 
+	[
+		{
+			"ImageROIProcessingNameArray" : 
+			[
+				"roi-read-barcodes"
+			],
+			"Name" : "ReadBarcodes_Default"
+		}
+	],
+	"GlobalParameter" : 
+	{
+		"IntraOpNumThreads" : 4
+	},
+	"ImageParameterOptions" : 
+	[
+		{
+			"ApplicableStages" : 
+			[
+				{
+					"Stage" : "SST_INPUT_COLOR_IMAGE"
+				},
+				{
+					"Stage" : "SST_SCALE_IMAGE"
+				},
+				{
+					"Stage" : "SST_CONVERT_TO_GRAYSCALE"
+				},
+				{
+					"Stage" : "SST_TRANSFORM_GRAYSCALE"
+				},
+				{
+					"Stage" : "SST_ENHANCE_GRAYSCALE"
+				},
+				{
+					"Stage" : "SST_BINARIZE_IMAGE"
+				},
+				{
+					"Stage" : "SST_DETECT_TEXTURE"
+				},
+				{
+					"Stage" : "SST_REMOVE_TEXTURE_FROM_GRAYSCALE"
+				},
+				{
+					"Stage" : "SST_BINARIZE_TEXTURE_REMOVED_GRAYSCALE"
+				},
+				{
+					"Stage" : "SST_FIND_CONTOURS"
+				},
+				{
+					"Stage" : "SST_DETECT_SHORTLINES"
+				},
+				{
+					"Stage" : "SST_ASSEMBLE_LINES"
+				},
+				{
+					"Stage" : "SST_DETECT_TEXT_ZONES"
+				},
+				{
+					"IfEraseTextZone" : 1,
+					"Stage" : "SST_REMOVE_TEXT_ZONES_FROM_BINARY"
+				}
+			],
+			"Name" : "ip-read-barcodes"
+		}
+	],
+	"TargetROIDefOptions" : 
+	[
+		{
+			"Name" : "roi-read-barcodes",
+			"TaskSettingNameArray" : 
+			[
+				"task-read-barcodes"
+			]
+		}
+	],
+	"Version" : "5.1"
+}

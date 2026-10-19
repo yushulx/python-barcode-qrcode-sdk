@@ -1,0 +1,38 @@
+{
+  "zxing_python": [
+    "AZTEC",
+    "CODE_128",
+    "GS1_128",
+    "CODE_39",
+    "DATA_MATRIX",
+    "EAN_13",
+    "EAN_8",
+    "EAN_2",
+    "ITF",
+    "PDF_417",
+    "QR_CODE",
+    "UPC_A",
+    "UPC_E"
+  ],
+  "dynamsoft_barcode_reader_python": [
+    "AZTEC",
+    "CODE_128",
+    "GS1_128",
+    "CODE_39",
+    "DATA_MATRIX",
+    "EAN_13",
+    "EAN_8",
+    "EAN_2",
+    "ITF",
+    "IATA_2_OF_5",
+    "USPS_INTELLIGENT_MAIL",
+    "JAPAN_POST",
+    "KIX",
+    "PDF_417",
+    "POSTNET",
+    "QR_CODE",
+    "ROYAL_MAIL",
+    "UPC_A",
+    "UPC_E"
+  ]
+}
