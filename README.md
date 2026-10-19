@@ -23,7 +23,7 @@ A Python wrapper for the [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.co
 ## 🔧 Installation
 
 ### Requirements
-- **Python 3.x**
+- **Python 3.10+**
 - **OpenCV** (for UI display)
 
     ```bash
@@ -32,7 +32,7 @@ A Python wrapper for the [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.co
 - Dynamsoft Capture Vision Bundle SDK
   
     ```bash
-    pip install dynamsoft-capture-vision-bundle
+    pip install dynamsoft-capture-vision-bundle==3.6.4000
     ```
 
 ### Build from Source
