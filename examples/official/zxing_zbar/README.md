@@ -24,10 +24,22 @@ This project focuses on **angled barcode detection** and **multiple barcode scen
     ```
 
 - Dataset
-    
-    - **Existing Dataset**: The dataset is sourced from this [GitHub issue](https://github.com/openfoodfacts/openfoodfacts-ai/issues/15). You can download it directly from: https://drive.google.com/uc?id=1uThXXH8HiHAw6KlpdgcimBSbrvi0Mksf&export=download. We have cleaned the images to ensure each image file name matches the barcode content. Extract the images to the `existing_dataset/` folder.
-    
-    - **Generated Dataset**: The benchmark framework can automatically generate test datasets with various conditions (angles, multiple barcodes, etc.). These are stored in the `generated_dataset/` folder and created by running `advanced.py`.
+
+    Both datasets are hosted in the [Dynamsoft datasets repository](https://github.com/Dynamsoft/datasets-from-dynamsoft/tree/main/zxing-zbar).
+
+    - **Existing Dataset**: 170 real-world barcode images sourced from [Open Food Facts](https://github.com/openfoodfacts/openfoodfacts-ai/issues/15). Clone [Dynamsoft/datasets-from-dynamsoft](https://github.com/Dynamsoft/datasets-from-dynamsoft) and make its `zxing-zbar/existing_dataset` folder available here as `existing_dataset/` (a symlink or junction is fine; copying also works).
+
+    - **Generated Dataset**: A pre-generated snapshot (442 images with 400 JSON annotations, including `skewed_datamatrix`) is available at `zxing-zbar/generated_dataset` in the same repository. It can also be regenerated locally by running `advanced.py`.
+
+    For example, on Windows:
+
+    ```powershell
+    git clone https://github.com/Dynamsoft/datasets-from-dynamsoft.git D:\datasets-from-dynamsoft
+    New-Item -ItemType Junction -Path existing_dataset -Target D:\datasets-from-dynamsoft\zxing-zbar\existing_dataset
+    New-Item -ItemType Junction -Path generated_dataset -Target D:\datasets-from-dynamsoft\zxing-zbar\generated_dataset
+    ```
+
+    On Linux/macOS, use `ln -s` instead of `New-Item -ItemType Junction`.
 
 ## Usage
 
@@ -145,12 +157,13 @@ Edit `config/benchmark_config.json` to enable/disable SDKs and configure setting
 ```
 ├── simple.py                   # Simple benchmark using existing dataset
 ├── advanced.py                 # Advanced benchmark with dataset selection
-├── existing_dataset/           # Real-world barcode images (download separately)
-├── generated_dataset/          # Auto-generated test cases (created by advanced.py)
+├── existing_dataset/           # Real-world images (linked from datasets-from-dynamsoft)
+├── generated_dataset/          # Test cases (linked or created by advanced.py)
 │   ├── single_barcode/
 │   ├── angled_barcodes/
 │   ├── multiple_barcodes/
-│   └── challenging_conditions/
+│   ├── challenging_conditions/
+│   └── skewed_datamatrix/
 ├── results/                    # Benchmark results and reports
 ├── src/                        # Benchmark framework modules
 └── config/                     # Configuration files
