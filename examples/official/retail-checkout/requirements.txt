@@ -9,4 +9,4 @@ numpy==1.26.4
 # Used only by generate_retail_images.py / make_cover.py to synthesize assets
 python-barcode==0.15.1
 qrcode==7.4.2
-Pillow==10.4.0
+Pillow==12.3.0
