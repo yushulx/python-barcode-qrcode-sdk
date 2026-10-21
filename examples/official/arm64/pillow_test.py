@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import os
+import sys
 import time
 from PIL import Image
-from dynamsoft_capture_vision_bundle import *
+from dynamsoft_barcode_reader_bundle import *
 import numpy as np
 def main():
     error_code, error_message = LicenseManager.init_license(
@@ -12,8 +13,11 @@ def main():
                 error_code, ", ErrorString:", error_message)
 
     # read file list
-    folder = '../../../images'
-    target_dir = os.path.join(os.getcwd(), folder)
+    if len(sys.argv) > 1:
+        target_dir = os.path.abspath(sys.argv[1])
+    else:
+        target_dir = os.path.normpath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'images'))
     print(target_dir)
     cvr_instance = CaptureVisionRouter()
 
