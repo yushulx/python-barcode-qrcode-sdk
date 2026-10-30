@@ -1,4 +1,4 @@
 FROM arm64v8/python
 
 RUN apt-get update && apt-get install -y libgl1 libglib2.0-0
-RUN pip install dynamsoft-barcode-reader-bundle==11.6.4000 opencv-python pillow
+RUN pip install dynamsoft-barcode-reader-bundle==11.6.5000 opencv-python pillow

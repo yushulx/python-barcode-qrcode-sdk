@@ -32,7 +32,7 @@ A Python wrapper for the [Dynamsoft Barcode Reader SDK](https://www.dynamsoft.co
 - Dynamsoft Capture Vision Bundle SDK
   
     ```bash
-    pip install dynamsoft-capture-vision-bundle==3.6.4000
+    pip install dynamsoft-capture-vision-bundle==3.6.5000
     ```
 
 ### Build from Source

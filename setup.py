@@ -4,7 +4,7 @@ import io
 long_description = io.open("README.md", encoding="utf-8").read()
 
 setup(name='barcode-qr-code-sdk',
-      version='11.6.4000',
+      version='11.6.5000',
       description='Barcode and QR code scanning SDK for Python',
       long_description=long_description,
       long_description_content_type="text/markdown",
@@ -33,7 +33,7 @@ setup(name='barcode-qr-code-sdk',
           "Topic :: Scientific/Engineering",
           "Topic :: Software Development",
       ],
-      install_requires=['opencv-python', 'dynamsoft-capture-vision-bundle==3.6.4000'],
+      install_requires=['opencv-python', 'dynamsoft-capture-vision-bundle==3.6.5000'],
       python_requires='>=3.10',
       entry_points={
           'console_scripts': ['scanbarcode=barcodeQrSDK.scripts:scanbarcode']
