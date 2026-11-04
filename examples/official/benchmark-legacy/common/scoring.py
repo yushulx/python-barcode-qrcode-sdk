@@ -1,4 +1,4 @@
-"""Python port of tony-xlh/barcode-reading-benchmark's scoring rules (src/utils.ts).
+"""Python port of the original browser benchmark's scoring rules (src/utils.ts).
 
 Used so a fresh Dynamsoft run can be scored exactly like the published 2021
 numbers. No dependency on the Vue app: it reads the same `results.zip` ground

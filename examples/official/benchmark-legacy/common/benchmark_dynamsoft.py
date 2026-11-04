@@ -16,7 +16,7 @@ Output:
     <output>/detection_results/<stem>-Dynamsoft.json   # same shape as the original
     <output>/summary.json                              # reading rate, precision, time
 
-Scoring is identical to tony-xlh/barcode-reading-benchmark (common/scoring.py).
+Scoring is identical to the original browser benchmark (see common/scoring.py).
 """
 from __future__ import annotations
 

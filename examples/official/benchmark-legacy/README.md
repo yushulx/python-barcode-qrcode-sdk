@@ -43,8 +43,7 @@ the QR metric is a detection rate.
 
 The results page for each project is
 `https://www.dynamsoft.com/barcode-dataset/benchmark/project/PDF417` (or
-`/QRCode`), and the original browser harness is
-[tony-xlh/barcode-reading-benchmark](https://github.com/tony-xlh/barcode-reading-benchmark).
+`/QRCode`).
 
 > The site is a Vue SPA. **Unknown paths return HTTP 200 with a 1 KB HTML
 > page**, so `download_dataset.py` validates `Content-Type` instead of the
