@@ -32,7 +32,14 @@ def main() -> int:
     summary = json.loads(args.summary.read_text(encoding="utf8"))
     stats = json.loads(args.inventory.read_text(encoding="utf8"))["summary"]
     environment = json.loads(args.environment.read_text(encoding="utf8"))
-    cards = "".join(f'<div class="card"><h3>{html.escape(name)}</h3><div class="metric">{value["coverage_adjusted_recall"]:.1%}</div><div class="muted">{value["correct"]}/{value["eligible_instances"]} exact, mean {value["mean_decode_ms"]:.1f} ms</div></div>' for name, value in summary["decoders"].items())
+    cards = "".join(
+        f'<div class="card"><h3>{html.escape(name)}</h3>'
+        f'<div class="metric">{value["coverage_adjusted_recall"]:.1%}</div>'
+        f'<div class="muted">{value["correct"]:,}/{value["eligible_instances"]:,} exact'
+        f' &middot; {value["wrong_reads"]:,} wrong reads &middot; {value["no_read"]:,} no read'
+        f' &middot; mean {value["mean_decode_ms"]:.1f} ms</div></div>'
+        for name, value in summary["decoders"].items()
+    )
     decoder_options = "".join(f'<option>{html.escape(x)}</option>' for x in sorted({r["decoder"] for r in rows}))
     outcomes = sorted({m["outcome"] for r in rows for m in r["matches"]})
     outcome_options = "".join(f'<option>{html.escape(x)}</option>' for x in outcomes)

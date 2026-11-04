@@ -676,6 +676,9 @@ def generate_summary(jsonl: Path, output: Path) -> None:
         false_predictions = c["outcomes"]["wrong_text"] + c["outcomes"]["wrong_format"] + c["outcomes"]["extra_result"]
         precision = c["correct"] / (c["correct"] + false_predictions) if c["correct"] + false_predictions else 0.0
         recall = c["correct"] / c["eligible"] if c["eligible"] else 0.0
+        wrong_reads = c["outcomes"]["wrong_text"] + c["outcomes"]["wrong_format"]
+        no_read = (c["outcomes"]["not_found"] + c["outcomes"]["unsupported_format"]
+                   + c["outcomes"]["decoder_error"])
         interval = wilson_interval(c["correct"], c["eligible"])
         common_interval = wilson_interval(c["common_correct"], c["common_eligible"])
         supported_denominator = c["eligible"] - c["unsupported"]
@@ -695,6 +698,9 @@ def generate_summary(jsonl: Path, output: Path) -> None:
             "supported_format_recall": c["correct"] / supported_denominator if supported_denominator else 0.0,
             "precision": precision,
             "f1": 2 * precision * recall / (precision + recall) if precision + recall else 0.0,
+            # Ground-truth failure split: wrong reads vs no read.
+            "wrong_reads": wrong_reads,
+            "no_read": no_read,
             "image_all_read_rate": c["image_all_read"] / c["records"] if c["records"] else 0.0,
             "by_format": {k: dict(v) for k, v in c["by_format"].items()},
             "by_source": {k: dict(v) for k, v in c["by_source"].items()},
