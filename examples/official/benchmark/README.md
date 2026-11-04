@@ -101,14 +101,14 @@ The [C++ benchmark](https://www.dynamsoft.com/codepool/benchmark-barcode-reading
 
 | Decoder | Run | Correct | Recall | Mean decode time |
 |---|---|---:|---:|---:|
-| Dynamsoft Barcode Reader | C++ 11.6.50.9329 | 7,807 / 8,411 | 92.82% | 58.04 ms |
+| Dynamsoft Barcode Reader | C++ 11.6.50.9329 | 7,806 / 8,411 | 92.81% | 57.09 ms |
 | Dynamsoft Barcode Reader | Python 11.6.5000 | 7,834 / 8,411 | 93.14% | 63.71 ms |
 | Dynamsoft Barcode Reader | JavaScript 11.6.5000 | 7,638 / 8,411 | 90.81% | 121.05 ms |
-| ZXing-C++ | C++ 3.1.1 | 6,031 / 8,411 | 71.70% | 496.79 ms |
+| ZXing-C++ | C++ 3.1.1 | 6,031 / 8,411 | 71.70% | 69.90 ms |
 | ZXing-C++ | Python 3.1.1 | 5,974 / 8,411 | 71.03% | 70.55 ms |
 | zxing-wasm | JavaScript 3.1.2 | 5,958 / 8,411 | 70.84% | 116.22 ms |
 
-On the same BarBeR images and one SDK release, the native C++ and Python bindings land within a few tenths of a percentage point of each other, while the browser/WASM binding gives up roughly two points to its JPEG → `ImageBitmap` → RGBA canvas image path. Decode times are not directly comparable across runtimes: the browser adds canvas and WASM boundary overhead, and each ZXing build enables a different format set. The SDK version is no longer a variable here.
+On the same BarBeR images and one SDK release, the native C++ and Python bindings land within a few tenths of a percentage point of each other, while the browser/WASM binding gives up roughly two points to its JPEG → `ImageBitmap` → RGBA canvas image path. Decode times are not directly comparable across runtimes: the browser adds canvas and WASM boundary overhead that the native and OpenCV paths do not have. The SDK version is no longer a variable here.
 
 ## Generate the HTML Report
 
