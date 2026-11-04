@@ -83,27 +83,32 @@ python tools/validate_results.py `
 
 ## Benchmark Results
 
-The current full run uses one repetition on 7,894 unique BarBeR images with zxing-cpp 3.1.1 and the Dynamsoft Capture Vision 3.6.1000 bundle. Recall is calculated as correct ground truth matches divided by 8,411 scored ground truth instances. The audit still records 8,615 original eligible annotations; 204 of those payloads are the unreliable placeholder `^` and are now excluded from scoring. Precision is calculated as correct predictions divided by evaluated predictions, where evaluated predictions are `correct + wrong_text + wrong_format + extra_result`.
+The current full run uses one repetition on 7,894 unique BarBeR images with zxing-cpp 3.1.1 and the Dynamsoft Capture Vision 3.6.5000 bundle (DBR 11.6.5000). Recall is calculated as correct ground truth matches divided by 8,411 scored ground truth instances. The audit still records 8,615 original eligible annotations; 204 of those payloads are the unreliable placeholder `^` and are now excluded from scoring. Precision is calculated as correct predictions divided by evaluated predictions, where evaluated predictions are `correct + wrong_text + wrong_format + extra_result`.
 
-| Decoder | Correct | Recall | Precision | Image all-read rate | Mean decode time | Median decode time | P95 decode time |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Dynamsoft Barcode Reader 3.6.1000 | **7,838 / 8,411** | **93.19%** | **95.92%** | **93.17%** | **63.84 ms** | 44.87 ms | **173.80 ms** |
-| ZXing-C++ 3.1.1 | 5,974 / 8,411 | 71.03% | 94.98% | 70.89% | 70.22 ms | 42.49 ms | 233.48 ms |
+| Decoder | Correct | Recall | Precision | Wrong reads | No read | Mean decode time | Median decode time | P95 decode time |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Dynamsoft Barcode Reader 3.6.5000 | **7,834 / 8,411** | **93.14%** | **95.96%** | 83 (0.99%) | 494 (5.87%) | **63.71 ms** | 44.61 ms | **171.66 ms** |
+| ZXing-C++ 3.1.1 | 5,974 / 8,411 | 71.03% | 94.98% | 155 (1.84%) | 2,282 (27.13%) | 70.55 ms | 45.01 ms | 233.79 ms |
 
-DBR read 1,864 more ground truth barcodes in this run and improved recall by 22.16 percentage points. DBR also had 0.94 percentage points higher precision. DBR's mean decoder call was 63.84 ms versus 70.22 ms for ZXing-C++, about 9.1% lower in this run.
+Failures are split into **wrong reads** (`wrong_text + wrong_format`) and **no read** (`not_found + unsupported_format + decoder_error`), so correct + wrong reads + no read equals the 8,411 scored ground-truth instances. Extra results beyond the ground truth affect precision, not this split. `image_all_read_rate` is retained in `summary.json` only as a diagnostic.
+
+
+DBR read 1,860 more ground truth barcodes in this run, a lead of 22.11 percentage points in recall and 0.98 points in precision. Its mean decoder call was 63.71 ms versus 70.55 ms for ZXing-C++, about 9.7% lower in this run.
 
 ### Python vs C++ on the Same BarBeR Images
 
-The [C++ benchmark](https://www.dynamsoft.com/codepool/benchmark-barcode-reading-cpp-zxing-dynamsoft-barcode-reader.html) ran the identical 7,894-image manifest with ZXing-C++ 3.1.0 and Dynamsoft Barcode Reader 11.4.20.7177. This Python run uses ZXing-C++ 3.1.1 and the Dynamsoft Capture Vision 3.6.1000 bundle, whose bundled engine is Dynamsoft Barcode Reader 11.6.10.8373. Both result files were re-scored with the same payload-normalization rules.
+The [C++ benchmark](https://www.dynamsoft.com/codepool/benchmark-barcode-reading-cpp-zxing-dynamsoft-barcode-reader.html) and the [JavaScript benchmark](https://www.dynamsoft.com/codepool/benchmark-barcode-reading-javascript-zxing-wasm-dynamsoft-barcode-reader.html) run the identical 7,894-image manifest. All three now use DBR 11.6.5000 and ZXing-C++ 3.1.x, so the series isolates the language/runtime binding on unchanged input and one SDK release.
 
 | Decoder | Run | Correct | Recall | Mean decode time |
 |---|---|---:|---:|---:|
-| Dynamsoft Barcode Reader | C++ 11.4.20.7177 | 7,804 / 8,411 | 92.78% | 70.08 ms |
-| Dynamsoft Barcode Reader | Python 11.6.10.8373 | 7,838 / 8,411 | 93.19% | 63.84 ms |
-| ZXing-C++ | C++ 3.1.0 | 6,019 / 8,411 | 71.56% | 74.09 ms |
-| ZXing-C++ | Python 3.1.1 | 5,974 / 8,411 | 71.03% | 70.22 ms |
+| Dynamsoft Barcode Reader | C++ 11.6.50.9329 | 7,807 / 8,411 | 92.82% | 58.04 ms |
+| Dynamsoft Barcode Reader | Python 11.6.5000 | 7,834 / 8,411 | 93.14% | 63.71 ms |
+| Dynamsoft Barcode Reader | JavaScript 11.6.5000 | 7,638 / 8,411 | 90.81% | 121.05 ms |
+| ZXing-C++ | C++ 3.1.1 | 6,031 / 8,411 | 71.70% | 496.79 ms |
+| ZXing-C++ | Python 3.1.1 | 5,974 / 8,411 | 71.03% | 70.55 ms |
+| zxing-wasm | JavaScript 3.1.2 | 5,958 / 8,411 | 70.84% | 116.22 ms |
 
-On the same BarBeR images, the newer DBR engine in the Python bundle improved recall by 0.41 percentage points and cut mean decode time by about 8.9% compared with the C++ release used in the earlier article. ZXing-C++ 3.1.1 in Python still read fewer barcodes than ZXing-C++ 3.1.0 in C++ on this dataset, while the Python binding and newer revision delivered a faster mean decode time in this run.
+On the same BarBeR images and one SDK release, the native C++ and Python bindings land within a few tenths of a percentage point of each other, while the browser/WASM binding gives up roughly two points to its JPEG → `ImageBitmap` → RGBA canvas image path. Decode times are not directly comparable across runtimes: the browser adds canvas and WASM boundary overhead, and each ZXing build enables a different format set. The SDK version is no longer a variable here.
 
 ## Generate the HTML Report
 
