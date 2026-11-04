@@ -10,6 +10,8 @@ the articles remain the original published measurements.
 |---|---|---:|---:|
 | [PDF417 Barcode Scanner SDK Benchmark](https://www.dynamsoft.com/codepool/pdf417-reading-benchmark-and-comparison.html) | `PDF417` | 78 | 88 PDF417 codes |
 | [QR Code Reading Benchmark](https://www.dynamsoft.com/codepool/qr-code-reading-benchmark-and-comparison.html) | `QRCode` | 536 | 1,232 QR codes, 16 categories |
+| [Data Matrix SDK Benchmark 2026](https://www.dynamsoft.com/codepool/data-matrix-reading-benchmark-and-comparison.html) | `DataMatrix` | 57 | 112 Data Matrix codes |
+| [1D Barcode Scanner Accuracy Benchmark](https://www.dynamsoft.com/codepool/barcode-scanning-accuracy-benchmark-and-comparison.html) | three independent archives | 3,484 | EAN-13 values |
 
 ## Directory layout
 
@@ -22,13 +24,17 @@ benchmark-legacy/
 │   ├── benchmark_dynamsoft.py    # run DCV 3.6.5000 and score
 │   └── scoring.py                # Python port of the original scoring rules
 ├── pdf417/README.md              # command + result for the PDF417 article
-└── qr_code/README.md             # command + result for the QR Code article
+├── qr_code/README.md             # command + result for the QR Code article
+├── data_matrix/README.md         # command + 3.6.5000 result for Data Matrix
+└── 1d_ean13/
+    ├── README.md                 # the three source archives + version note
+    └── make_manifest.py          # build the runner layout from <EAN13>.jpg files
 ```
 
 ## Data source
 
-Everything comes from the public Dynamsoft Barcode Benchmark site. For a
-project `P` (`PDF417` or `QRCode`):
+The three Dynamsoft-site projects (`PDF417`, `QRCode`, `DataMatrix`) come from
+the public Dynamsoft Barcode Benchmark site. For a project `P`:
 
 | What | URL |
 |---|---|
@@ -43,14 +49,21 @@ the QR metric is a detection rate.
 
 The results page for each project is
 `https://www.dynamsoft.com/barcode-dataset/benchmark/project/PDF417` (or
-`/QRCode`).
+`/QRCode`, `/DataMatrix`).
 
-> The site is a Vue SPA. **Unknown paths return HTTP 200 with a 1 KB HTML
-> page**, so `download_dataset.py` validates `Content-Type` instead of the
+The **1D article** uses three independent public archives (Arte-Lab Medium
+Barcode 1D, WWU Muenster BarcodeDB and DEAL/KAIST Lab Barcode), not the site
+above. Their source pages and direct links are listed in
+[`1d_ean13/README.md`](1d_ean13/README.md); `1d_ean13/make_manifest.py` builds
+the same directory layout from a folder of `<EAN13>.jpg` images.
+
+> The Dynamsoft site is a Vue SPA. **Unknown paths return HTTP 200 with a 1 KB
+> HTML page**, so `download_dataset.py` validates `Content-Type` instead of the
 > status code. A few palette PNGs are legitimately under 1 KB.
 
-Downloaded sizes: PDF417 ≈ 116 MB, QRCode ≈ 205 MB. The images are **not**
-committed to git; use the downloader to fetch them from the source.
+Downloaded sizes: PDF417 ≈ 116 MB, QRCode ≈ 205 MB, DataMatrix ≈ 3.9 MB.
+The images are **not** committed to git; use the downloader to fetch them from
+the source.
 
 ## How to run
 
@@ -63,6 +76,7 @@ python -m pip install -r requirements.txt
 # 1. Download images, ground truth and the archived results
 python common/download_dataset.py --project PDF417 --output datasets/PDF417
 python common/download_dataset.py --project QRCode --output datasets/QRCode
+python common/download_dataset.py --project DataMatrix --output datasets/DataMatrix
 
 # 2. Run Dynamsoft Barcode Reader over the full dataset
 python common/benchmark_dynamsoft.py \
@@ -72,6 +86,16 @@ python common/benchmark_dynamsoft.py \
 python common/benchmark_dynamsoft.py \
   --dataset datasets/QRCode --project QRCode \
   --output datasets/QRCode/current_run
+
+python common/benchmark_dynamsoft.py \
+  --dataset datasets/DataMatrix --project DataMatrix \
+  --output datasets/DataMatrix/current_run
+
+# For the 1D article, fetch the three archives listed in 1d_ean13/README.md,
+# build the runner layout, then run:
+python 1d_ean13/make_manifest.py --images /path/to/one-dataset --output datasets/1D
+python common/benchmark_dynamsoft.py \
+  --dataset datasets/1D --project 1D --output datasets/1D/current_run
 
 # quick sanity check
 python common/benchmark_dynamsoft.py \
@@ -88,7 +112,7 @@ Useful options:
 | Option | Meaning |
 |---|---|
 | `--dataset` | Root produced by `download_dataset.py` |
-| `--project` | `PDF417` or `QRCode` (also selects the symbology) |
+| `--project` | `PDF417`, `QRCode`, `DataMatrix` or `1D` (also selects the symbology) |
 | `--output` | Destination for `detection_results/` and `summary.json` |
 | `--tuning` | `accuracy` (default, see below) or `default` |
 | `--license-key-file` | Text file with a [30-day trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) |
@@ -143,5 +167,16 @@ average time = total decode time / number of processed images
 The QR article reports the **unweighted mean of the 16 category reading
 rates** as its "total average"; the runner emits that as
 `totalAverageReadingRate`. The port was validated by replaying the archived
-`-Dynamsoft.json` results: PDF417 95.45% / 586.64 ms and QR Code 83.29% /
-195.01 ms, matching the published tables.
+`-Dynamsoft.json` results: PDF417 95.45% / 586.64 ms, QR Code 83.29% /
+195.01 ms and Data Matrix 100% / 473.56 ms, matching the published tables.
+
+## Version status
+
+The PDF417 and QR Code articles use the 3.6.5000 results produced by this
+runner. The Data Matrix article and the 1D article keep their published
+figures: Data Matrix was measured on 3.6.1000 (its 100% scenario-template
+result is not reproduced by 3.6.5000 — see `data_matrix/README.md`), and the
+1D article needs all three independent source archives for a comparable
+re-run (`1d_ean13/README.md`). In all four articles the non-Dynamsoft columns
+are the original published measurements; re-running them needs their own
+licences and, for Apple Vision / ML Kit, their own platforms.
