@@ -10,3 +10,8 @@ dist
 # Large datasets live outside the repo (junctions to D:\code\datasets-from-dynamsoft)
 /examples/official/zxing_zbar/generated_dataset
 /examples/official/zxing_zbar/existing_dataset
+
+# Generated BarBeR run outputs (rebuild with tools/generate_html_report.py)
+/examples/official/benchmark/results/
+/examples/official/benchmark/report/
+/examples/official/benchmark/report/media/

@@ -90,7 +90,7 @@ The current full run uses one repetition on 7,894 unique BarBeR images with zxin
 | Dynamsoft Barcode Reader 3.6.5000 | **7,834 / 8,411** | **93.14%** | **95.96%** | 83 (0.99%) | 494 (5.87%) | **63.71 ms** | 44.61 ms | **171.66 ms** |
 | ZXing-C++ 3.1.1 | 5,974 / 8,411 | 71.03% | 94.98% | 155 (1.84%) | 2,282 (27.13%) | 70.55 ms | 45.01 ms | 233.79 ms |
 
-Failures are split into **wrong reads** (`wrong_text + wrong_format`) and **no read** (`not_found + unsupported_format + decoder_error`), so correct + wrong reads + no read equals the 8,411 scored ground-truth instances. Extra results beyond the ground truth affect precision, not this split. `image_all_read_rate` is retained in `summary.json` only as a diagnostic.
+Failures are split into **wrong reads** (`wrong_text + wrong_format`) and **no read** (`not_found + unsupported_format + decoder_error`), so correct + wrong reads + no read equals the 8,411 scored ground-truth instances. Extra results beyond the ground truth affect precision, not this split.
 
 
 DBR read 1,860 more ground truth barcodes in this run, a lead of 22.11 percentage points in recall and 0.98 points in precision. Its mean decoder call was 63.71 ms versus 70.55 ms for ZXing-C++, about 9.7% lower in this run.
@@ -108,7 +108,7 @@ The [C++ benchmark](https://www.dynamsoft.com/codepool/benchmark-barcode-reading
 | ZXing-C++ | Python 3.1.1 | 5,974 / 8,411 | 71.03% | 70.55 ms |
 | zxing-wasm | JavaScript 3.1.2 | 5,958 / 8,411 | 70.84% | 116.22 ms |
 
-On the same BarBeR images and one SDK release, the native C++ and Python bindings land within a few tenths of a percentage point of each other, while the browser/WASM binding gives up roughly two points to its JPEG → `ImageBitmap` → RGBA canvas image path. Decode times are not directly comparable across runtimes: the browser adds canvas and WASM boundary overhead that the native and OpenCV paths do not have. The SDK version is no longer a variable here.
+On the same BarBeR images and one SDK release, the native C++ and Python bindings land within a few tenths of a percentage point of each other, while the browser/WASM binding gives up roughly two points to its JPEG → `ImageBitmap` → RGBA canvas image path. Decode times are not directly comparable across runtimes: the browser adds canvas and WASM boundary overhead that the native and OpenCV paths do not have.
 
 ## Generate the HTML Report
 
@@ -156,7 +156,6 @@ python tools/generate_benchmark_media.py `
 - Unsupported formats remain visible in coverage-adjusted metrics.
 - Decoder and input pipeline errors are explicit outcomes, not no-read results.
 
-<<<<<<< HEAD
 To re-score an existing `results.jsonl` after a matching-rule change, without re-running the decoders:
 
 ```powershell
@@ -165,8 +164,6 @@ python benchmark.py rematch `
   --output results/full
 ```
 
-
-=======
 ## Blog
+
 [How to Benchmark Barcode Reading in Python with ZXing-C++ and Dynamsoft Barcode Reader](https://www.dynamsoft.com/codepool/benchmark-barcode-reading-python-zxing-dynamsoft-barcode-reader.html)
->>>>>>> 9675dd5430f6d0a0b61a12fe6cbdcee754731db2
