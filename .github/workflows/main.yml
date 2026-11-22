@@ -17,7 +17,7 @@ jobs:
       
       - name: Run test.py 
         run: |
-          python -m pip install opencv-python dynamsoft-capture-vision-bundle
+          python -m pip install opencv-python dynamsoft-capture-vision-bundle==3.6.4000
           python test.py
 
       - name: Install build tooling

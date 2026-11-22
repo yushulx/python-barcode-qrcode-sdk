@@ -22,8 +22,8 @@ https://github.com/user-attachments/assets/d8ffc6a8-d2d1-45fd-98ad-fb52f1e874e8
 
 ## Requirements
 
-- Python 3.9+
-- `dynamsoft-capture-vision-bundle>=3.4.2001`
+- Python 3.10+
+- `dynamsoft-capture-vision-bundle==3.6.4000`
 - `PySide6>=6.5`
 - `opencv-python>=4.8`
 - `numpy>=1.24`

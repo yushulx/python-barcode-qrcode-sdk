@@ -22,7 +22,7 @@ https://github.com/user-attachments/assets/1bf1e149-62ac-42c6-904f-d313515aaafe
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - A valid [Dynamsoft Barcode Reader license key](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform) 
 
 ## Installation

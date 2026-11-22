@@ -1,1 +1,1 @@
-dynamsoft_barcode_reader_bundle
+dynamsoft-barcode-reader-bundle==11.6.4000
