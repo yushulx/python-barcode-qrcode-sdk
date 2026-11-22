@@ -40,6 +40,8 @@ TEMPLATE = "ReadBarcodes_Default"
 FORMATS = {
     "PDF417": (dcv.EnumBarcodeFormat.BF_PDF417, "PDF417"),
     "QRCode": (dcv.EnumBarcodeFormat.BF_QR_CODE, "QR_CODE"),
+    "DataMatrix": (dcv.EnumBarcodeFormat.BF_DATAMATRIX, "DATAMATRIX"),
+    "1D": (dcv.EnumBarcodeFormat.BF_EAN_13 | dcv.EnumBarcodeFormat.BF_UPC_A, "EAN_13"),
 }
 
 # The published tables used tuned runtime settings (the PDF417 article documents
@@ -55,13 +57,17 @@ _BASE_ACCURACY = {
     "localization_modes": FULL_LOCALIZATION,
 }
 TUNING = {
-    "default": {"PDF417": {}, "QRCode": {}},
+    "default": {"PDF417": {}, "QRCode": {}, "DataMatrix": {}, "1D": {}},
     "accuracy": {
         # PDF417: full resolution + full localization wins (98.86%).
         "PDF417": dict(_BASE_ACCURACY),
         # QR Code: GEM_GRAY_SMOOTH additionally helps the lots / damaged cases
         # (84.75%, vs 84.05% without it).
         "QRCode": {**_BASE_ACCURACY, "grayscale_enhancement_modes": GRAY_SMOOTH},
+        # Data Matrix: DPM / industrial codes benefit from the same full-resolution
+        # + full-localization path; GEM_GRAY_SMOOTH is left off (tested lower).
+        "DataMatrix": dict(_BASE_ACCURACY),
+        "1D": dict(_BASE_ACCURACY),
     },
 }
 
@@ -128,7 +134,9 @@ def load_ground_truth(root: Path, images: list[str]) -> dict[str, list[dict]]:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--dataset", required=True, help="Root produced by download_dataset.py")
-    ap.add_argument("--project", required=True, choices=["PDF417", "QRCode"])
+    ap.add_argument("--project", required=True,
+                    choices=["PDF417", "QRCode", "DataMatrix", "1D"],
+                    help="Dataset project (also selects the decoded symbology)")
     ap.add_argument("--output", default="results", help="Where to write detection results")
     ap.add_argument("--license-key-file", help="Text file containing a Dynamsoft license key")
     ap.add_argument("--tuning", choices=list(TUNING), default="accuracy",
