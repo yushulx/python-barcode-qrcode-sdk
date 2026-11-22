@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
-from dynamsoft_capture_vision_bundle import *
+import sys
+from dynamsoft_barcode_reader_bundle import *
 import time
 
 
@@ -12,8 +13,11 @@ def main():
                 error_code, ", ErrorString:", error_message)
 
     # read file list
-    folder = '../../../images'
-    target_dir = os.path.join(os.getcwd(), folder)
+    if len(sys.argv) > 1:
+        target_dir = os.path.abspath(sys.argv[1])
+    else:
+        target_dir = os.path.normpath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'images'))
     cvr_instance = CaptureVisionRouter()
     if os.path.exists(target_dir):
         filelist = os.listdir(target_dir)

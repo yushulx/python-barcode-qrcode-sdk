@@ -1,5 +1,4 @@
 FROM arm64v8/python
 
-RUN apt-get update && apt-get install -y cmake libgl1-mesa-glx
-RUN pip install dynamsoft-capture-vision-bundle==3.6.4000 opencv-python pillow
-
+RUN apt-get update && apt-get install -y libgl1 libglib2.0-0
+RUN pip install dynamsoft-barcode-reader-bundle==11.6.4000 opencv-python pillow

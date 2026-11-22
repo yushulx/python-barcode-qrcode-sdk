@@ -1,5 +1,5 @@
 import cv2
-from dynamsoft_capture_vision_bundle import *
+from dynamsoft_barcode_reader_bundle import *
 import numpy as np
 capture = cv2.VideoCapture(0)
 
