@@ -1,0 +1,1 @@
+dynamsoft-capture-vision-bundle

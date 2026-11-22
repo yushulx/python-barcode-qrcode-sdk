@@ -1,0 +1,44 @@
+{
+  "code128_clean.png": [
+    "INV-LOWRES-00042"
+  ],
+  "code128_low_resolution.png": [
+    "INV-LOWRES-00042"
+  ],
+  "code128_low_light.png": [
+    "INV-LOWRES-00042"
+  ],
+  "code128_glare.png": [
+    "INV-LOWRES-00042"
+  ],
+  "code128_blurred.png": [
+    "INV-LOWRES-00042"
+  ],
+  "code128_inverted.png": [
+    "INV-LOWRES-00042"
+  ],
+  "code128_inverted_low_light.png": [
+    "INV-LOWRES-00042"
+  ],
+  "qr_clean.png": [
+    "https://example.com/warehouse/bin/A12?sku=DS-042"
+  ],
+  "qr_low_resolution.png": [
+    "https://example.com/warehouse/bin/A12?sku=DS-042"
+  ],
+  "qr_low_light.png": [
+    "https://example.com/warehouse/bin/A12?sku=DS-042"
+  ],
+  "qr_glare.png": [
+    "https://example.com/warehouse/bin/A12?sku=DS-042"
+  ],
+  "qr_blurred.png": [
+    "https://example.com/warehouse/bin/A12?sku=DS-042"
+  ],
+  "qr_inverted.png": [
+    "https://example.com/warehouse/bin/A12?sku=DS-042"
+  ],
+  "qr_inverted_low_light.png": [
+    "https://example.com/warehouse/bin/A12?sku=DS-042"
+  ]
+}

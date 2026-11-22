@@ -1,0 +1,13 @@
+# Dynamsoft Barcode Reader SDK
+dynamsoft-barcode-reader>=10.0.0
+
+# Computer Vision for webcam support
+opencv-python>=4.5.0
+
+# Standard libraries (usually included with Python)
+# argparse - built-in
+# json - built-in
+# os - built-in
+# sys - built-in
+# pathlib - built-in (Python 3.4+)
+# typing - built-in (Python 3.5+)

@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Reader Benchmark Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .metric { display: inline-block; background: #f8f9fa; padding: 10px; margin: 5px; border-radius: 5px; border-left: 4px solid #007bff; }
+        .metric-value { font-size: 1.5em; font-weight: bold; color: #007bff; }
+        .chart { text-align: center; margin: 20px 0; }
+        .chart img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 5px; }
+        .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .table th { background-color: #f2f2f2; font-weight: bold; }
+        .best-performance { background-color: #d4edda; font-weight: bold; }
+        .highlight { background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; }
+        .competitive-advantage { background-color: #d1ecf1; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Barcode Reader Performance Benchmark Report</h1>
+        <p>Comprehensive analysis of barcode recognition performance focusing on angled barcode detection and multiple barcode scenarios</p>
+        <p><strong>Generated:</strong> 2025-11-17 16:57:02</p>
+    </div>
+
+    <div class="section">
+        <h2>📊 Executive Summary</h2>
+        <div class="metric">
+            <div>Total Tests</div>
+            <div class="metric-value">1710</div>
+        </div>
+        <div class="metric">
+            <div>Success Rate</div>
+            <div class="metric-value">78.1%</div>
+        </div>
+        <div class="metric">
+            <div>Libraries Tested</div>
+            <div class="metric-value">3</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🎯 Key Focus Areas Performance</h2>
+
+        <div class="competitive-advantage">
+            <h3>🧪 Challenging Conditions Performance</h3>
+            <p><strong>Total challenging tests:</strong> 120</p>
+            <div class='table-container'><table class='table'><tr><th>Library</th><th>Success Rate</th><th>Avg Detection Time (ms)</th></tr>
+            <tr>
+                <td><strong>ZXing_Cpp</strong></td>
+                <td>35.0%</td>
+                <td>13.67</td>
+            </tr>
+            
+            <tr>
+                <td><strong>PyZBar</strong></td>
+                <td>42.5%</td>
+                <td>28.16</td>
+            </tr>
+            
+            <tr>
+                <td><strong>Dynamsoft</strong></td>
+                <td>47.5%</td>
+                <td>18.66</td>
+            </tr>
+            </table></div>
+            <h4>Degradation Impact</h4>
+            <h5>Dynamsoft</h5><table class='table'><tr><th>Degradation</th><th>Tests</th><th>Success Rate</th><th>Avg Detection Time (ms)</th></tr><tr><td><strong>background_clutter</strong></td><td>10</td><td>60.0%</td><td>26.02</td></tr><tr><td><strong>channel_dropout</strong></td><td>6</td><td>33.3%</td><td>23.12</td></tr><tr><td><strong>color_inversion</strong></td><td>6</td><td>0.0%</td><td>0.00</td></tr><tr><td><strong>gaussian_blur</strong></td><td>3</td><td>66.7%</td><td>18.69</td></tr><tr><td><strong>gaussian_noise</strong></td><td>7</td><td>57.1%</td><td>20.93</td></tr><tr><td><strong>high_brightness</strong></td><td>9</td><td>55.6%</td><td>14.80</td></tr><tr><td><strong>low_brightness</strong></td><td>5</td><td>80.0%</td><td>30.51</td></tr><tr><td><strong>low_contrast</strong></td><td>5</td><td>60.0%</td><td>16.43</td></tr><tr><td><strong>low_resolution</strong></td><td>5</td><td>40.0%</td><td>17.56</td></tr><tr><td><strong>motion_blur</strong></td><td>5</td><td>20.0%</td><td>20.30</td></tr><tr><td><strong>occlusion</strong></td><td>8</td><td>37.5%</td><td>16.15</td></tr><tr><td><strong>partial_cutoff</strong></td><td>6</td><td>66.7%</td><td>15.47</td></tr><tr><td><strong>perspective_warp</strong></td><td>4</td><td>25.0%</td><td>23.54</td></tr><tr><td><strong>reflections</strong></td><td>10</td><td>50.0%</td><td>11.34</td></tr><tr><td><strong>salt_pepper_noise</strong></td><td>4</td><td>50.0%</td><td>46.06</td></tr><tr><td><strong>shadows</strong></td><td>8</td><td>62.5%</td><td>13.80</td></tr><tr><td><strong>torn_edges</strong></td><td>10</td><td>30.0%</td><td>10.08</td></tr></table><h5>PyZBar</h5><table class='table'><tr><th>Degradation</th><th>Tests</th><th>Success Rate</th><th>Avg Detection Time (ms)</th></tr><tr><td><strong>background_clutter</strong></td><td>10</td><td>40.0%</td><td>16.81</td></tr><tr><td><strong>channel_dropout</strong></td><td>6</td><td>16.7%</td><td>17.76</td></tr><tr><td><strong>color_inversion</strong></td><td>6</td><td>0.0%</td><td>0.00</td></tr><tr><td><strong>gaussian_blur</strong></td><td>3</td><td>0.0%</td><td>0.00</td></tr><tr><td><strong>gaussian_noise</strong></td><td>7</td><td>71.4%</td><td>57.98</td></tr><tr><td><strong>high_brightness</strong></td><td>9</td><td>55.6%</td><td>13.76</td></tr><tr><td><strong>low_brightness</strong></td><td>5</td><td>80.0%</td><td>29.60</td></tr><tr><td><strong>low_contrast</strong></td><td>5</td><td>60.0%</td><td>34.91</td></tr><tr><td><strong>low_resolution</strong></td><td>5</td><td>20.0%</td><td>59.45</td></tr><tr><td><strong>motion_blur</strong></td><td>5</td><td>40.0%</td><td>39.61</td></tr><tr><td><strong>occlusion</strong></td><td>8</td><td>12.5%</td><td>18.55</td></tr><tr><td><strong>partial_cutoff</strong></td><td>6</td><td>50.0%</td><td>34.78</td></tr><tr><td><strong>perspective_warp</strong></td><td>4</td><td>25.0%</td><td>86.22</td></tr><tr><td><strong>reflections</strong></td><td>10</td><td>50.0%</td><td>23.40</td></tr><tr><td><strong>salt_pepper_noise</strong></td><td>4</td><td>50.0%</td><td>23.87</td></tr><tr><td><strong>shadows</strong></td><td>8</td><td>62.5%</td><td>17.40</td></tr><tr><td><strong>torn_edges</strong></td><td>10</td><td>40.0%</td><td>23.24</td></tr></table><h5>ZXing_Cpp</h5><table class='table'><tr><th>Degradation</th><th>Tests</th><th>Success Rate</th><th>Avg Detection Time (ms)</th></tr><tr><td><strong>background_clutter</strong></td><td>10</td><td>20.0%</td><td>10.89</td></tr><tr><td><strong>channel_dropout</strong></td><td>6</td><td>0.0%</td><td>0.00</td></tr><tr><td><strong>color_inversion</strong></td><td>6</td><td>0.0%</td><td>0.00</td></tr><tr><td><strong>gaussian_blur</strong></td><td>3</td><td>0.0%</td><td>0.00</td></tr><tr><td><strong>gaussian_noise</strong></td><td>7</td><td>71.4%</td><td>17.63</td></tr><tr><td><strong>high_brightness</strong></td><td>9</td><td>44.4%</td><td>11.17</td></tr><tr><td><strong>low_brightness</strong></td><td>5</td><td>40.0%</td><td>22.09</td></tr><tr><td><strong>low_contrast</strong></td><td>5</td><td>40.0%</td><td>12.93</td></tr><tr><td><strong>low_resolution</strong></td><td>5</td><td>20.0%</td><td>13.67</td></tr><tr><td><strong>motion_blur</strong></td><td>5</td><td>40.0%</td><td>14.39</td></tr><tr><td><strong>occlusion</strong></td><td>8</td><td>12.5%</td><td>11.99</td></tr><tr><td><strong>partial_cutoff</strong></td><td>6</td><td>50.0%</td><td>12.59</td></tr><tr><td><strong>perspective_warp</strong></td><td>4</td><td>25.0%</td><td>15.93</td></tr><tr><td><strong>reflections</strong></td><td>10</td><td>50.0%</td><td>11.53</td></tr><tr><td><strong>salt_pepper_noise</strong></td><td>4</td><td>25.0%</td><td>15.44</td></tr><tr><td><strong>shadows</strong></td><td>8</td><td>62.5%</td><td>11.99</td></tr><tr><td><strong>torn_edges</strong></td><td>10</td><td>30.0%</td><td>11.10</td></tr></table>
+        </div>
+
+        <div class="competitive-advantage">
+            <h3>📐 Angled Barcode Performance</h3>
+            <p><strong>Total angled tests:</strong> 360</p>
+            <div class='table-container'><table class='table'><tr><th>Library</th><th>Success Rate</th><th>Avg Detection Time (ms)</th></tr>
+            <tr>
+                <td><strong>ZXing_Cpp</strong></td>
+                <td>55.0%</td>
+                <td>11.61</td>
+            </tr>
+            
+            <tr>
+                <td><strong>PyZBar</strong></td>
+                <td>60.0%</td>
+                <td>15.01</td>
+            </tr>
+            
+            <tr>
+                <td><strong>Dynamsoft</strong></td>
+                <td>100.0%</td>
+                <td>15.34</td>
+            </tr>
+            </table></div>
+        </div>
+
+        <div class="competitive-advantage">
+            <h3>📊 Multiple Barcode Performance</h3>
+            <p><strong>Total multiple barcode tests:</strong> 240</p>
+            <div class='table-container'><table class='table'><tr><th>Library</th><th>Success Rate</th><th>Avg Detection Time (ms)</th></tr>
+            <tr>
+                <td><strong>ZXing_Cpp</strong></td>
+                <td>23.8%</td>
+                <td>38.73</td>
+            </tr>
+            
+            <tr>
+                <td><strong>PyZBar</strong></td>
+                <td>85.0%</td>
+                <td>47.76</td>
+            </tr>
+            
+            <tr>
+                <td><strong>Dynamsoft</strong></td>
+                <td>91.2%</td>
+                <td>66.19</td>
+            </tr>
+            </table></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🏆 Library Performance Comparison</h2>
+        <table class='table'>
+        <tr>
+            <th>Library</th>
+            <th>Success Rate</th>
+            <th>Avg Detection Time (ms)</th>
+            <th>Total Tests</th>
+        </tr>
+        
+            <tr>
+                <td><strong>ZXing_Cpp</strong></td>
+                <td>65.1%</td>
+                <td>42.13</td>
+                <td>570</td>
+            </tr>
+            
+            <tr>
+                <td><strong>PyZBar</strong></td>
+                <td>76.8%</td>
+                <td>64.49</td>
+                <td>570</td>
+            </tr>
+            
+            <tr>
+                <td><strong>Dynamsoft</strong></td>
+                <td>92.3%</td>
+                <td>41.02</td>
+                <td>570</td>
+            </tr>
+            </table>
+    </div>
+
+    <div class="section">
+        <h2>📈 Performance Charts</h2>
+        <div class="chart">
+            <h3>Detection Time Comparison</h3>
+            <img src="charts/detection_time_comparison.png" alt="Detection Time Comparison">
+        </div>
+        <div class="chart">
+            <h3>Success Rate Comparison</h3>
+            <img src="charts/success_rate_comparison.png" alt="Success Rate Comparison">
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🎯 Strategic Insights & Recommendations</h2>
+        <div class='highlight'><h3>🎯 Key Findings</h3><p><strong>Best Challenging Conditions Performance:</strong> Dynamsoft demonstrates resilience under compounded degradations.</p><p><strong>Best Angled Barcode Performance:</strong> Dynamsoft shows superior performance in angled barcode detection.</p><p><strong>Best Multiple Barcode Performance:</strong> PyZBar excels in scenarios with multiple barcodes per image.</p><h3>📈 Competitive Advantages</h3><ul><li><strong>Robustness Under Degradation:</strong> Ability to decode in noise, blur, occlusion, motion, low-light, and perspective distortion scenarios.</li><li><strong>Angled Barcode Recognition:</strong> Advanced algorithms demonstrate superior performance in rotated barcode detection.</li><li><strong>Multiple Barcode Processing:</strong> Efficient batch processing capabilities handle complex multi-barcode scenarios.</li><li><strong>Speed and Reliability:</strong> Optimal balance between fast detection time and consistent success rates.</li></ul><h3>🚀 Recommendations</h3><ol><li>Highlight challenging condition performance for applications in warehouse, mobile scanning, and adverse field environments.</li><li>Leverage superior angled barcode performance in use cases requiring flexible camera positioning.</li><li>Promote multiple barcode detection capabilities for inventory and logistics applications.</li><li>Emphasize detection speed and reliability in enterprise deployment scenarios.</li></ol></div>
+    </div>
+
+    <div class="section">
+        <h2>📋 Technical Details</h2>
+        <h3>Test Configuration</h3>
+        <ul>
+            <li>Image formats: PNG, JPG</li>
+            <li>Barcode types tested: Code 128, Code 39, EAN-13, EAN-8, ITF, QR Code</li>
+            <li>Rotation angles: 0°, 15°, 30°, 45°, 60°, 75°, 90°</li>
+            <li>Multiple barcode counts: 2, 5, 10, 15, 20 barcodes per image</li>
+            <li>Performance metrics: Detection time, success rate</li>
+        </ul>
+    </div>
+</body>
+</html>

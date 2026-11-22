@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+output/
+*.pth
+!model_mbv3_iou_mix_2C049.pth
+
+# Keep model files in web apps
+*.onnx
+!web_app_onnx/*.onnx
+*.tflite
+
+# TensorFlow conversion artifacts
+tf_saved_model/
+tfjs_model_wrapped/
+
+# Logs
+*.log
+log.txt
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Test files
+test_*.py
+*_test.py

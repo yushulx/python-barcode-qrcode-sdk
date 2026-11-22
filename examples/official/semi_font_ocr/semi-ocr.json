@@ -1,0 +1,147 @@
+{
+  "CaptureVisionTemplates": [
+    {
+      "Name": "recognize_semi_ocr",
+      "ImageROIProcessingNameArray": [
+        "roi_test"
+      ],
+      "Timeout": 2000
+    }
+  ],
+  "TargetROIDefOptions": [
+    {
+      "Name": "roi_test",
+      "TaskSettingNameArray": [
+        "task_test"
+      ]
+    }
+  ],
+  "TextLineSpecificationOptions": [
+    {
+      "Name": "tls_test",
+      "CharacterModelName": "",
+      "TextLineRecModelName": "semi-ocr",
+      "CharHeightRange": [
+        1,
+        1000,
+        1
+      ],
+      "StringLengthRange": [
+        7,
+        13
+      ],
+      "BinarizationModes": [
+        {
+          "BlockSizeX": 30,
+          "BlockSizeY": 30,
+          "Mode": "BM_LOCAL_BLOCK",
+          "EnableFillBinaryVacancy": 0,
+          "ThresholdCompensation": 15
+        }
+      ]
+    }
+  ],
+  "LabelRecognizerTaskSettingOptions": [
+    {
+      "Name": "task_test",
+      "TextLineSpecificationNameArray": [
+        "tls_test"
+      ],
+      "SectionArray": [
+        {
+          "Section": "ST_REGION_PREDETECTION",
+          "ImageParameterName": "ip_test",
+          "StageArray": [
+            {
+              "Stage": "SST_PREDETECT_REGIONS"
+            }
+          ]
+        },
+        {
+          "Section": "ST_TEXT_LINE_LOCALIZATION",
+          "ImageParameterName": "ip_test",
+          "StageArray": [
+            {
+              "Stage": "SST_LOCALIZE_TEXT_LINES"
+            }
+          ]
+        },
+        {
+          "Section": "ST_TEXT_LINE_RECOGNITION",
+          "ImageParameterName": "ip_test",
+          "StageArray": [
+            {
+              "Stage": "SST_RECOGNIZE_RAW_TEXT_LINES"
+            },
+            {
+              "Stage": "SST_ASSEMBLE_TEXT_LINES"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "CaptureVisionModelOptions": [
+    {
+      "Name": "semi-ocr",
+      "MaxModelInstances": 1
+    }
+  ],
+  "ImageParameterOptions": [
+    {
+      "Name": "ip_test",
+      "ApplicableStages": [
+        {
+          "Stage": "SST_TRANSFORM_GRAYSCALE",
+          "GrayscaleTransformationModes": [
+            {
+              "Mode": "GTM_ORIGINAL"
+            },
+            {
+              "Mode": "GTM_INVERTED"
+            }
+          ]
+        },
+        {
+          "Stage": "SST_DETECT_TEXTURE",
+          "TextureDetectionModes": [
+            {
+              "Mode": "TDM_GENERAL_WIDTH_CONCENTRATION",
+              "Sensitivity": 8
+            }
+          ]
+        },
+        {
+          "Stage": "SST_BINARIZE_IMAGE",
+          "BinarizationModes": [
+            {
+              "EnableFillBinaryVacancy": 0,
+              "ThresholdCompensation": 21,
+              "Mode": "BM_LOCAL_BLOCK",
+              "MorphOperation": "Dilate",
+              "MorphOperationKernelSizeX": 7,
+              "MorphOperationKernelSizeY": 7
+            }
+          ]
+        },
+        {
+          "Stage": "SST_DETECT_TEXT_ZONES",
+          "TextDetectionMode": {
+            "Mode": "TTDM_LINE",
+            "CharHeightRange": [
+              5,
+              1000,
+              1
+            ],
+            "StringLengthRange": [
+              7,
+              13
+            ],
+            "Direction": "HORIZONTAL",
+            "Sensitivity": 7
+          }
+        }
+      ]
+    }
+  ]
+}

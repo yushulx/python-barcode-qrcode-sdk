@@ -1,0 +1,17 @@
+# Requirements for PySide6 Barcode Reader GUI
+# Core Dynamsoft SDK
+dynamsoft-capture-vision-bundle>=2.0.20
+
+# PySide6 for modern Qt GUI
+PySide6>=6.5.0
+
+# Image processing
+opencv-python>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# System monitoring (optional)
+psutil>=5.9.0
+
+# Note: The original Tkinter version dependencies for comparison:
+# tkinterdnd2>=0.3.0  # Not needed for PySide6 (has built-in drag/drop)
