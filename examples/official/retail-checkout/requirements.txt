@@ -1,5 +1,5 @@
 # Dynamsoft Barcode Reader Bundle (decoding engine)
-dynamsoft-barcode-reader-bundle==11.6.4000
+dynamsoft-barcode-reader-bundle==11.6.5000
 
 # Desktop GUI + camera
 PySide6==6.7.2

@@ -1,4 +1,4 @@
-dynamsoft-capture-vision-bundle==3.6.4000
+dynamsoft-capture-vision-bundle==3.6.5000
 opencv-python
 Pillow
 tkinterdnd2

@@ -1,4 +1,4 @@
-dynamsoft-barcode-reader-bundle==11.6.4000
+dynamsoft-barcode-reader-bundle==11.6.5000
 opencv-python
 PySide6
 PyMuPDF
