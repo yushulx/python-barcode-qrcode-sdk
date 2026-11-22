@@ -64,9 +64,14 @@ TUNING = {
         # QR Code: GEM_GRAY_SMOOTH additionally helps the lots / damaged cases
         # (84.75%, vs 84.05% without it).
         "QRCode": {**_BASE_ACCURACY, "grayscale_enhancement_modes": GRAY_SMOOTH},
-        # Data Matrix: DPM / industrial codes benefit from the same full-resolution
-        # + full-localization path; GEM_GRAY_SMOOTH is left off (tested lower).
-        "DataMatrix": dict(_BASE_ACCURACY),
+        # Data Matrix: the 57 images contain up to 5 codes each. The default
+        # expected_barcodes_count of 0 finds only one per image; raising it to
+        # 10 plus the full localization list decodes all 112 codes (100%).
+        "DataMatrix": {
+            "scale_down_threshold": 99999,
+            "localization_modes": FULL_LOCALIZATION,
+            "expected_barcodes_count": 10,
+        },
         "1D": dict(_BASE_ACCURACY),
     },
 }

@@ -146,10 +146,14 @@ A/B results on all images (article metric = detected codes / ground truth):
 | both | 98.86% | 217.57 | 84.05% | 121.45 |
 | both + GEM_GRAY_SMOOTH | 96.59% | 175.12 | **84.75%** | 124.46 |
 
-`--tuning accuracy` applies the best combination for each project:
+`--tuning accuracy` applies the best combination found for each project:
 PDF417 = full resolution + full localization; QR Code = the same plus
-`GEM_GRAY_SMOOTH`. `ReadBarcodes_ReadRateFirst` was also tested but reached
-the same PDF417 rate at ~915 ms/image, so it is not used.
+`GEM_GRAY_SMOOTH`; Data Matrix = full resolution + full localization +
+`expected_barcodes_count=10`. On the Data Matrix set this last setting matters
+most: the 57 images hold up to five codes each, and the SDK default finds only
+about one per image (84.82%). With the full configuration it decodes 112/112
+(100%); see `data_matrix/README.md`. `ReadBarcodes_ReadRateFirst` was also tested
+but reached the same PDF417 rate at ~915 ms/image, so it is not used.
 
 ## Metrics
 
@@ -172,11 +176,9 @@ rates** as its "total average"; the runner emits that as
 
 ## Version status
 
-The PDF417 and QR Code articles use the 3.6.5000 results produced by this
-runner. The Data Matrix article and the 1D article keep their published
-figures: Data Matrix was measured on 3.6.1000 (its 100% scenario-template
-result is not reproduced by 3.6.5000 — see `data_matrix/README.md`), and the
-1D article needs all three independent source archives for a comparable
-re-run (`1d_ean13/README.md`). In all four articles the non-Dynamsoft columns
-are the original published measurements; re-running them needs their own
-licences and, for Apple Vision / ML Kit, their own platforms.
+The PDF417, QR Code and Data Matrix articles use the 3.6.5000 results produced
+by this runner. The 1D article keeps its published figures: it needs all three
+independent source archives for a comparable re-run (`1d_ean13/README.md`).
+In all four articles the non-Dynamsoft columns are the original published
+measurements; re-running them needs their own licences and, for Apple Vision /
+ML Kit, their own platforms.
