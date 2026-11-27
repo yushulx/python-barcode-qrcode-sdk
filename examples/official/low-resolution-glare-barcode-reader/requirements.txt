@@ -2,4 +2,4 @@ pillow
 qrcode
 python-barcode
 opencv-python
-dynamsoft-capture-vision-bundle==3.6.5000
+dynamsoft-capture-vision-bundle==3.6.6000
